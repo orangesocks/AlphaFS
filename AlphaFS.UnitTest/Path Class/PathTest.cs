@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -49,7 +49,7 @@ namespace AlphaFS.UnitTest
 
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
 
-         string myLongPath = Path.GetTempPath("My Long Data File Or Directory");
+         var myLongPath = Path.GetTempPath("My Long Data File Or Directory");
          if (!isLocal) myLongPath = Path.LocalToUnc(myLongPath);
 
          Console.WriteLine("\nInput Path: [{0}]\n", myLongPath);
@@ -78,7 +78,7 @@ namespace AlphaFS.UnitTest
 
             UnitTestConstants.StopWatcher(true);
 
-            string longFrom83Path = Path.GetLongFrom83ShortPath(short83Path);
+            var longFrom83Path = Path.GetLongFrom83ShortPath(short83Path);
 
             Console.WriteLine("Long path from 8.3 path: [{0}]{1}", longFrom83Path, UnitTestConstants.Reporter(true));
 
@@ -120,7 +120,7 @@ namespace AlphaFS.UnitTest
 
             UnitTestConstants.StopWatcher(true);
 
-            string longFrom83Path = Path.GetLongFrom83ShortPath(short83Path);
+            var longFrom83Path = Path.GetLongFrom83ShortPath(short83Path);
 
             Console.WriteLine("Long path from 8.3 path : [{0}]{1}", longFrom83Path, UnitTestConstants.Reporter(true));
 
@@ -149,11 +149,11 @@ namespace AlphaFS.UnitTest
          const string neDir = "Non-Existing Directory";
          const string sys32 = "system32";
 
-         string fullPath = Path.Combine(Environment.SystemDirectory, neDir);
+         var fullPath = Path.Combine(Environment.SystemDirectory, neDir);
          if (!isLocal) fullPath = Path.LocalToUnc(fullPath);
 
          UnitTestConstants.StopWatcher(true);
-         string directoryNameWithoutRoot = Path.GetDirectoryNameWithoutRoot(fullPath);
+         var directoryNameWithoutRoot = Path.GetDirectoryNameWithoutRoot(fullPath);
          Console.WriteLine("\nInput Path: [{0}]\n\tGetDirectoryNameWithoutRoot() (Should be: [{1}]): [{2}]", fullPath, sys32, directoryNameWithoutRoot);
          Assert.IsTrue(directoryNameWithoutRoot.Equals(sys32, StringComparison.OrdinalIgnoreCase));
 
@@ -184,10 +184,10 @@ namespace AlphaFS.UnitTest
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
 
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
          if (!isLocal) tempFile = Path.LocalToUnc(tempFile);
 
-         string longTempStream = Path.LongPathPrefix + tempFile;
+         var longTempStream = Path.LongPathPrefix + tempFile;
          bool gotFileNameNormalized;
          bool gotFileNameOpened;
          bool gotVolumeNameDos;
@@ -196,22 +196,22 @@ namespace AlphaFS.UnitTest
          bool gotVolumeNameNone;
          bool gotSomething;
 
-         using (FileStream stream = File.Create(tempFile))
+         using (var stream = File.Create(tempFile))
          {
             // For Windows versions < Vista, the file must be > 0 bytes.
             if (!NativeMethods.IsAtLeastWindowsVista)
                stream.WriteByte(1);
 
-            SafeFileHandle handle = stream.SafeFileHandle;
+            var handle = stream.SafeFileHandle;
 
             UnitTestConstants.StopWatcher(true);
-            string fileNameNormalized = Path.GetFinalPathNameByHandle(handle);
-            string fileNameOpened = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.FileNameOpened);
+            var fileNameNormalized = Path.GetFinalPathNameByHandle(handle);
+            var fileNameOpened = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.FileNameOpened);
 
-            string volumeNameDos = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.None);
-            string volumeNameGuid = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameGuid);
-            string volumeNameNt = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameNT);
-            string volumeNameNone = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameNone);
+            var volumeNameDos = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.None);
+            var volumeNameGuid = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameGuid);
+            var volumeNameNt = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameNT);
+            var volumeNameNone = Path.GetFinalPathNameByHandle(handle, FinalPathFormats.VolumeNameNone);
 
             // These three output the same.
             gotFileNameNormalized = !string.IsNullOrWhiteSpace(fileNameNormalized) && longTempStream.Equals(fileNameNormalized);
@@ -239,7 +239,7 @@ namespace AlphaFS.UnitTest
          }
 
 
-         bool fileExists = File.Exists(tempFile);
+         var fileExists = File.Exists(tempFile);
 
          File.Delete(tempFile, true);
          Assert.IsFalse(File.Exists(tempFile), "Cleanup failed: File should have been removed.");
@@ -279,10 +279,10 @@ namespace AlphaFS.UnitTest
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
 
-         string neDir = "Non-Existing Directory";
-         string sys32 = Environment.SystemDirectory + Path.DirectorySeparator;
+         var neDir = "Non-Existing Directory";
+         var sys32 = Environment.SystemDirectory + Path.DirectorySeparator;
 
-         string fullPath = Path.Combine(Environment.SystemDirectory, neDir);
+         var fullPath = Path.Combine(Environment.SystemDirectory, neDir);
          if (!isLocal)
          {
             fullPath = Path.LocalToUnc(fullPath);
@@ -290,7 +290,7 @@ namespace AlphaFS.UnitTest
          }
 
          UnitTestConstants.StopWatcher(true);
-         string suffixedDirectoryName = Path.GetSuffixedDirectoryName(fullPath);
+         var suffixedDirectoryName = Path.GetSuffixedDirectoryName(fullPath);
          Console.WriteLine("\nInput Path: [{0}]\n\tGetSuffixedDirectoryName() (Should be: [{1}]): [{2}]\n{3}", fullPath, sys32, suffixedDirectoryName, UnitTestConstants.Reporter());
          Assert.IsTrue(suffixedDirectoryName.Equals(sys32, StringComparison.OrdinalIgnoreCase));
 
@@ -335,14 +335,14 @@ namespace AlphaFS.UnitTest
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
 
-         string neDir = "Non-Existing Directory";
-         string sys32 = (UnitTestConstants.SysRoot + Path.DirectorySeparator + "system32" + Path.DirectorySeparator).Replace(UnitTestConstants.SysDrive + Path.DirectorySeparator, "");
+         var neDir = "Non-Existing Directory";
+         var sys32 = (UnitTestConstants.SysRoot + Path.DirectorySeparator + "system32" + Path.DirectorySeparator).Replace(UnitTestConstants.SysDrive + Path.DirectorySeparator, "");
 
-         string fullPath = Path.Combine(UnitTestConstants.SysRoot + Path.DirectorySeparator + "system32" + Path.DirectorySeparator, neDir);
+         var fullPath = Path.Combine(UnitTestConstants.SysRoot + Path.DirectorySeparator + "system32" + Path.DirectorySeparator, neDir);
          if (!isLocal) fullPath = Path.LocalToUnc(fullPath);
 
          UnitTestConstants.StopWatcher(true);
-         string suffixedDirectoryNameWithoutRoot = Path.GetSuffixedDirectoryNameWithoutRoot(fullPath);
+         var suffixedDirectoryNameWithoutRoot = Path.GetSuffixedDirectoryNameWithoutRoot(fullPath);
          Console.WriteLine("\nInput Path: [{0}]\n\tGetSuffixedDirectoryName() (Should be: [{1}]): [{2}]\n{3}", fullPath, sys32, suffixedDirectoryNameWithoutRoot, UnitTestConstants.Reporter());
          Assert.IsTrue(suffixedDirectoryNameWithoutRoot.Equals(sys32, StringComparison.OrdinalIgnoreCase), "Path mismatch.");
 
@@ -389,7 +389,7 @@ namespace AlphaFS.UnitTest
       #region ChangeExtension (.NET)
 
       [TestMethod]
-      public void NET_ChangeExtension()
+      public void Path_ChangeExtension_NET()
       {
          Console.WriteLine("Path.ChangeExtension()");
          Console.WriteLine("\nThe .NET method is used.");
@@ -400,17 +400,17 @@ namespace AlphaFS.UnitTest
       #region Combine
 
       [TestMethod]
-      public void Combine()
+      public void Path_Combine()
       {
          Console.WriteLine("Path.Combine()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
+         var pathCnt = 0;
+         var errorCnt = 0;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
-            foreach (string path2 in UnitTestConstants.InputPaths)
+            foreach (var path2 in UnitTestConstants.InputPaths)
             {
                string expected = null;
                string actual = null;
@@ -455,16 +455,16 @@ namespace AlphaFS.UnitTest
       #region GetFileName
 
       [TestMethod]
-      public void GetFileName()
+      public void Path_GetFileName()
       {
          Console.WriteLine("Path.GetFileName()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
-         bool skipAssert = false;
+         var pathCnt = 0;
+         var errorCnt = 0;
+         var skipAssert = false;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
             string expected = null;
             string actual = null;
@@ -511,16 +511,16 @@ namespace AlphaFS.UnitTest
       #region GetFileNameWithoutExtension
 
       [TestMethod]
-      public void GetFileNameWithoutExtension()
+      public void Path_GetFileNameWithoutExtension()
       {
          Console.WriteLine("Path.GetFileNameWithoutExtension()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
-         bool skipAssert = false;
+         var pathCnt = 0;
+         var errorCnt = 0;
+         var skipAssert = false;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
             string expected = null;
             string actual = null;
@@ -564,114 +564,16 @@ namespace AlphaFS.UnitTest
 
       #endregion // GetFileNameWithoutExtension
 
-      #region GetFullPath
-
-      [TestMethod]
-      public void GetFullPath()
-      {
-         Console.WriteLine("Path.GetFullPath()");
-
-         int pathCnt = 0;
-         int errorCnt = 0;
-         bool skipAssert = false;
-
-         #region Exceptions
-
-         try
-         {
-            Path.GetFullPath(UnitTestConstants.SysDrive + @"\?test.txt");
-            //Path.GetFullPath(UnitTestConstants.SysDrive + @"\*test.txt");
-            //Path.GetFullPath(UnitTestConstants.SysDrive + @"\\test.txt");
-            //Path.GetFullPath(UnitTestConstants.SysDrive + @"\/test.txt");
-         }
-         catch (ArgumentException)
-         {
-            skipAssert = true;
-         }
-         Assert.IsTrue(skipAssert, "ArgumentException should have been caught.");
-
-
-         skipAssert = false;
-         try
-         {
-            Path.GetFullPath(UnitTestConstants.SysDrive + @"\dev\test\aaa:aaa.txt");
-         }
-         catch (NotSupportedException)
-         {
-            skipAssert = true;
-         }
-         Assert.IsTrue(skipAssert, "NotSupportedException should have been caught.");
-
-
-         skipAssert = false;
-         try
-         {
-            Path.GetFullPath(@"\\\\.txt");
-         }
-         catch (ArgumentException)
-         {
-            skipAssert = true;
-         }
-         Assert.IsTrue(skipAssert, "ArgumentException should have been caught.");
-
-         #endregion // Exceptions
-
-         UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
-         {
-            string expected = null;
-            string actual = null;
-            skipAssert = false;
-
-            Console.WriteLine("\n#{0:000}\tInput Path: [{1}]", ++pathCnt, path);
-
-            // System.IO
-            try
-            {
-               expected = System.IO.Path.GetFullPath(path);
-            }
-            catch (Exception ex)
-            {
-               skipAssert = ex is ArgumentException;
-
-               Console.WriteLine("\tCaught [System.IO] {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Console.WriteLine("\t   System.IO : [{0}]", expected ?? "null");
-
-
-            // AlphaFS
-            try
-            {
-               actual = Path.GetFullPath(path);
-
-               if (!skipAssert)
-                  Assert.AreEqual(expected, actual);
-            }
-            catch (Exception ex)
-            {
-               errorCnt++;
-
-               Console.WriteLine("\tCaught [AlphaFS] {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Console.WriteLine("\t   AlphaFS   : [{0}]", actual ?? "null");
-         }
-         Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
-
-         Assert.AreEqual(0, errorCnt, "Encountered paths where AlphaFS != System.IO");
-      }
-
-      #endregion // GetFullPath
-
       #region GetInvalidFileNameChars (.NET)
 
       [TestMethod]
-      public void NET_GetInvalidFileNameChars()
+      public void Path_GetInvalidFileNameChars_NET()
       {
          Console.WriteLine("Path.GetInvalidFileNameChars()");
          Console.WriteLine("\nThe .NET method is used.\n");
 
          UnitTestConstants.StopWatcher(true);
-         foreach (char c in Path.GetInvalidFileNameChars())
+         foreach (var c in Path.GetInvalidFileNameChars())
             Console.WriteLine("\tChar: [{0}]", c);
          Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
       }
@@ -681,13 +583,13 @@ namespace AlphaFS.UnitTest
       #region GetInvalidPathChars (.NET)
 
       [TestMethod]
-      public void NET_GetInvalidPathChars()
+      public void Path_GetInvalidPathChars_NET()
       {
          Console.WriteLine("Path.GetInvalidPathChars()");
          Console.WriteLine("\nThe .NET method is used.\n");
 
          UnitTestConstants.StopWatcher(true);
-         foreach (char c in Path.GetInvalidPathChars())
+         foreach (var c in Path.GetInvalidPathChars())
             Console.WriteLine("\tChar: [{0}]", c);
          Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
       }
@@ -697,13 +599,13 @@ namespace AlphaFS.UnitTest
       #region GetPathRoot
 
       [TestMethod]
-      public void GetPathRoot()
+      public void Path_GetPathRoot()
       {
          Console.WriteLine("Path.GetPathRoot()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
-         bool skipAssert = false;
+         var pathCnt = 0;
+         var errorCnt = 0;
+         var skipAssert = false;
 
          #region Exceptions
 
@@ -720,7 +622,7 @@ namespace AlphaFS.UnitTest
          #endregion // Exceptions
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
             string expected = null;
             string actual = null;
@@ -769,7 +671,7 @@ namespace AlphaFS.UnitTest
       #region GetRandomFileName (.NET)
 
       [TestMethod]
-      public void NET_GetRandomFileName()
+      public void Path_GetRandomFileName_NET()
       {
          Console.WriteLine("Path.GetRandomFileName()");
          Console.WriteLine("\nThe .NET method is used.");
@@ -780,7 +682,7 @@ namespace AlphaFS.UnitTest
       #region GetTempFileName (.NET)
 
       [TestMethod]
-      public void NET_GetTempFileName()
+      public void Path_GetTempFileName_NET()
       {
          Console.WriteLine("Path.GetTempFileName()");
          Console.WriteLine("\nThe .NET method is used.");
@@ -791,7 +693,7 @@ namespace AlphaFS.UnitTest
       #region GetTempPath (.NET)
 
       [TestMethod]
-      public void NET_GetTempPath()
+      public void Path_GetTempPath_NET()
       {
          Console.WriteLine("Path.GetTempPath()");
          Console.WriteLine("\nThe .NET method is used.");
@@ -802,15 +704,15 @@ namespace AlphaFS.UnitTest
       #region HasExtension (.NET)
 
       [TestMethod]
-      public void NET_HasExtension()
+      public void Path_HasExtension_NET()
       {
          Console.WriteLine("Path.HasExtension()");
          Console.WriteLine("\nThe .NET method is used.\n");
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
-            bool action = Path.HasExtension(path);
+            var action = Path.HasExtension(path);
             Console.WriteLine("\tHasExtension: [{0}]\t\tInput Path: [{1}]", action, path);
             Assert.AreEqual(System.IO.Path.HasExtension(path), action);
          }
@@ -826,7 +728,7 @@ namespace AlphaFS.UnitTest
       #region AddTrailingDirectorySeparator
 
       [TestMethod]
-      public void AlphaFS_AddTrailingDirectorySeparator()
+      public void AlphaFS_Path_AddTrailingDirectorySeparator()
       {
          Console.WriteLine("Path.AddTrailingDirectorySeparator()\n");
 
@@ -834,13 +736,13 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\tstring: [{0}];\n", nonSlashedString);
 
          // True, add DirectorySeparatorChar.
-         string hasBackslash = Path.AddTrailingDirectorySeparator(nonSlashedString, false);
-         bool addedBackslash = hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString()) && (nonSlashedString + Path.DirectorySeparatorChar).Equals(hasBackslash);
+         var hasBackslash = Path.AddTrailingDirectorySeparator(nonSlashedString, false);
+         var addedBackslash = hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString()) && (nonSlashedString + Path.DirectorySeparatorChar).Equals(hasBackslash);
          Console.WriteLine("\tAddTrailingDirectorySeparator(string);\n\tAdded == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, addedBackslash, hasBackslash);
 
          // True, add AltDirectorySeparatorChar.
-         string hasSlash = Path.AddTrailingDirectorySeparator(nonSlashedString, true);
-         bool addedSlash = hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && (nonSlashedString + Path.AltDirectorySeparatorChar).Equals(hasSlash);
+         var hasSlash = Path.AddTrailingDirectorySeparator(nonSlashedString, true);
+         var addedSlash = hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && (nonSlashedString + Path.AltDirectorySeparatorChar).Equals(hasSlash);
          Console.WriteLine("\tAddTrailingDirectorySeparator(string, true);\n\tAdded == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, addedSlash, hasSlash);
 
          Assert.IsTrue(addedBackslash);
@@ -852,7 +754,7 @@ namespace AlphaFS.UnitTest
       #region GetDirectoryNameWithoutRoot
 
       [TestMethod]
-      public void AlphaFS_GetDirectoryNameWithoutRoot()
+      public void AlphaFS_Path_GetDirectoryNameWithoutRoot()
       {
          Console.WriteLine("Path.GetDirectoryNameWithoutRoot()");
 
@@ -868,7 +770,7 @@ namespace AlphaFS.UnitTest
       #region GetFinalPathNameByHandle
 
       [TestMethod]
-      public void AlphaFS_GetFinalPathNameByHandle()
+      public void AlphaFS_Path_GetFinalPathNameByHandle()
       {
          Console.WriteLine("Path.GetFinalPathNameByHandle()");
 
@@ -880,7 +782,7 @@ namespace AlphaFS.UnitTest
       #region GetSuffixedDirectoryName
 
       [TestMethod]
-      public void AlphaFS_GetSuffixedDirectoryName()
+      public void AlphaFS_Path_GetSuffixedDirectoryName()
       {
          Console.WriteLine("Path.GetSuffixedDirectoryName()");
 
@@ -896,7 +798,7 @@ namespace AlphaFS.UnitTest
       #region GetSuffixedDirectoryNameWithoutRoot
 
       [TestMethod]
-      public void AlphaFS_GetSuffixedDirectoryNameWithoutRoot()
+      public void AlphaFS_Path_GetSuffixedDirectoryNameWithoutRoot()
       {
          Console.WriteLine("Path.GetSuffixedDirectoryNameWithoutRoot()");
 
@@ -912,15 +814,15 @@ namespace AlphaFS.UnitTest
       #region GetLongPath
 
       [TestMethod]
-      public void AlphaFS_GetLongPath()
+      public void AlphaFS_Path_GetLongPath()
       {
          Console.WriteLine("Path.GetLongPath()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
+         var pathCnt = 0;
+         var errorCnt = 0;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
             string actual = null;
 
@@ -963,7 +865,7 @@ namespace AlphaFS.UnitTest
       #region GetLongFrom83ShortPath
 
       [TestMethod]
-      public void AlphaFS_GetLongFrom83ShortPath()
+      public void AlphaFS_Path_GetLongFrom83ShortPath()
       {
          Console.WriteLine("Path.GetLongFrom83ShortPath()");
 
@@ -976,19 +878,19 @@ namespace AlphaFS.UnitTest
       #region GetMappedConnectionName
 
       [TestMethod]
-      public void AlphaFS_GetMappedConnectionName()
+      public void AlphaFS_Path_GetMappedConnectionName()
       {
          Console.WriteLine("Path.GetMappedConnectionName()");
 
-         int cnt = 0;
+         var cnt = 0;
          UnitTestConstants.StopWatcher(true);
-         foreach (string drive in Directory.GetLogicalDrives().Where(drive => new DriveInfo(drive).IsUnc))
+         foreach (var drive in Directory.GetLogicalDrives().Where(drive => new DriveInfo(drive).IsUnc))
          {
             ++cnt;
 
             UnitTestConstants.StopWatcher(true);
-            string gmCn = Path.GetMappedConnectionName(drive);
-            string gmUn = Path.GetMappedUncName(drive);
+            var gmCn = Path.GetMappedConnectionName(drive);
+            var gmUn = Path.GetMappedUncName(drive);
             Console.WriteLine("\n\tMapped drive: [{0}]\tGetMappedConnectionName(): [{1}]", drive, gmCn);
             Console.WriteLine("\tMapped drive: [{0}]\tGetMappedUncName()       : [{1}]", drive, gmUn);
 
@@ -998,7 +900,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
 
          if (cnt == 0)
-            Assert.Inconclusive("Nothing was enumerated.");
+            Assert.Inconclusive("Nothing was enumerated because no mapped drives were found.");
       }
 
       #endregion // GetMappedConnectionName
@@ -1006,15 +908,15 @@ namespace AlphaFS.UnitTest
       #region GetRegularPath
 
       [TestMethod]
-      public void AlphaFS_GetRegularPath()
+      public void AlphaFS_Path_GetRegularPath()
       {
          Console.WriteLine("Path.GetRegularPath()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
+         var pathCnt = 0;
+         var errorCnt = 0;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
             string actual = null;
 
@@ -1049,25 +951,25 @@ namespace AlphaFS.UnitTest
       #region IsLongPath
 
       [TestMethod]
-      public void AlphaFS_IsLongPath()
+      public void AlphaFS_Path_IsLongPath()
       {
          Console.WriteLine("Path.IsLongPath()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
-         int longPathCnt = 0;
+         var pathCnt = 0;
+         var errorCnt = 0;
+         var longPathCnt = 0;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
-            bool actual = false;
+            var actual = false;
 
             Console.WriteLine("\n#{0:000}\tInput Path: [{1}]", ++pathCnt, path);
 
             // AlphaFS
             try
             {
-               bool expected = path.StartsWith(Path.LongPathPrefix, StringComparison.OrdinalIgnoreCase);
+               var expected = path.StartsWith(Path.LongPathPrefix, StringComparison.OrdinalIgnoreCase);
                actual = Path.IsLongPath(path);
 
                Assert.AreEqual(expected, actual);
@@ -1096,25 +998,25 @@ namespace AlphaFS.UnitTest
       #region IsUncPath
 
       [TestMethod]
-      public void AlphaFS_IsUncPath()
+      public void AlphaFS_Path_IsUncPath()
       {
          Console.WriteLine("Path.IsUncPath()");
 
-         int pathCnt = 0;
-         int errorCnt = 0;
-         int uncPathCnt = 0;
+         var pathCnt = 0;
+         var errorCnt = 0;
+         var uncPathCnt = 0;
 
          UnitTestConstants.StopWatcher(true);
-         foreach (string path in UnitTestConstants.InputPaths)
+         foreach (var path in UnitTestConstants.InputPaths)
          {
-            bool actual = false;
+            var actual = false;
 
             Console.WriteLine("\n#{0:000}\tInput Path: [{1}]", ++pathCnt, path);
 
             // AlphaFS
             try
             {
-               bool expected = path.StartsWith(Path.UncPrefix, StringComparison.OrdinalIgnoreCase);
+               var expected = path.StartsWith(Path.UncPrefix, StringComparison.OrdinalIgnoreCase);
 
                actual = Path.IsUncPath(path);
 
@@ -1146,17 +1048,17 @@ namespace AlphaFS.UnitTest
       #region LocalToUnc
 
       [TestMethod]
-      public void AlphaFS_LocalToUnc()
+      public void AlphaFS_Path_LocalToUnc()
       {
          Console.WriteLine("Path.LocalToUnc()");
 
          Console.WriteLine("\nInput Path: [{0}]\n", UnitTestConstants.SysRoot);
 
-         int cnt = 0;
+         var cnt = 0;
          UnitTestConstants.StopWatcher(true);
-         foreach (string path2 in Directory.EnumerateFileSystemEntries(UnitTestConstants.SysRoot))
+         foreach (var path2 in Directory.EnumerateFileSystemEntries(UnitTestConstants.SysRoot))
          {
-            string uncPath = Path.LocalToUnc(path2);
+            var uncPath = Path.LocalToUnc(path2);
             Console.WriteLine("\t#{0:000}\tLocal: [{1}]\t\t\tUNC: [{2}]", ++cnt, path2, uncPath);
 
             Assert.IsTrue(Path.IsUncPath(uncPath));
@@ -1165,7 +1067,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
 
          if (cnt == 0)
-            Assert.Inconclusive("Nothing was enumerated.");
+            Assert.Inconclusive("Nothing was enumerated, but it was expected.");
 
          Console.WriteLine();
       }
@@ -1175,21 +1077,21 @@ namespace AlphaFS.UnitTest
       #region RemoveTrailingDirectorySeparator
 
       [TestMethod]
-      public void AlphaFS_RemoveTrailingDirectorySeparator()
+      public void AlphaFS_Path_RemoveTrailingDirectorySeparator()
       {
          Console.WriteLine("Path.RemoveTrailingDirectorySeparator()\n");
 
          const string backslashedString = @"Backslashed\";
          const string slashedString = "Slashed/";
          // True, add DirectorySeparatorChar.
-         string hasBackslash = Path.RemoveTrailingDirectorySeparator(backslashedString);
-         bool removedBackslash = !hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !backslashedString.Equals(hasBackslash);
+         var hasBackslash = Path.RemoveTrailingDirectorySeparator(backslashedString);
+         var removedBackslash = !hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !backslashedString.Equals(hasBackslash);
          Console.WriteLine("\tstring = @[{0}];\n", backslashedString);
          Console.WriteLine("\tRemoveTrailingDirectorySeparator(string);\n\tRemoved == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, removedBackslash, hasBackslash);
 
          // True, add AltDirectorySeparatorChar.
-         string hasSlash = Path.RemoveTrailingDirectorySeparator(slashedString, true);
-         bool removedSlash = !hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !slashedString.Equals(hasSlash);
+         var hasSlash = Path.RemoveTrailingDirectorySeparator(slashedString, true);
+         var removedSlash = !hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !slashedString.Equals(hasSlash);
          Console.WriteLine("\tstring: [{0}];\n", slashedString);
          Console.WriteLine("\tRemoveTrailingDirectorySeparator(string, true);\n\tRemoved == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, removedSlash, hasSlash);
 

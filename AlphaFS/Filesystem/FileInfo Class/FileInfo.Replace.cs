@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -78,13 +78,12 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public FileInfo Replace(string destinationFileName, string destinationBackupFileName, PathFormat pathFormat)
       {
-         var options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
+         const GetFullPathOptions options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
 
          string destinationFileNameLp = Path.GetExtendedLengthPathCore(Transaction, destinationFileName, pathFormat, options);
-         string destinationBackupFileNameLp =
-                destinationBackupFileName != null?
-                    Path.GetExtendedLengthPathCore(Transaction, destinationBackupFileName, pathFormat, options):
-                    null;
+         string destinationBackupFileNameLp = destinationBackupFileName != null
+            ? Path.GetExtendedLengthPathCore(Transaction, destinationBackupFileName, pathFormat, options)
+            : null;
 
          File.ReplaceCore(LongFullName, destinationFileNameLp, destinationBackupFileNameLp, false, PathFormat.LongFullPath);
 
@@ -106,13 +105,12 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public FileInfo Replace(string destinationFileName, string destinationBackupFileName, bool ignoreMetadataErrors, PathFormat pathFormat)
       {
-         var options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
+         const GetFullPathOptions options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
 
          string destinationFileNameLp = Path.GetExtendedLengthPathCore(Transaction, destinationFileName, pathFormat, options);
-            string destinationBackupFileNameLp =
-                   destinationBackupFileName != null ?
-                       Path.GetExtendedLengthPathCore(Transaction, destinationBackupFileName, pathFormat, options) :
-                       null; 
+         string destinationBackupFileNameLp = destinationBackupFileName != null
+            ? Path.GetExtendedLengthPathCore(Transaction, destinationBackupFileName, pathFormat, options)
+            : null;
 
          File.ReplaceCore(LongFullName, destinationFileNameLp, destinationBackupFileNameLp, ignoreMetadataErrors, PathFormat.LongFullPath);
 

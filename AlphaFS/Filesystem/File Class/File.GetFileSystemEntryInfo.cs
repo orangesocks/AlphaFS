@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -81,7 +81,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="transaction">The transaction.</param>
       /// <param name="path">The path to the file or directory.</param>
       /// <param name="continueOnException">
-      ///    <para><c>true</c> suppress any Exception that might be thrown a result from a failure,</para>
+      ///    <para><c>true</c> suppress any Exception that might be thrown as a result from a failure,</para>
       ///    <para>such as ACLs protected directories or non-accessible reparse points.</para>
       /// </param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
@@ -91,7 +91,7 @@ namespace Alphaleonis.Win32.Filesystem
          // Enable BasicSearch and LargeCache by default.
          var options = DirectoryEnumerationOptions.BasicSearch | DirectoryEnumerationOptions.LargeCache | (continueOnException ? DirectoryEnumerationOptions.ContinueOnException : 0);
 
-         return (new FindFileSystemEntryInfo(isFolder, transaction, path, Path.WildcardQuestion, options, typeof(FileSystemEntryInfo), pathFormat)).Get<FileSystemEntryInfo>();
+         return (new FindFileSystemEntryInfo(isFolder, transaction, path, Path.WildcardStarMatchAll, options, typeof(FileSystemEntryInfo), pathFormat)).Get<FileSystemEntryInfo>();
       }
 
       #endregion // Internal Methods

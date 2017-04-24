@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -85,7 +85,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <exception cref="PlatformNotSupportedException"/>
       /// <param name="host">The DNS or NetBIOS name of a host.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dfs")]
       [SecurityCritical]
       public static IEnumerable<string> EnumerateDfsRoot(string host, bool continueOnException)
@@ -113,7 +113,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <exception cref="PlatformNotSupportedException"/>
       /// <param name="domain">A domain name.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dfs")]
       [SecurityCritical]
       public static IEnumerable<string> EnumerateDomainDfsRoot(string domain, bool continueOnException)
@@ -182,7 +182,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <exception cref="PlatformNotSupportedException"/>
       /// <param name="host">The DNS or NetBIOS name of a host.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dfs")]
       [SecurityCritical]
       private static IEnumerable<string> EnumerateDfsRootCore(string host, bool continueOnException)
@@ -199,7 +199,7 @@ namespace Alphaleonis.Win32.Network
                totalEntries = 0;
 
                // When host == null, the local computer is used.
-               // However, the resulting OpenResourceInfo.Host property will be empty.
+               // However, the resulting Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
                string stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
@@ -216,7 +216,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <exception cref="PlatformNotSupportedException"/>
       /// <param name="domain">A domain name.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dfs")]
       [SecurityCritical]
       private static IEnumerable<string> EnumerateDomainDfsRootCore(string domain, bool continueOnException)
@@ -233,7 +233,7 @@ namespace Alphaleonis.Win32.Network
                totalEntries = 0;
 
                // When host == null, the local computer is used.
-               // However, the resulting OpenResourceInfo.Host property will be empty.
+               // However, the resulting Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
                string stripUnc = Utils.IsNullOrWhiteSpace(domain) ? NativeMethods.ComputerDomain : Path.GetRegularPathCore(domain, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);

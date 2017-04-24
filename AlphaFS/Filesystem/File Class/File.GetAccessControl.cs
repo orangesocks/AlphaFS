@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -157,13 +157,8 @@ namespace Alphaleonis.Win32.Filesystem
             // When GetNamedSecurityInfo() fails with ACCESS_DENIED, try again using GetSecurityInfo().
 
             if (lastError == Win32Errors.ERROR_ACCESS_DENIED)
-            {
-               using (SafeFileHandle handle = CreateFileCore(null, pathLp, ExtendedFileAttributes.BackupSemantics, null,
-                  FileMode.Open, FileSystemRights.Read, FileShare.Read, false, PathFormat.LongFullPath))
-               {
+               using (SafeFileHandle handle = CreateFileCore(null, pathLp, ExtendedFileAttributes.BackupSemantics, null, FileMode.Open, FileSystemRights.Read, FileShare.Read, false, PathFormat.LongFullPath))
                   return GetAccessControlHandleCore<T>(true, isFolder, handle, includeSections, securityInfo);
-               }
-            }
 
             return GetSecurityDescriptor<T>(lastError, isFolder, pathLp, pSecurityDescriptor);
          }

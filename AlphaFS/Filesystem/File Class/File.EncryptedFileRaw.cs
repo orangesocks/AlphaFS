@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -227,7 +227,7 @@ namespace Alphaleonis.Win32.Filesystem
          // 2015-08-02: MSDN does not confirm LongPath usage but a Unicode version of this function exists.
 
          SafeEncryptedFileRawHandle context;
-         int lastError = NativeMethods.OpenEncryptedFileRaw(destinationPathLp, mode, out context);
+         var lastError = NativeMethods.OpenEncryptedFileRaw(destinationPathLp, mode, out context);
 
          try
          {

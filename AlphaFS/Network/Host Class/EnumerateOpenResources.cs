@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -55,7 +55,7 @@ namespace Alphaleonis.Win32.Network
       ///   does not begin with two backslashes ("\\") it indicates the name of the user. If <paramref name="typeName"/> begins with two
       ///   backslashes ("\\") it indicates the name of the connection.
       /// </param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static IEnumerable<OpenResourceInfo> EnumerateOpenResources(string host, string basePath, string typeName, bool continueOnException)
       {
@@ -81,7 +81,7 @@ namespace Alphaleonis.Win32.Network
       ///   does not begin with two backslashes ("\\") it indicates the name of the user. If <paramref name="typeName"/> begins with two
       ///   backslashes ("\\") it indicates the name of the connection.
       /// </param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       private static IEnumerable<OpenResourceInfo> EnumerateOpenResourcesCore(string host, string basePath, string typeName, bool continueOnException)
       {
@@ -98,7 +98,7 @@ namespace Alphaleonis.Win32.Network
             (FunctionData functionData, out SafeGlobalMemoryBufferHandle buffer, int prefMaxLen, out uint entriesRead, out uint totalEntries, out uint resumeHandle) =>
             {
                // When host == null, the local computer is used.
-               // However, the resulting OpenResourceInfo.Host property will be empty.
+               // However, the resulting Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
                string stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);

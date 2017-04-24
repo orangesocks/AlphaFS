@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -19,24 +19,15 @@
  *  THE SOFTWARE. 
  */
 
-using Alphaleonis;
-using Alphaleonis.Win32;
 using Alphaleonis.Win32.Filesystem;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Text;
-using System.Threading;
 using Directory = Alphaleonis.Win32.Filesystem.Directory;
-using DirectoryInfo = Alphaleonis.Win32.Filesystem.DirectoryInfo;
-using DriveInfo = Alphaleonis.Win32.Filesystem.DriveInfo;
 using File = Alphaleonis.Win32.Filesystem.File;
-using FileInfo = Alphaleonis.Win32.Filesystem.FileInfo;
 using Path = Alphaleonis.Win32.Filesystem.Path;
 
 namespace AlphaFS.UnitTest
@@ -54,15 +45,15 @@ namespace AlphaFS.UnitTest
          #region Setup
 
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string tempFolder = Path.GetTempPath();
-         string tempPath = Path.Combine(tempFolder, "File.Delete-" + Path.GetRandomFileName());
+         var tempFolder = Path.GetTempPath();
+         var tempPath = Path.Combine(tempFolder, "File.Delete-" + Path.GetRandomFileName());
          if (!isLocal) tempPath = Path.LocalToUnc(tempPath);
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
          if (!isLocal) tempFile = Path.LocalToUnc(tempFile);
 
-         IEnumerable<string> allLines = new[] { UnitTestConstants.TenNumbers, UnitTestConstants.TextHelloWorld, UnitTestConstants.TextAppend, UnitTestConstants.TextUnicode };
+         IEnumerable<string> allLines = new[] {UnitTestConstants.TenNumbers, UnitTestConstants.TextHelloWorld, UnitTestConstants.TextGoodbyeWorld, UnitTestConstants.TextUnicode};
 
          #endregion // Setup
 
@@ -76,13 +67,13 @@ namespace AlphaFS.UnitTest
             File.AppendAllLines(tempFile, allLines, NativeMethods.DefaultFileEncoding);
 
             // Read filestream contents.
-            using (StreamReader streamRead = File.OpenText(tempFile))
+            using (var streamRead = File.OpenText(tempFile))
             {
-               string line = streamRead.ReadToEnd();
+               var line = streamRead.ReadToEnd();
 
                Console.WriteLine("\nCreated: [{0}] filestream: [{1}]\n\n\tAppendAllLines content:\n{2}", streamRead.CurrentEncoding.EncodingName, tempFile, line);
 
-               foreach (string line2 in allLines)
+               foreach (var line2 in allLines)
                   Assert.IsTrue(line.Contains(line2));
             }
 
@@ -93,13 +84,13 @@ namespace AlphaFS.UnitTest
             File.AppendAllLines(tempFile, allLines);
 
             // Read filestream contents.
-            using (StreamReader streamRead = File.OpenText(tempFile))
+            using (var streamRead = File.OpenText(tempFile))
             {
-               string line = streamRead.ReadToEnd();
+               var line = streamRead.ReadToEnd();
 
                Console.WriteLine("AppendAllLines content:\n{0}", line);
 
-               foreach (string line2 in allLines)
+               foreach (var line2 in allLines)
                   Assert.IsTrue(line.Contains(line2));
             }
 
@@ -115,920 +106,23 @@ namespace AlphaFS.UnitTest
       }
 
       #endregion // DumpAppendAllLines
-
-      #region DumpCopy
-
-      private void DumpCopy(bool isLocal)
-      {
-         #region Setup
-
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string path = isLocal ? UnitTestConstants.SysRoot : Path.LocalToUnc(UnitTestConstants.SysRoot);
-         string tempPath = Path.GetTempPath("File-Copy-" + Path.GetRandomFileName());
-         if (!isLocal) tempPath = Path.LocalToUnc(tempPath);
-
-         bool exception;
-         int expectedLastError;
-         string expectedException;
-
-         string fileSource = @"file-source-" + Path.GetRandomFileName() + ".exe";
-         string fileDestination = @"file-destination-" + Path.GetRandomFileName() + ".exe";
-
-         string folderSource = tempPath + @"\folder-source-" + Path.GetRandomFileName();
-         string folderDestination = tempPath + @"\folder-destination-" + Path.GetRandomFileName();
-
-         string fullPathSource = folderSource + @"\" + fileSource;
-         string fullPathDestination = folderDestination + @"\" + fileDestination;
-         if (!isLocal) fullPathSource = Path.LocalToUnc(fullPathSource);
-         if (!isLocal) fullPathDestination = Path.LocalToUnc(fullPathDestination);
-
-         DirectoryInfo dirInfo = new DirectoryInfo(folderDestination);
-
-         #endregion // Setup
-
-         try
-         {
-            #region UnauthorizedAccessException
-
-            Directory.CreateDirectory(folderSource);
-            Directory.CreateDirectory(folderDestination);
-
-            DirectorySecurity dirSecurity;
-
-            string user = (Environment.UserDomainName + @"\" + Environment.UserName).TrimStart('\\');
-
-            // ╔═════════════╦═════════════╦═══════════════════════════════╦════════════════════════╦══════════════════╦═══════════════════════╦═════════════╦═════════════╗
-            // ║             ║ folder only ║ folder, sub-folders and files ║ folder and sub-folders ║ folder and files ║ sub-folders and files ║ sub-folders ║    files    ║
-            // ╠═════════════╬═════════════╬═══════════════════════════════╬════════════════════════╬══════════════════╬═══════════════════════╬═════════════╬═════════════╣
-            // ║ Propagation ║ none        ║ none                          ║ none                   ║ none             ║ InheritOnly           ║ InheritOnly ║ InheritOnly ║
-            // ║ Inheritance ║ none        ║ Container|Object              ║ Container              ║ Object           ║ Container|Object      ║ Container   ║ Object      ║
-            // ╚═════════════╩═════════════╩═══════════════════════════════╩════════════════════════╩══════════════════╩═══════════════════════╩═════════════╩═════════════╝
-
-            var rule = new FileSystemAccessRule(user, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Deny);
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.UnauthorizedAccessException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-
-               FileInfo fileInfo = new FileInfo(fullPathSource);
-               using (StreamWriter sw = fileInfo.CreateText())
-                  sw.WriteLine("MoveTo-TestFile");
-
-               // Set DENY for current user.
-               dirSecurity = dirInfo.GetAccessControl();
-               dirSecurity.AddAccessRule(rule);
-               dirInfo.SetAccessControl(dirSecurity);
-
-               fileInfo.CopyTo(fullPathDestination);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            finally
-            {
-               // Remove DENY for current user.
-               dirSecurity = dirInfo.GetAccessControl();
-               dirSecurity.RemoveAccessRule(rule);
-               dirInfo.SetAccessControl(dirSecurity, AccessControlSections.Access);
-
-               Directory.Delete(tempPath, true, true);
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // UnauthorizedAccessException
-
-            #region FileNotFoundException
-
-            expectedLastError = (int)Win32Errors.ERROR_FILE_NOT_FOUND;
-            expectedException = "System.IO.FileNotFoundException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Copy(isLocal ? fileSource : Path.LocalToUnc(fileSource), isLocal ? fileDestination : Path.LocalToUnc(fileDestination));
-            }
-            catch (FileNotFoundException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // FileNotFoundException
-
-            #region DirectoryNotFoundException
-
-            expectedLastError = (int)Win32Errors.ERROR_PATH_NOT_FOUND;
-            expectedException = "System.IO.DirectoryNotFoundException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Copy(fullPathSource, fullPathDestination);
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // DirectoryNotFoundException
-
-            #region IOException #1 (AlreadyExistsException)
-
-            Directory.CreateDirectory(folderSource);
-            Directory.CreateDirectory(folderDestination);
-            using (File.Create(fullPathSource)) { }
-            using (File.Create(fullPathDestination)) { }
-
-            expectedLastError = (int)Win32Errors.ERROR_FILE_EXISTS;
-            expectedException = "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Copy(fullPathSource, fullPathDestination);
-            }
-            catch (AlreadyExistsException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            Directory.Delete(folderSource, true);
-            Directory.Delete(folderDestination, true);
-
-            #endregion // IOException #1 (AlreadyExistsException)
-
-            #region IOException #2
-
-            string folderfileName = null;
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-
-               foreach (string file in Directory.EnumerateFiles(path))
-               {
-                  string newFile = Path.Combine(tempPath, Path.GetFileName(file, true));
-                  folderfileName = newFile;
-
-                  // Trigger the Exception.
-                  Directory.CreateDirectory(folderfileName);
-
-                  // true: overwrite existing.
-                  File.Copy(file, folderfileName, true);
-               }
-            }
-            catch (AlreadyExistsException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Directory.Delete(folderfileName);
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // IOException #2
-
-            #region Copy
-
-            Console.WriteLine("\nInput Directory Path: [{0}]\n", path);
-            int cnt = 0;
-            string readOnlySource = null;
-            string readOnlyDestination = null;
-
-            UnitTestConstants.StopWatcher(true);
-            foreach (string file in Directory.EnumerateFiles(path))
-            {
-               string newFile = Path.Combine(tempPath, Path.GetFileName(file, true));
-               File.Copy(file, newFile);
-
-               // Set the first file as read-only to trigger an Exception when copying again.
-               if (cnt == 0)
-               {
-                  File.SetAttributes(newFile, FileAttributes.ReadOnly);
-                  readOnlySource = file;
-                  readOnlyDestination = newFile;
-               }
-
-               Console.WriteLine("\t#{0:000}\tCopied to: [{1}]", ++cnt, newFile);
-               Assert.IsTrue(File.Exists(newFile));
-            }
-            Console.WriteLine("\n\tTotal Size: [{0}]{1}", Utils.UnitSizeToText(Directory.GetProperties(tempPath)["Size"]), UnitTestConstants.Reporter());
-            Console.WriteLine();
-
-            #endregion // Copy
-
-            #region Preserve Timestamps
-
-            // Test preservation of timestamps.
-            int seed = (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime creationTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastAccessTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastWriteTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-
-            string preservePath = Path.Combine(tempPath, "PreserveTimestamps");
-            string preserveFile = Path.GetFileName(readOnlySource);
-            string preserveReadOnlySource = Path.Combine(preservePath, preserveFile);
-
-            Directory.CreateDirectory(preservePath);
-            File.Copy(readOnlySource, preserveReadOnlySource);
-
-            File.SetCreationTime(preserveReadOnlySource, creationTime);
-            File.SetLastAccessTime(preserveReadOnlySource, lastAccessTime);
-            File.SetLastWriteTime(preserveReadOnlySource, lastWriteTime);
-            
-            UnitTestConstants.StopWatcher(true);
-
-            // 3rd parameter CopyOptions.None: overwrite existing.
-            // 4rd parameter true: preserve timestamps of source.
-            File.Copy(preserveReadOnlySource, readOnlyDestination, CopyOptions.None, true);
-
-            Console.WriteLine("\tFile copied.{0}", UnitTestConstants.Reporter());
-
-            Assert.IsTrue(File.Exists(preserveReadOnlySource));
-            Assert.IsTrue(File.Exists(readOnlyDestination));
-
-            Assert.AreEqual(File.GetCreationTime(readOnlyDestination), creationTime, "File CreationTime should match.");
-            Assert.AreEqual(File.GetLastAccessTime(readOnlyDestination), lastAccessTime, "File LastAccessTime should match.");
-            Assert.AreEqual(File.GetLastWriteTime(readOnlyDestination), lastWriteTime, "File LastWriteTime should match.");
-            Console.WriteLine("\nTimestamps are transferred.");
-
-            #endregion Preserve Timestamps
-         }
-         finally
-         {
-            if (Directory.Exists(tempPath))
-            {
-               Directory.Delete(tempPath, true, true);
-               Assert.IsFalse(Directory.Exists(tempPath), "Cleanup failed: Directory should have been removed.");
-            }
-            Console.WriteLine();
-         }
-      }
-
-      #endregion // DumpCopy
-
-      #region TestDelete
-
-      private void TestDelete(bool isLocal)
-      {
-         #region Setup
-
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string tempFolder = Path.GetTempPath();
-         string tempPath = Path.Combine(tempFolder, "File.Delete-" + Path.GetRandomFileName());
-         if (!isLocal) tempPath = Path.LocalToUnc(tempPath);
-
-         string nonExistingFile = UnitTestConstants.SysRoot32 + @"\NonExistingFile-" + Path.GetRandomFileName();
-         if (!isLocal) nonExistingFile = Path.LocalToUnc(nonExistingFile);
-
-         string sysDrive = UnitTestConstants.SysDrive;
-         if (!isLocal) sysDrive = Path.LocalToUnc(sysDrive);
-
-         string sysRoot = UnitTestConstants.SysRoot;
-         if (!isLocal) sysRoot = Path.LocalToUnc(sysRoot);
-
-         string letter = DriveInfo.GetFreeDriveLetter() + @":\";
-         if (!isLocal) letter = Path.LocalToUnc(letter);
-
-         int catchCount = 0;
-         bool exception;
-         int expectedLastError;
-         string expectedException;
-
-         #endregion // Setup
-
-         try
-         {
-            #region ArgumentException
-
-            expectedException = "System.ArgumentException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: Path is a zero-length string, contains only white space, or contains one or more invalid characters.", ++catchCount, expectedException);
-
-               File.Delete(sysDrive + @"\<>");
-            }
-            catch (ArgumentException ex)
-            {
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // ArgumentException
-
-            #region NotSupportedException
-
-            expectedLastError = (int)(isLocal ? Win32Errors.ERROR_FILE_EXISTS : Win32Errors.NERR_UseNotFound);
-            expectedException = "System.NotSupportedException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: path is in an invalid format.", ++catchCount, expectedException);
-
-               string invalidPath = UnitTestConstants.SysDrive + @"\dev\test\aaa:aaa.txt";
-               if (!isLocal) invalidPath = Path.LocalToUnc(invalidPath) + ":aaa.txt";
-
-               File.Delete(invalidPath);
-            }
-            catch (NotSupportedException ex)
-            {
-               // win32Error is always 0 for local.
-               if (!isLocal)
-               {
-                  var win32Error = new Win32Exception("", ex);
-                  Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               }
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // NotSupportedException
-
-            #region UnauthorizedAccessException
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.UnauthorizedAccessException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: The caller does not have the required permission.", ++catchCount, expectedException);
-
-               File.Delete(UnitTestConstants.SysRoot32 + @"\kernel32.dll");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // UnauthorizedAccessException
-
-            #region DirectoryNotFoundException (UnitTestConstants.Local) / IOException (UnitTestConstants.Network)
-
-            expectedLastError = (int)(isLocal ? Win32Errors.ERROR_PATH_NOT_FOUND : Win32Errors.ERROR_BAD_NET_NAME);
-            expectedException = isLocal ? "System.IO.DirectoryNotFoundException" : "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: The specified path is invalid (for example, it is on an unmapped drive).", ++catchCount, expectedException);
-
-               File.Delete(nonExistingFile.Replace(sysDrive + @"\", letter));
-            }
-            catch (Exception ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               string exceptionTypeName = ex.GetType().FullName;
-               if (exceptionTypeName.Equals(expectedException))
-               {
-                  exception = true;
-                  Console.WriteLine("\n\t[{0}]: [{1}]", exceptionTypeName, ex.Message.Replace(Environment.NewLine, "  "));
-               }
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // DirectoryNotFoundException (UnitTestConstants.Local) / IOException (UnitTestConstants.Network)
-
-            #region UnauthorizedAccessException #1
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.UnauthorizedAccessException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: Path is a directory.", ++catchCount, expectedException);
-
-               Directory.CreateDirectory(tempPath);
-
-               File.Delete(tempPath);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + Win32Errors.ERROR_INVALID_PARAMETER + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Directory.Delete(tempPath);
-            Assert.IsFalse(Directory.Exists(tempPath), "Cleanup failed: Directory should have been removed.");
-            Console.WriteLine();
-
-            #endregion // UnauthorizedAccessException #1
-
-            #region IOException
-
-            using (File.Create(tempPath))
-            {
-            }
-            FileStream streamCreate2 = File.Open(tempPath, FileMode.Open);
-
-            expectedLastError = (int)Win32Errors.ERROR_SHARING_VIOLATION;
-            expectedException = "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: The specified file is in use or there is an open handle on the file.", ++catchCount, expectedException);
-
-               File.Delete(tempPath);
-            }
-            catch (IOException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            streamCreate2.Close();
-            Console.WriteLine();
-
-            #endregion // IOException
-
-            #region UnauthorizedAccessException #2 (FileReadOnlyException)
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.UnauthorizedAccessException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch #{0}: [{1}]: Path specified a read-only file.", ++catchCount, expectedException);
-
-               File.SetAttributes(tempPath, FileAttributes.ReadOnly);
-
-               File.Delete(tempPath);
-            }
-            catch (FileReadOnlyException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + Win32Errors.ERROR_FILE_READ_ONLY + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // UnauthorizedAccessException #2 (FileReadOnlyException)
-         }
-         finally
-         {
-            File.Delete(tempPath, true);
-            Assert.IsFalse(File.Exists(tempPath), "Cleanup failed: File should have been removed.");
-         }
-
-         Console.WriteLine();
-      }
-
-      #endregion // TestDelete
       
-      #region DumpMove
-
-      private void DumpMove(bool isLocal)
-      {
-         #region Setup
-
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string path = isLocal ? UnitTestConstants.SysRoot : Path.LocalToUnc(UnitTestConstants.SysRoot);
-         string tempPath = Path.GetTempPath("File-Move-" + Path.GetRandomFileName());
-         if (!isLocal) tempPath = Path.LocalToUnc(tempPath);
-
-         bool exception;
-         int expectedLastError;
-         string expectedException;
-
-         string fileSource = @"file-source-" + Path.GetRandomFileName() + ".exe";
-         string fileDestination = @"file-destination-" + Path.GetRandomFileName() + ".exe";
-
-         string folderSource = tempPath + @"\folder-source-" + Path.GetRandomFileName();
-         string folderDestination = tempPath + @"\folder-destination-" + Path.GetRandomFileName();
-
-         string fullPathSource = folderSource + @"\" + fileSource;
-         string fullPathDestination = folderDestination + @"\" + fileDestination;
-         if (!isLocal) fullPathSource = Path.LocalToUnc(fullPathSource);
-         if (!isLocal) fullPathDestination = Path.LocalToUnc(fullPathDestination);
-
-         DirectoryInfo dirInfo = new DirectoryInfo(folderDestination);
-
-         #endregion // Setup
-
-         try
-         {
-            #region UnauthorizedAccessException
-
-            Directory.CreateDirectory(folderSource);
-            Directory.CreateDirectory(folderDestination);
-
-            DirectorySecurity dirSecurity;
-
-            string user = (Environment.UserDomainName + @"\" + Environment.UserName).TrimStart('\\');
-
-            // ╔═════════════╦═════════════╦═══════════════════════════════╦════════════════════════╦══════════════════╦═══════════════════════╦═════════════╦═════════════╗
-            // ║             ║ folder only ║ folder, sub-folders and files ║ folder and sub-folders ║ folder and files ║ sub-folders and files ║ sub-folders ║    files    ║
-            // ╠═════════════╬═════════════╬═══════════════════════════════╬════════════════════════╬══════════════════╬═══════════════════════╬═════════════╬═════════════╣
-            // ║ Propagation ║ none        ║ none                          ║ none                   ║ none             ║ InheritOnly           ║ InheritOnly ║ InheritOnly ║
-            // ║ Inheritance ║ none        ║ Container|Object              ║ Container              ║ Object           ║ Container|Object      ║ Container   ║ Object      ║
-            // ╚═════════════╩═════════════╩═══════════════════════════════╩════════════════════════╩══════════════════╩═══════════════════════╩═════════════╩═════════════╝
-
-            var rule = new FileSystemAccessRule(user, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Deny);
-
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.UnauthorizedAccessException";
-            exception = false;
-
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-
-               FileInfo fileInfo = new FileInfo(fullPathSource);
-               using (StreamWriter sw = fileInfo.CreateText())
-                  sw.WriteLine("MoveTo-TestFile");
-
-               // Set DENY for current user.
-               dirSecurity = dirInfo.GetAccessControl();
-               dirSecurity.AddAccessRule(rule);
-               dirInfo.SetAccessControl(dirSecurity);
-
-               fileInfo.MoveTo(fullPathDestination);
-            }
-            catch (Exception ex)
-            {
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               string exceptionTypeName = ex.GetType().FullName;
-               if (exceptionTypeName.Equals(expectedException))
-               {
-                  exception = true;
-                  Console.WriteLine("\n\t[{0}]: [{1}]", exceptionTypeName, ex.Message.Replace(Environment.NewLine, "  "));
-               }
-               else
-                  Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", exceptionTypeName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            finally
-            {
-               // Remove DENY for current user.
-               dirSecurity = dirInfo.GetAccessControl();
-               dirSecurity.RemoveAccessRule(rule);
-               dirInfo.SetAccessControl(dirSecurity, AccessControlSections.Access);
-
-               Directory.Delete(tempPath, true, true);
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-
-            Console.WriteLine();
-
-            #endregion // UnauthorizedAccessException
-
-            #region FileNotFoundException
-
-            expectedLastError = (int)Win32Errors.ERROR_FILE_NOT_FOUND;
-            expectedException = "System.IO.FileNotFoundException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Move(isLocal ? fileSource : Path.LocalToUnc(fileSource), isLocal ? fileDestination : Path.LocalToUnc(fileDestination));
-            }
-            catch (FileNotFoundException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // FileNotFoundException
-
-            #region DirectoryNotFoundException
-
-            expectedLastError = (int)Win32Errors.ERROR_PATH_NOT_FOUND;
-            expectedException = "System.IO.DirectoryNotFoundException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Move(fullPathSource, fullPathDestination);
-            }
-            catch (DirectoryNotFoundException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // DirectoryNotFoundException
-
-            #region IOException #1
-
-            Directory.CreateDirectory(folderSource);
-            Directory.CreateDirectory(folderDestination);
-            using (File.Create(fullPathSource)) { }
-            using (File.Create(fullPathDestination)) { }
-
-            expectedLastError = (int)Win32Errors.ERROR_ALREADY_EXISTS;
-            expectedException = "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               File.Move(fullPathSource, fullPathDestination);
-            }
-            catch (AlreadyExistsException ex)
-            {
-               // win32Error is always 0
-               //var win32Error = new Win32Exception("", ex);
-               //Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-               Assert.IsTrue(ex.Message.StartsWith("(" + expectedLastError + ")"), string.Format("Expected Win32Exception error is: [{0}]", expectedLastError));
-
-               exception = true;
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            Directory.Delete(folderSource, true);
-            Directory.Delete(folderDestination, true);
-
-            #endregion // IOException #1
-
-            #region IOException #2
-
-            string folderfileName = null;
-
-            expectedLastError = (int)Win32Errors.ERROR_ACCESS_DENIED;
-            expectedException = "System.IO.IOException";
-            exception = false;
-            try
-            {
-               Console.WriteLine("\nCatch: [{0}]", expectedException);
-               foreach (string file in Directory.EnumerateFiles(path))
-               {
-                  string newFile = Path.Combine(tempPath, Path.GetFileName(file, true));
-                  folderfileName = newFile;
-
-                  // Trigger the Exception.
-                  Directory.CreateDirectory(folderfileName);
-
-                  // MoveOptions.None: overwrite existing.
-                  File.Move(file, folderfileName, MoveOptions.None);
-               }
-            }
-            catch (AlreadyExistsException ex)
-            {
-               var win32Error = new Win32Exception("", ex);
-               Assert.IsTrue(win32Error.NativeErrorCode == expectedLastError, string.Format("Expected Win32Exception error should be: [{0}], got: [{1}]", expectedLastError, win32Error.NativeErrorCode));
-
-               exception = true;
-               Directory.Delete(folderfileName);
-               Console.WriteLine("\n\t[{0}]: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            catch (Exception ex)
-            {
-               Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            }
-            Assert.IsTrue(exception, "[{0}] should have been caught.", expectedException);
-            Console.WriteLine();
-
-            #endregion // IOException #2
-
-            #region Move
-
-            #region Copy (Use as Move() source)
-
-            foreach (string file in Directory.EnumerateFiles(path))
-               File.Copy(file, Path.Combine(tempPath, Path.GetFileName(file, true)));
-
-            #endregion // Copy (Use as Move() source)
-
-            string movePath = Path.GetTempPath("File-Move-II-" + Path.GetRandomFileName());
-            if (!isLocal) movePath = Path.LocalToUnc(movePath);
-
-            Directory.CreateDirectory(movePath);
-
-            Console.WriteLine("\nInput Directory Path: [{0}]\n", tempPath);
-            int cnt = 0;
-            string readOnlySource = null;
-            string readOnlyDestination = null;
-
-            UnitTestConstants.StopWatcher(true);
-            foreach (string file in Directory.EnumerateFiles(tempPath))
-            {
-               string newFile = Path.Combine(movePath, Path.GetFileName(file, true));
-               File.Move(file, newFile);
-
-               // A read-only file triggers UnauthorizedAccessException when moving again.
-               if (cnt == 0)
-               {
-                  File.SetAttributes(newFile, FileAttributes.ReadOnly);
-                  readOnlySource = file;
-                  readOnlyDestination = newFile;
-               }
-
-               Console.WriteLine("\t#{0:000}\tMoved to: [{1}]", ++cnt, newFile);
-               Assert.IsTrue(File.Exists(newFile));
-            }
-            Console.WriteLine("\n\tTotal Size: [{0}]{1}", Utils.UnitSizeToText(Directory.GetProperties(movePath)["Size"]), UnitTestConstants.Reporter());
-            Console.WriteLine();
-
-            #endregion // Move
-
-            // Move again, use overwrite to prevent IOException: The destination file already exists.
-
-            #region Copy (Use as Move() source)
-
-            foreach (string file in Directory.EnumerateFiles(path))
-               File.Copy(file, Path.Combine(tempPath, Path.GetFileName(file, true)));
-
-            #endregion // Copy (Use as Move() source)
-
-            #region Remove Read-Only Attribute, Move Again
-
-            Console.WriteLine("\nRemove read-only attribute and move again.");
-
-            #region Preserve Timestamps
-
-            // Test preservation of timestamps.
-            int seed = (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime creationTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastAccessTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastWriteTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-
-            File.SetCreationTime(readOnlySource, creationTime);
-            File.SetLastAccessTime(readOnlySource, lastAccessTime);
-            File.SetLastWriteTime(readOnlySource, lastWriteTime);
-
-            #endregion Preserve Timestamps
-
-            UnitTestConstants.StopWatcher(true);
-
-            // 3rd parameter MoveOptions.ReplaceExisting: overwrite existing.
-            // File.Move() automatically preserves Timestamps.
-            File.Move(readOnlySource, readOnlyDestination, MoveOptions.ReplaceExisting);
-
-            Console.WriteLine("\tFile moved.{0}", UnitTestConstants.Reporter());
-
-            Assert.IsFalse(File.Exists(readOnlySource));
-            Assert.IsTrue(File.Exists(readOnlyDestination));
-
-            Assert.AreEqual(File.GetCreationTime(readOnlyDestination), creationTime, "File CreationTime should match.");
-            Assert.AreEqual(File.GetLastAccessTime(readOnlyDestination), lastAccessTime, "File LastAccessTime should match.");
-            Assert.AreEqual(File.GetLastWriteTime(readOnlyDestination), lastWriteTime, "File LastWriteTime should match.");
-            Console.WriteLine("\nTimestamps are transferred.");
-
-            Directory.Delete(movePath, true, true);
-            Assert.IsFalse(Directory.Exists(movePath), "Cleanup failed: Directory should have been removed.");
-
-            #endregion // Remove Read-Only Attribute, Move Again
-         }
-         finally
-         {
-            if (Directory.Exists(tempPath))
-            {
-               Directory.Delete(tempPath, true, true);
-               Assert.IsFalse(Directory.Exists(tempPath), "Cleanup failed: Directory should have been removed.");
-            }
-            Console.WriteLine();
-         }
-      }
-
-      #endregion // DumpMove
-
       #region DumpGetSetAttributes
 
       private void DumpGetSetAttributes(bool isLocal)
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string tmp = Path.Combine(Path.GetTempPath(), "File.SetAttributes()-" + Path.GetRandomFileName());
-         string tempPath = isLocal ? tmp : Path.LocalToUnc(tmp);
-         string sys32 = isLocal ? UnitTestConstants.SysRoot32 : Path.LocalToUnc(UnitTestConstants.SysRoot32);
+         var tmp = Path.Combine(Path.GetTempPath(), "File.SetAttributes()-" + Path.GetRandomFileName());
+         var tempPath = isLocal ? tmp : Path.LocalToUnc(tmp);
+         var sys32 = isLocal ? UnitTestConstants.SysRoot32 : Path.LocalToUnc(UnitTestConstants.SysRoot32);
 
          Console.WriteLine("\nInput Path: [{0}]", sys32);
 
          // Just enumerate and compare attributes in folder: C:\Windows\System32
-         foreach (string file in Directory.EnumerateFiles(sys32))
+         foreach (var file in Directory.EnumerateFiles(sys32))
          {
-            FileAttributes actual = File.GetAttributes(file);
-            FileAttributes expected = System.IO.File.GetAttributes(file);
+            var actual = File.GetAttributes(file);
+            var expected = System.IO.File.GetAttributes(file);
 
             Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
          }
@@ -1039,25 +133,25 @@ namespace AlphaFS.UnitTest
          // Create some folders and files.
          UnitTestConstants.CreateDirectoriesAndFiles(tempPath, 10, true);
 
-         FileAttributes apply = FileAttributes.Hidden | FileAttributes.Archive | FileAttributes.System | FileAttributes.ReadOnly;
+         var apply = FileAttributes.Hidden | FileAttributes.Archive | FileAttributes.System | FileAttributes.ReadOnly;
          Console.WriteLine("\nSetAttributes(): [{0}]", apply);
 
-         bool allOk = true;
-         int cnt = 0;
+         var allOk = true;
+         var cnt = 0;
          UnitTestConstants.StopWatcher(true);
-         foreach (string file in Directory.EnumerateFiles(tempPath))
+         foreach (var file in Directory.EnumerateFiles(tempPath))
          {
             try
             {
                File.SetAttributes(file, apply);
 
-               FileAttributes actual = File.GetAttributes(file);
-               FileAttributes expected = System.IO.File.GetAttributes(file);
+               var actual = File.GetAttributes(file);
+               var expected = System.IO.File.GetAttributes(file);
 
                Console.WriteLine("\n\t#{0:000}\tFile     : [{1}]\n\t\tAlphaFS  : [{2}]\n\t\tSystem.IO: [{3}]", ++cnt, file, expected, actual);
 
                if (cnt == 0)
-                  Assert.Inconclusive("Nothing was enumerated.");
+                  Assert.Inconclusive("Nothing was enumerated, but it was expected.");
 
                Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
             }
@@ -1078,19 +172,19 @@ namespace AlphaFS.UnitTest
          allOk = true;
          cnt = 0;
          UnitTestConstants.StopWatcher(true);
-         foreach (string file in Directory.EnumerateFiles(tempPath))
+         foreach (var file in Directory.EnumerateFiles(tempPath))
          {
             try
             {
                File.SetAttributes(file, apply);
 
-               FileAttributes actual = File.GetAttributes(file);
-               FileAttributes expected = System.IO.File.GetAttributes(file);
+               var actual = File.GetAttributes(file);
+               var expected = System.IO.File.GetAttributes(file);
 
                Console.WriteLine("\n\t#{0:000}\tFile     : [{1}]\n\t\tAlphaFS  : [{2}]\n\t\tSystem.IO: [{3}]", ++cnt, file, expected, actual);
 
                if (cnt == 0)
-                  Assert.Inconclusive("Nothing was enumerated.");
+                  Assert.Inconclusive("Nothing was enumerated, but it was expected.");
 
                Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
             }
@@ -1112,321 +206,30 @@ namespace AlphaFS.UnitTest
 
       #endregion // DumpGetSetAttributes
 
-      #region DumpSetXxxTimeXxx
-
-      private void DumpSetXxxTimeXxx(bool isLocal)
-      {
-         #region Setup
-
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string path = Path.GetTempPath("File.SetCreationTime()-" + Path.GetRandomFileName());
-         if (!isLocal) path = Path.LocalToUnc(path);
-         string symlinkPath = path + "-symlink";
-
-         Console.WriteLine("\nInput File Path: [{0}]\n", path);
-
-         using (File.Create(path)) { }
-         File.CreateSymbolicLink(symlinkPath, path, SymbolicLinkTarget.File);
-
-         var rnd = new Random();
-
-         #endregion // Setup
-
-         UnitTestConstants.StopWatcher(true);
-
-         #region SetCreationTimeXxx
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime creationTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         File.SetCreationTime(path, creationTime);
-         DateTime actual = File.GetCreationTime(path);
-         System.IO.File.SetCreationTime(path, creationTime);
-         DateTime expected = System.IO.File.GetCreationTime(path);
-         Console.WriteLine("\tSetCreationTime()     : [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetCreationTime(symlinkPath, creationTime.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetCreationTime(path), "SetCreationTime modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetCreationTime(symlinkPath);
-         Assert.AreEqual(expected, File.GetCreationTime(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(creationTime.AddDays(1), expected, "Time set != time read back");
-
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime creationTimeUtc = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59)).ToUniversalTime();
-         File.SetCreationTimeUtc(path, creationTimeUtc);
-         actual = File.GetCreationTimeUtc(path);
-         System.IO.File.SetCreationTimeUtc(path, creationTimeUtc);
-         expected = System.IO.File.GetCreationTimeUtc(path);
-         Console.WriteLine("\tSetCreationTimeUtc()  : [{0}]    System.IO: [{1}]\n", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetCreationTimeUtc(symlinkPath, creationTimeUtc.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetCreationTimeUtc(path), "SetCreationTimeUtc modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetCreationTimeUtc(symlinkPath);
-         Assert.AreEqual(expected, File.GetCreationTimeUtc(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(creationTimeUtc.AddDays(1), expected, "Time set != time read back");
-
-         #endregion // SetCreationTimeXxx
-
-         #region SetLastAccessTimeXxx
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime lastAccessTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         File.SetLastAccessTime(path, lastAccessTime);
-         actual = File.GetLastAccessTime(path);
-         System.IO.File.SetLastAccessTime(path, lastAccessTime);
-         expected = System.IO.File.GetLastAccessTime(path);
-         Console.WriteLine("\tSetLastAccessTime()   : [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetLastAccessTime(symlinkPath, lastAccessTime.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetLastAccessTime(path), "SetLastAccessTime modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetLastAccessTime(symlinkPath);
-         Assert.AreEqual(expected, File.GetLastAccessTime(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(lastAccessTime.AddDays(1), expected, "Time set != time read back");
-
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime lastAccessTimeUtc = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59)).ToUniversalTime();
-         File.SetLastAccessTimeUtc(path, lastAccessTimeUtc);
-         actual = File.GetLastAccessTimeUtc(path);
-         System.IO.File.SetLastAccessTimeUtc(path, lastAccessTimeUtc);
-         expected = System.IO.File.GetLastAccessTimeUtc(path);
-         Console.WriteLine("\tSetLastAccessTimeUtc(): [{0}]    System.IO: [{1}]\n", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetLastAccessTimeUtc(symlinkPath, lastAccessTimeUtc.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetLastAccessTimeUtc(path), "SetLastAccessTimeUtc modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetLastAccessTimeUtc(symlinkPath);
-         Assert.AreEqual(expected, File.GetLastAccessTimeUtc(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(lastAccessTimeUtc.AddDays(1), expected, "Time set != time read back");
-
-         #endregion // SetLastAccessTimeXxx
-
-         #region SetLastWriteTimeXxx
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime lastWriteTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         File.SetLastWriteTime(path, lastWriteTime);
-         actual = File.GetLastWriteTime(path);
-         System.IO.File.SetLastWriteTime(path, lastWriteTime);
-         expected = System.IO.File.GetLastWriteTime(path);
-         Console.WriteLine("\tSetLastWriteTime()    : [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetLastWriteTime(symlinkPath, lastWriteTime.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetLastWriteTime(path), "SetLastWriteTime modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetLastWriteTime(symlinkPath);
-         Assert.AreEqual(expected, File.GetLastWriteTime(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(lastWriteTime.AddDays(1), expected, "Time set != time read back");
-
-
-         //Thread.Sleep(new Random().Next(250, 500));
-         DateTime lastWriteTimeUtc = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59)).ToUniversalTime();
-         File.SetLastWriteTimeUtc(path, lastWriteTimeUtc);
-         actual = File.GetLastWriteTimeUtc(path);
-         System.IO.File.SetLastWriteTimeUtc(path, lastWriteTimeUtc);
-         expected = System.IO.File.GetLastWriteTimeUtc(path);
-         Console.WriteLine("\tSetLastWriteTimeUtc() : [{0}]    System.IO: [{1}]\n", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-         File.SetLastWriteTimeUtc(symlinkPath, lastWriteTimeUtc.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(expected, File.GetLastWriteTimeUtc(path), "SetLastWriteTimeUtc modify-reparse-point should not have altered the underlying file's timestamp");
-         expected = System.IO.File.GetLastWriteTimeUtc(symlinkPath);
-         Assert.AreEqual(expected, File.GetLastWriteTimeUtc(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(lastWriteTimeUtc.AddDays(1), expected, "Time set != time read back");
-
-         #endregion // SetLastWriteTimeXxx
-
-         File.Delete(symlinkPath);
-         Assert.IsFalse(File.Exists(symlinkPath), "Cleanup failed: Symlink should have been removed.");
-         File.Delete(path);
-         Assert.IsFalse(File.Exists(path), "Cleanup failed: File should have been removed.");
-         Console.WriteLine();
-      }
-
-      #endregion // DumpSetXxxTimeXxx
-
-      #region DumpSetTimestamps
-
-      private void DumpSetTimestamps(bool isLocal)
-      {
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string path = Path.Combine(Path.GetTempPath(), "File.SetTimestamps()-" + Path.GetRandomFileName());
-         if (!isLocal) path = Path.LocalToUnc(path);
-         string symlinkPath = path + "-symlink";
-         var rnd = new Random();
-
-         Console.WriteLine("\nInput Path: [{0}]", path);
-
-         using (File.Create(path)) { }
-         File.CreateSymbolicLink(symlinkPath, path, SymbolicLinkTarget.File);
-
-         DateTime creationTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         DateTime lastAccessTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         DateTime lastWriteTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-
-         Console.WriteLine("\n");
-         Console.WriteLine("\tCreationTime  : [{0} {1}]", creationTime.ToLongDateString(), creationTime.ToLongTimeString());
-         Console.WriteLine("\tLastAccessTime: [{0} {1}]", lastAccessTime.ToLongDateString(), lastAccessTime.ToLongTimeString());
-         Console.WriteLine("\tLastWriteTime : [{0} {1}]", lastWriteTime.ToLongDateString(), lastWriteTime.ToLongTimeString());
-         Console.WriteLine("\n");
-
-         File.SetTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
-
-         DateTime actual = File.GetCreationTime(path);
-         DateTime expected = System.IO.File.GetCreationTime(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         actual = File.GetLastAccessTime(path);
-         expected = System.IO.File.GetLastAccessTime(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         actual = File.GetLastWriteTime(path);
-         expected = System.IO.File.GetLastWriteTime(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         File.SetTimestamps(symlinkPath, creationTime.AddDays(1), lastAccessTime.AddDays(1), lastWriteTime.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(System.IO.File.GetCreationTime(symlinkPath), File.GetCreationTime(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(System.IO.File.GetLastAccessTime(symlinkPath), File.GetLastAccessTime(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(System.IO.File.GetLastWriteTime(symlinkPath), File.GetLastWriteTime(symlinkPath), "AlphaFS != System.IO");
-
-
-         creationTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         lastAccessTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-         lastWriteTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
-
-         Console.WriteLine("\n");
-         Console.WriteLine("\tCreationTimeUtc  : [{0} {1}]", creationTime.ToLongDateString(), creationTime.ToLongTimeString());
-         Console.WriteLine("\tLastAccessTimeUtc: [{0} {1}]", lastAccessTime.ToLongDateString(), lastAccessTime.ToLongTimeString());
-         Console.WriteLine("\tLastWriteTimeUtc : [{0} {1}]", lastWriteTime.ToLongDateString(), lastWriteTime.ToLongTimeString());
-         Console.WriteLine("\n");
-
-         File.SetTimestampsUtc(path, creationTime, lastAccessTime, lastWriteTime);
-
-         actual = File.GetCreationTimeUtc(path);
-         expected = System.IO.File.GetCreationTimeUtc(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         actual = File.GetLastAccessTimeUtc(path);
-         expected = System.IO.File.GetLastAccessTimeUtc(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         actual = File.GetLastWriteTimeUtc(path);
-         expected = System.IO.File.GetLastWriteTimeUtc(path);
-         Console.WriteLine("\t\tAlphaFS: [{0}]    System.IO: [{1}]", actual, expected);
-         Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
-
-         File.SetTimestampsUtc(symlinkPath, creationTime.AddDays(1), lastAccessTime.AddDays(1), lastWriteTime.AddDays(1), true, PathFormat.RelativePath);
-         Assert.AreEqual(System.IO.File.GetCreationTimeUtc(symlinkPath), File.GetCreationTimeUtc(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(System.IO.File.GetLastAccessTimeUtc(symlinkPath), File.GetLastAccessTimeUtc(symlinkPath), "AlphaFS != System.IO");
-         Assert.AreEqual(System.IO.File.GetLastWriteTimeUtc(symlinkPath), File.GetLastWriteTimeUtc(symlinkPath), "AlphaFS != System.IO");
-
-         File.Delete(symlinkPath);
-         Assert.IsFalse(File.Exists(symlinkPath));
-         File.Delete(path);
-         Assert.IsFalse(File.Exists(path));
-
-         Console.WriteLine("\n");
-      }
-
-      #endregion // DumpSetTimestamps
-
-      #region DumpTransferTimestamps
-
-      private void DumpTransferTimestamps(bool isLocal)
-      {
-         Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string path = Path.Combine(Path.GetTempPath(), "File.TransferTimestamps()-" + Path.GetRandomFileName());
-         string path2 = Path.Combine(Path.GetTempPath(), "File.TransferTimestamps()-" + Path.GetRandomFileName());
-
-         if (!isLocal)
-         {
-            path = Path.LocalToUnc(path);
-            path2 = Path.LocalToUnc(path2);
-         }
-
-         Console.WriteLine("\nInput Path1: [{0}]", path);
-         Console.WriteLine("\nInput Path2: [{0}]", path2);
-
-         using (File.Create(path)) { }
-         using (File.Create(path2)) { }
-
-         try
-         {
-            Thread.Sleep(new Random().Next(250, 500));
-            int seed = (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime creationTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-
-            Thread.Sleep(new Random().Next(250, 500));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastAccessTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-
-            Thread.Sleep(new Random().Next(250, 500));
-            seed += (int)DateTime.Now.Ticks & 0x0000FFFF;
-            DateTime lastWriteTime = new DateTime(new Random(seed).Next(1971, 2071), new Random(seed).Next(1, 12), new Random(seed).Next(1, 28), new Random(seed).Next(0, 23), new Random(seed).Next(0, 59), new Random(seed).Next(0, 59));
-
-            File.SetTimestamps(path, creationTime, lastAccessTime, lastWriteTime);
-
-            Console.WriteLine("\n\tPath1 dates and times:");
-            Console.WriteLine("\t\tCreationTime  : [{0} {1}]", creationTime.ToLongDateString(), creationTime.ToLongTimeString());
-            Console.WriteLine("\t\tLastAccessTime: [{0} {1}]", lastAccessTime.ToLongDateString(), lastAccessTime.ToLongTimeString());
-            Console.WriteLine("\t\tLastWriteTime : [{0} {1}]", lastWriteTime.ToLongDateString(), lastWriteTime.ToLongTimeString());
-
-            Console.WriteLine("\n\tPath2 current dates and times:");
-            Console.WriteLine("\t\tCreationTime  : [{0} {1}]", File.GetCreationTime(path2).ToLongDateString(), File.GetCreationTime(path2).ToLongTimeString());
-            Console.WriteLine("\t\tLastAccessTime: [{0} {1}]", File.GetLastAccessTime(path2).ToLongDateString(), File.GetLastAccessTime(path2).ToLongTimeString());
-            Console.WriteLine("\t\tLastWriteTime : [{0} {1}]", File.GetLastWriteTime(path2).ToLongDateString(), File.GetLastWriteTime(path2).ToLongTimeString());
-
-            File.TransferTimestamps(path, path2);
-
-            Console.WriteLine("\n\tPath2 dates and times after TransferTimestamps():");
-            Console.WriteLine("\t\tCreationTime  : [{0} {1}]", File.GetCreationTime(path2).ToLongDateString(), File.GetCreationTime(path2).ToLongTimeString());
-            Console.WriteLine("\t\tLastAccessTime: [{0} {1}]", File.GetLastAccessTime(path2).ToLongDateString(), File.GetLastAccessTime(path2).ToLongTimeString());
-            Console.WriteLine("\t\tLastWriteTime : [{0} {1}]", File.GetLastWriteTime(path2).ToLongDateString(), File.GetLastWriteTime(path2).ToLongTimeString());
-
-            Assert.AreEqual(File.GetCreationTime(path), File.GetCreationTime(path2));
-            Assert.AreEqual(File.GetLastAccessTime(path), File.GetLastAccessTime(path2));
-            Assert.AreEqual(File.GetLastWriteTime(path), File.GetLastWriteTime(path2));
-         }
-         finally
-         {
-            File.Delete(path);
-            File.Delete(path2);
-
-            Assert.IsFalse(File.Exists(path), "Cleanup failed: File should have been removed.");
-            Assert.IsFalse(File.Exists(path), "Cleanup failed: File should have been removed.");
-         }
-
-         Console.WriteLine("\n");
-      }
-
-      #endregion // DumpTransferTimestamps
-
       #region DumpReadAllLines
 
       private void DumpReadAllLines(bool isLocal)
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string tmp = Path.Combine(Path.GetTempPath(), "File.SetAttributes()-" + Path.GetRandomFileName());
-         string tempPath = isLocal ? tmp : Path.LocalToUnc(tmp);
+         var tmp = Path.Combine(Path.GetTempPath(), "File.SetAttributes()-" + Path.GetRandomFileName());
+         var tempPath = isLocal ? tmp : Path.LocalToUnc(tmp);
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
          string[] createText = { "Hello", "And", "Welcome" };
          File.WriteAllLines(tempFile, createText);
 
          Console.WriteLine("\nFile.ReadAllLines()\n");
-         string[] readText = File.ReadAllLines(tempFile);
-         foreach (string s in readText)
+         var readText = File.ReadAllLines(tempFile);
+         foreach (var s in readText)
          {
             Console.WriteLine("\t{0}", s);
             Assert.IsTrue(createText.Contains(s));
          }
 
          Console.WriteLine("\nFile.ReadLines()\n");
-         foreach (string s in File.ReadLines((tempFile)))
+         foreach (var s in File.ReadLines((tempFile)))
          {
             Console.WriteLine("\t{0}", s);
             Assert.IsTrue(createText.Contains(s));
@@ -1443,12 +246,12 @@ namespace AlphaFS.UnitTest
       private void DumpReadWriteAllBytes(bool isLocal)
       {
          Console.WriteLine("\n=== TEST {0} ===", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         string tempPath = Path.GetTempPath("File.ReadWriteAllBytes()-" + Path.GetRandomFileName());
+         var tempPath = Path.GetTempPath("File.ReadWriteAllBytes()-" + Path.GetRandomFileName());
          if (!isLocal) { tempPath = Path.LocalToUnc(tempPath); }
 
-         int size = 10000;
-         byte[] text = Encoding.UTF8.GetBytes(new string('X', size));
-         bool allOk = true;
+         var size = 10000;
+         var text = Encoding.UTF8.GetBytes(new string('X', size));
+         var allOk = true;
 
          try
          {
@@ -1461,7 +264,7 @@ namespace AlphaFS.UnitTest
             Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
          }
          Assert.IsTrue(File.Exists(tempPath), "File.WriteAllBytes(): File was not created.");
-         long fileSize = File.GetSize(tempPath);
+         var fileSize = File.GetSize(tempPath);
          Assert.AreEqual(size, fileSize);
          Assert.IsTrue(allOk);
 
@@ -1494,306 +297,6 @@ namespace AlphaFS.UnitTest
       }
 
       #endregion // DumpReadWriteAllBytes
-
-      #region Create file with trailing dot/space
-
-      private void DumpFileTrailingDotSpace(bool isLocal)
-      {
-         Console.WriteLine("\n=== TEST {0} ===\n", isLocal ? UnitTestConstants.Local : UnitTestConstants.Network);
-         const string characterDot = ".";
-         const string characterSpace = " ";
-         string random = Path.GetRandomFileName();
-         string tempPathDot = Path.GetTempPath("File.Create()-" + random + "-file-with-dot-" + characterDot);
-         string tempPathSpace = Path.GetTempPath("File.Create()-" + random + "-file-with-space-" + characterSpace);
-         if (!isLocal) tempPathDot = Path.LocalToUnc(tempPathDot);
-         if (!isLocal) tempPathSpace = Path.LocalToUnc(tempPathSpace);
-
-         Console.WriteLine("Input File Path (with dot)  : [{0}]", tempPathDot);
-         Console.WriteLine("Input File Path (with space): [{0}]", tempPathSpace);
-
-         Assert.IsTrue(tempPathDot.EndsWith(characterDot), "Path should have a trailing dot.");
-         Assert.IsTrue(tempPathSpace.EndsWith(characterSpace), "Path should have a trailing space.");
-
-         #region Path.GetFullPath(), Path Normalization
-
-         string sysIo = System.IO.Path.GetFullPath(tempPathDot);
-         Assert.IsFalse(sysIo.EndsWith(characterDot), "Path should not have a trailing dot.");
-
-         sysIo = System.IO.Path.GetFullPath(tempPathSpace);
-         Assert.IsFalse(sysIo.EndsWith(characterSpace), "Path should not have a trailing space.");
-
-
-         string alphaFs = Path.GetFullPath(tempPathDot);
-         Assert.IsFalse(alphaFs.EndsWith(characterDot), "Path should not have a trailing dot.");
-
-         alphaFs = Path.GetFullPath(tempPathSpace);
-         Assert.IsFalse(alphaFs.EndsWith(characterSpace), "Path should not have a trailing space.");
-
-
-         Assert.AreEqual(sysIo, alphaFs, "Paths should be the same.");
-
-         #endregion // Path.GetFullPath(), Path Normalization
-
-         #region Path.GetLongPath(), No Path Normalization
-
-         alphaFs = Path.GetLongPath(tempPathDot);
-         Assert.IsTrue(alphaFs.EndsWith(characterDot), "Path should have a trailing dot.");
-
-         alphaFs = Path.GetLongPath(tempPathSpace);
-         Assert.IsTrue(alphaFs.EndsWith(characterSpace), "Path should have a trailing space.");
-
-         Assert.AreNotEqual(alphaFs, sysIo, "Paths should not be the same.");
-
-         #endregion // Path.GetLongPath(), No Path Normalization
-
-         #region Path.GetRegularPath(), No Path Normalization
-
-         alphaFs = Path.GetRegularPath(tempPathDot);
-         Assert.IsTrue(alphaFs.EndsWith(characterDot), "Path should have a trailing dot.");
-
-         alphaFs = Path.GetRegularPath(tempPathSpace);
-         Assert.IsTrue(alphaFs.EndsWith(characterSpace), "Path should have a trailing space.");
-
-         Assert.AreNotEqual(alphaFs, sysIo, "Paths should not be the same.");
-
-         #endregion // Path.GetRegularPath(), No Path Normalization
-
-         Console.WriteLine();
-
-         #region File() Class
-
-         UnitTestConstants.StopWatcher(true);
-
-         #region TrailingDot
-
-         #region System.IO
-
-         // tempPathDot contains a trailing dot but gets stripped on path normalization.
-         // System.IO handles the file without the trailing dot. Therefore, the file exists.
-         // AlphaFS has the same behaviour as .NET for default methods.
-
-         using (FileStream fs = System.IO.File.Create(tempPathDot)) { fs.WriteByte(1); }
-         Assert.IsTrue(System.IO.File.Exists(tempPathDot), "File should exist.");
-         Assert.IsTrue(File.Exists(tempPathDot), "File should be visible to AlphaFS.");
-         Assert.IsFalse(File.Exists(tempPathDot, PathFormat.FullPath), "File should be invisible to AlphaFS.");
-
-         using (StreamWriter sw = System.IO.File.AppendText(tempPathDot))
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         string lineSysIo;
-         using (StreamReader sr = System.IO.File.OpenText(tempPathDot))
-            lineSysIo = sr.ReadToEnd();
-
-         System.IO.File.Delete(tempPathDot);
-         Assert.IsFalse(System.IO.File.Exists(tempPathDot), "File should not exist.");
-
-         #endregion // System.IO
-
-         #region AlphaFS
-
-         using (FileStream fs = File.Create(tempPathDot, PathFormat.FullPath)) { fs.WriteByte(1); } // Create file without path normalization.
-         Assert.IsTrue(File.Exists(tempPathDot, PathFormat.FullPath), "File should exist and visible to AlphaFS.");
-         Assert.IsFalse(System.IO.File.Exists(tempPathDot), "File should be invisible to System.IO.");
-
-         using (StreamWriter sw = File.AppendText(tempPathDot, PathFormat.FullPath))
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         string lineAlphaFs;
-         using (StreamReader sr = File.OpenText(tempPathDot, PathFormat.FullPath))
-            lineAlphaFs = sr.ReadToEnd();
-
-         File.Delete(tempPathDot, true, PathFormat.FullPath); // Delete file without path normalization.
-         Assert.IsFalse(File.Exists(tempPathDot, PathFormat.FullPath), "File should not exist.");
-
-         #endregion // AlphaFS
-
-         Assert.AreEqual(lineSysIo, lineAlphaFs);
-
-         #endregion // TrailingDot
-
-         #region TrailingSpace
-
-         #region System.IO
-
-         // tempPathSpace contains a trailing space but gets stripped on path normalization.
-         // System.IO handles the file without the trailing space. Therefore, the file exists.
-         // AlphaFS has the same behaviour as .NET for default methods.
-
-         using (FileStream fs = System.IO.File.Create(tempPathSpace)) { fs.WriteByte(1); }
-         Assert.IsTrue(System.IO.File.Exists(tempPathSpace), "File should exist.");
-         Assert.IsTrue(File.Exists(tempPathSpace), "File should be visible to AlphaFS.");
-         Assert.IsFalse(File.Exists(tempPathSpace, PathFormat.FullPath), "File should be invisible to AlphaFS.");
-
-         using (StreamWriter sw = System.IO.File.AppendText(tempPathSpace))
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = System.IO.File.OpenText(tempPathSpace))
-            lineSysIo = sr.ReadToEnd();
-
-         System.IO.File.Delete(tempPathSpace);
-         Assert.IsFalse(System.IO.File.Exists(tempPathSpace), "File should not exist.");
-
-         #endregion // System.IO
-
-         #region AlphaFS
-
-         using (FileStream fs = File.Create(tempPathSpace, PathFormat.FullPath)) { fs.WriteByte(1); } // Create file without path normalization.
-         Assert.IsTrue(File.Exists(tempPathSpace, PathFormat.FullPath), "File should exist and visible to AlphaFS.");
-         Assert.IsFalse(System.IO.File.Exists(tempPathSpace), "File should be invisible to System.IO.");
-
-         using (StreamWriter sw = File.AppendText(tempPathSpace, PathFormat.FullPath))
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = File.OpenText(tempPathSpace, PathFormat.FullPath))
-            lineAlphaFs = sr.ReadToEnd();
-
-         File.Delete(tempPathSpace, true, PathFormat.FullPath); // Delete file without path normalization.
-         Assert.IsFalse(File.Exists(tempPathSpace, PathFormat.FullPath), "File should not exist.");
-
-         #endregion // AlphaFS
-
-         Assert.AreEqual(lineSysIo, lineAlphaFs);
-
-         #endregion // TrailingSpace
-
-         Console.WriteLine("\tClass File(){0}", UnitTestConstants.Reporter());
-
-         #endregion // File() Class
-
-         #region FileInfo() Class
-
-         UnitTestConstants.StopWatcher(true);
-
-         #region TrailingDot
-
-         #region System.IO
-
-         // tempPathDot contains a trailing dot but gets stripped on path normalization.
-         // System.IO handles the file without the trailing dot. Therefore, the file exists.
-         // AlphaFS has the same behaviour as .NET for default methods.
-
-         System.IO.FileInfo sysIoFi = new System.IO.FileInfo(tempPathDot);
-         Assert.IsTrue(sysIoFi.Name.EndsWith(characterDot), "Path should have a trailing dot.");
-
-         using (FileStream fs = sysIoFi.Create())
-         {
-            fs.WriteByte(100);
-
-            Assert.IsTrue(sysIoFi.Exists, "File should exist.");
-            Assert.IsTrue(File.Exists(tempPathDot), "File should be visible to AlphaFS.");
-            Assert.IsFalse(File.Exists(tempPathDot, PathFormat.FullPath), "File should be invisible to AlphaFS.");
-         }
-
-         using (StreamWriter sw = sysIoFi.AppendText())
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = System.IO.File.OpenText(tempPathDot))
-            lineSysIo = sr.ReadToEnd();
-
-         sysIoFi.Delete();
-         Assert.IsFalse(System.IO.File.Exists(tempPathDot), "File should not exist.");
-
-         #endregion // System.IO
-
-         #region AlphaFS
-
-         FileInfo alphaFsFi = new FileInfo(tempPathDot, PathFormat.FullPath);
-         Assert.IsTrue(alphaFsFi.Name.EndsWith(characterDot), "Path should have a trailing dot.");
-
-         using (FileStream fs = alphaFsFi.Create())
-         {
-            fs.WriteByte(100);
-
-            Assert.IsTrue(alphaFsFi.Exists, "File should exist.");
-            Assert.IsTrue(File.Exists(tempPathDot, PathFormat.FullPath), "File should be visible to AlphaFS.");
-            Assert.IsFalse(File.Exists(tempPathDot), "File should be invisible to AlphaFS.");
-         }
-
-         using (StreamWriter sw = alphaFsFi.AppendText())
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = File.OpenText(tempPathDot, PathFormat.FullPath))
-            lineAlphaFs = sr.ReadToEnd();
-
-         alphaFsFi.Delete();
-         alphaFsFi.Refresh(); // Must Refresh() to get actual state.
-         Assert.IsFalse(File.Exists(tempPathDot, PathFormat.FullPath), "File should not exist.");
-
-         #endregion // AlphaFS
-
-         Assert.AreEqual(lineSysIo, lineAlphaFs);
-
-         #endregion // TrailingDot
-
-         #region TrailingSpace
-
-         #region System.IO
-
-         // tempPathSpace contains a trailing space but gets stripped on path normalization.
-         // System.IO handles the file without the trailing space. Therefore, the file exists.
-         // AlphaFS has the same behaviour as .NET for default methods.
-
-         sysIoFi = new System.IO.FileInfo(tempPathSpace);
-         Assert.IsTrue(sysIoFi.Name.EndsWith(characterSpace), "Path should have a trailing space.");
-
-         using (FileStream fs = sysIoFi.Create())
-         {
-            fs.WriteByte(100);
-
-            Assert.IsTrue(sysIoFi.Exists, "File should exist.");
-            Assert.IsTrue(File.Exists(tempPathSpace), "File should be visible to AlphaFS.");
-            Assert.IsFalse(File.Exists(tempPathSpace, PathFormat.FullPath), "File should be invisible to AlphaFS.");
-         }
-
-         using (StreamWriter sw = sysIoFi.AppendText())
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = System.IO.File.OpenText(tempPathSpace))
-            lineSysIo = sr.ReadToEnd();
-
-         sysIoFi.Delete();
-         Assert.IsFalse(System.IO.File.Exists(tempPathSpace), "File should not exist.");
-
-         #endregion // System.IO
-
-         #region AlphaFS
-
-         alphaFsFi = new FileInfo(tempPathSpace, PathFormat.FullPath);
-         Assert.IsTrue(alphaFsFi.Name.EndsWith(characterSpace), "Path should have a trailing space.");
-
-         using (FileStream fs = alphaFsFi.Create())
-         {
-            fs.WriteByte(100);
-
-            Assert.IsTrue(alphaFsFi.Exists, "File should exist.");
-            Assert.IsTrue(File.Exists(tempPathSpace, PathFormat.FullPath), "File should be visible to AlphaFS.");
-            Assert.IsFalse(File.Exists(tempPathSpace), "File should be invisible to AlphaFS.");
-         }
-
-         using (StreamWriter sw = alphaFsFi.AppendText())
-            sw.WriteLine(UnitTestConstants.TextHelloWorld);
-
-         using (StreamReader sr = File.OpenText(tempPathSpace, PathFormat.FullPath))
-            lineAlphaFs = sr.ReadToEnd();
-
-         alphaFsFi.Delete();
-         alphaFsFi.Refresh(); // Must Refresh() to get actual state.
-         Assert.IsFalse(File.Exists(tempPathSpace, PathFormat.FullPath), "File should not exist.");
-
-         #endregion // AlphaFS
-
-         Assert.AreEqual(lineSysIo, lineAlphaFs);
-
-         #endregion // TrailingSpace
-
-         Console.WriteLine("\tClass FileInfo(){0}", UnitTestConstants.Reporter());
-
-         #endregion // FileInfo() Class
-
-         Console.WriteLine();
-      }
-
-      #endregion // Create file with trailing dot/space
       
       #endregion // Unit Tests
 
@@ -1802,7 +305,7 @@ namespace AlphaFS.UnitTest
       #region AppendAllLines
 
       [TestMethod]
-      public void AppendAllLines()
+      public void File_AppendAllLines()
       {
          Console.WriteLine("File.AppendAllLines()");
 
@@ -1811,7 +314,7 @@ namespace AlphaFS.UnitTest
       }
 
       [TestMethod]
-      public void AppendAllLinesThenReadAllLinesShouldReturnSameCollection()
+      public void File_AppendAllLinesThenReadAllLinesShouldReturnSameCollection()
       {
          var file = Path.GetTempFileName();
          var sample = new []{ "line one", "line two" };
@@ -1832,23 +335,23 @@ namespace AlphaFS.UnitTest
       #region AppendAllText
 
       [TestMethod]
-      public void AppendAllText()
+      public void File_AppendAllText()
       {
          Console.WriteLine("File.AppendAllText()");
          Console.WriteLine("\n\tDefault AlphaFS Encoding: [{0}]", NativeMethods.DefaultFileEncoding.EncodingName);
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
-         string allLines = UnitTestConstants.TextHelloWorld;
+         var allLines = UnitTestConstants.TextHelloWorld;
 
          // Create real UTF-8 file.
          File.AppendAllText(tempFile, allLines, NativeMethods.DefaultFileEncoding);
 
          // Read filestream contents.
-         using (StreamReader streamRead = File.OpenText(tempFile))
+         using (var streamRead = File.OpenText(tempFile))
          {
-            string line = streamRead.ReadToEnd();
+            var line = streamRead.ReadToEnd();
 
             Console.WriteLine("\n\tCreated: [{0}] filestream: [{1}]\n\n\tAppendAllText content:\n{2}", streamRead.CurrentEncoding.EncodingName, tempFile, line);
 
@@ -1862,9 +365,9 @@ namespace AlphaFS.UnitTest
          File.AppendAllText(tempFile, allLines);
 
          // Read filestream contents.
-         using (StreamReader streamRead = File.OpenText(tempFile))
+         using (var streamRead = File.OpenText(tempFile))
          {
-            string line = streamRead.ReadToEnd();
+            var line = streamRead.ReadToEnd();
 
             Console.WriteLine("\tAppendAllText content:\n{0}", line);
 
@@ -1882,14 +385,14 @@ namespace AlphaFS.UnitTest
       #region AppendText
 
       [TestMethod]
-      public void AppendText()
+      public void File_AppendText()
       {
          Console.WriteLine("File.AppendText()");
 
-         string utf8 = NativeMethods.DefaultFileEncoding.BodyName.ToUpperInvariant();
+         var utf8 = NativeMethods.DefaultFileEncoding.BodyName.ToUpperInvariant();
          string line;
-         string matchLine = string.Empty;
-         string tempFile = Path.GetTempFileName();
+         var matchLine = string.Empty;
+         var tempFile = Path.GetTempFileName();
 
          StreamReader streamRead;
          StreamWriter streamWrite;
@@ -1922,7 +425,7 @@ namespace AlphaFS.UnitTest
          // Append text as UTF-8, default.
          using (streamWrite = File.AppendText(tempFile))
          {
-            streamWrite.Write(UnitTestConstants.TextAppend);
+            streamWrite.Write(UnitTestConstants.TextGoodbyeWorld);
          }
 
          // Read filestream contents.
@@ -1930,7 +433,7 @@ namespace AlphaFS.UnitTest
          {
             while ((line = streamRead.ReadLine()) != null)
             {
-               Console.WriteLine("\n AppendText() as [{0}]\n  Appended: [{1}]\n  Content : [{2}]", utf8, UnitTestConstants.TextAppend, line);
+               Console.WriteLine("\n AppendText() as [{0}]\n  Appended: [{1}]\n  Content : [{2}]", utf8, UnitTestConstants.TextGoodbyeWorld, line);
             }
          }
 
@@ -1946,12 +449,12 @@ namespace AlphaFS.UnitTest
          {
             while ((line = streamRead.ReadLine()) != null)
             {
-               Console.WriteLine("\n AppendText() as [{0}]\n  Appended: [{1}]\n  Content : [{2}]", utf8, UnitTestConstants.TextAppend, line);
+               Console.WriteLine("\n AppendText() as [{0}]\n  Appended: [{1}]\n  Content : [{2}]", utf8, UnitTestConstants.TextGoodbyeWorld, line);
                matchLine = line; // Catch the last line.
             }
          }
 
-         Assert.IsTrue(matchLine.Equals(UnitTestConstants.TextHelloWorld + UnitTestConstants.TextAppend + UnitTestConstants.TextUnicode, StringComparison.OrdinalIgnoreCase));
+         Assert.IsTrue(matchLine.Equals(UnitTestConstants.TextHelloWorld + UnitTestConstants.TextGoodbyeWorld + UnitTestConstants.TextUnicode, StringComparison.OrdinalIgnoreCase));
 
          File.Delete(tempFile, true);
          Assert.IsFalse(File.Exists(tempFile), "Cleanup failed: File should have been removed.");
@@ -1961,67 +464,29 @@ namespace AlphaFS.UnitTest
 
       #endregion // AppendText
 
-      #region Copy
-
-      [TestMethod]
-      public void Copy()
-      {
-         Console.WriteLine("File.Copy()");
-
-         DumpCopy(true);
-         DumpCopy(false);
-      }
-
-      #endregion // Copy
-
-      #region CreateText
-
-      [TestMethod]
-      public void CreateText()
-      {
-         Console.WriteLine("File.CreateText()");
-
-         AppendText();
-      }
-
-      #endregion // CreateText
-
-      #region Delete
-
-      [TestMethod]
-      public void Delete()
-      {
-         Console.WriteLine("File.Delete()");
-
-         TestDelete(true);
-         TestDelete(false);
-      }
-
-      #endregion // Delete
-
       #region Encrypt
 
       [TestMethod]
-      public void Encrypt()
+      public void File_Encrypt()
       {
          Console.WriteLine("File.Encrypt()");
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
          // Append text as UTF-8, default.
          File.AppendAllText(tempFile, UnitTestConstants.TextHelloWorld);
 
-         string utf8 = NativeMethods.DefaultFileEncoding.BodyName.ToUpperInvariant();
-         string readText8 = File.ReadAllText(tempFile);
-         FileAttributes actual = File.GetAttributes(tempFile);
-         FileEncryptionStatus encryptionStatus = File.GetEncryptionStatus(tempFile);
+         var utf8 = NativeMethods.DefaultFileEncoding.BodyName.ToUpperInvariant();
+         var readText8 = File.ReadAllText(tempFile);
+         var actual = File.GetAttributes(tempFile);
+         var encryptionStatus = File.GetEncryptionStatus(tempFile);
          Console.WriteLine("\n\tCreated {0} file: [{1}]", utf8, tempFile);
          Console.WriteLine("\tContent: [{0}]", readText8);
          Console.WriteLine("\n\tFile.GetAttributes(): [{0}]", actual);
          Console.WriteLine("\tEncryption status   : [{0}]", encryptionStatus);
 
-         bool encryptOk = false;
+         var encryptOk = false;
          try
          {
             File.Encrypt(tempFile);
@@ -2037,7 +502,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\tFile.GetAttributes()           : [{0}]", actual);
          Console.WriteLine("\tEncryption status              : [{0}]", encryptionStatus);
 
-         bool decryptOk = false;
+         var decryptOk = false;
          try
          {
             File.Decrypt(tempFile);
@@ -2048,7 +513,7 @@ namespace AlphaFS.UnitTest
          {
             Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
          }
-         FileEncryptionStatus decryptionStatus = File.GetEncryptionStatus(tempFile);
+         var decryptionStatus = File.GetEncryptionStatus(tempFile);
          Console.WriteLine("\n\tFile.Decrypt() (Should be True): [{0}]:", decryptOk);
          Console.WriteLine("\tFile.GetAttributes()           : [{0}]", actual);
          Console.WriteLine("\tDecryption status              : [{0}]", decryptionStatus);
@@ -2067,7 +532,7 @@ namespace AlphaFS.UnitTest
       #region GetAttributes
 
       [TestMethod]
-      public void GetAttributes()
+      public void File_GetAttributes()
       {
          Console.WriteLine("File.GetAttributes()");
 
@@ -2077,65 +542,10 @@ namespace AlphaFS.UnitTest
 
       #endregion // GetAttributes
 
-
-      #region Move
-
-      [TestMethod]
-      public void Move()
-      {
-         Console.WriteLine("File.Move()");
-
-         DumpMove(true);
-         DumpMove(false);
-      }
-
-      #endregion // Move
-
-      #region OpenWrite
-
-      [TestMethod]
-      public void OpenWrite()
-      {
-         Console.WriteLine("File.OpenWrite()\n");
-
-         string path = Path.GetTempPath("File.OpenWrite()-" + Path.GetRandomFileName());
-
-         // Open the stream and write to it.
-         using (FileStream fs = File.OpenWrite(path))
-         {
-            byte[] info = new UTF8Encoding(true).GetBytes("This is to test the OpenWrite method.");
-
-            // Add some information to the file.
-            fs.Write(info, 0, info.Length);
-         }
-
-         bool fileExists = File.Exists(path);
-
-
-         // Open the stream and read it back.
-         using (FileStream fs = File.OpenRead(path))
-         {
-            byte[] b = new byte[1024];
-            UTF8Encoding temp = new UTF8Encoding(true);
-
-            while (fs.Read(b, 0, b.Length) > 0)
-            {
-               Console.WriteLine(temp.GetString(b));
-            }
-         }
-
-         File.Delete(path, true);
-         Assert.IsFalse(File.Exists(path), "Cleanup failed: File should have been removed.");
-
-         Assert.IsTrue(fileExists);
-      }
-
-      #endregion // OpenWrite
-
       #region ReadAllBytes
 
       [TestMethod]
-      public void ReadAllBytes()
+      public void File_ReadAllBytes()
       {
          Console.WriteLine("File.ReadAllBytes()");
 
@@ -2148,7 +558,7 @@ namespace AlphaFS.UnitTest
       #region ReadAllLines
 
       [TestMethod]
-      public void ReadAllLines()
+      public void File_ReadAllLines()
       {
          Console.WriteLine("File.ReadAllLines()");
 
@@ -2161,18 +571,18 @@ namespace AlphaFS.UnitTest
       #region ReadAllText
 
       [TestMethod]
-      public void ReadAllText()
+      public void File_ReadAllText()
       {
          Console.WriteLine("File.ReadAllText()\n");
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
          string[] createText = { "Hello", "And", "Welcome" };
          File.WriteAllLines(tempFile, createText);
 
          // Open the file to read from. 
-         string textRead = File.ReadAllText(tempFile);
+         var textRead = File.ReadAllText(tempFile);
          Console.WriteLine(textRead);
 
          File.Delete(tempFile, true);
@@ -2184,113 +594,23 @@ namespace AlphaFS.UnitTest
       #region ReadLines
 
       [TestMethod]
-      public void ReadLines()
+      public void File_ReadLines()
       {
          Console.WriteLine("File.ReadLines()");
 
-         ReadAllLines();
+         File_ReadAllLines();
       }
 
       #endregion // ReadLines
 
-      #region SetAccessControl
-
-      [TestMethod]
-      public void SetAccessControl()
-      {
-         Console.WriteLine("File.SetAccessControl()");
-
-         if (!UnitTestConstants.IsAdmin())
-             Assert.Inconclusive();
-
-         string path = UnitTestConstants.SysDrive + @"\AlphaFile-" + Path.GetRandomFileName();
-         string pathAlpha = path;
-
-         Console.WriteLine("\n\tFile: [{0}]", path);
-
-         try
-         {
-            using (File.Create(pathAlpha))
-            {
-            }
-
-            FileSecurity dsSystem = System.IO.File.GetAccessControl(path, AccessControlSections.Access);
-            FileSecurity dsAlpha = File.GetAccessControl(pathAlpha, AccessControlSections.Access);
-            AuthorizationRuleCollection accessRulesSystem = dsSystem.GetAccessRules(true, true, typeof(NTAccount));
-            AuthorizationRuleCollection accessRulesAlpha = dsAlpha.GetAccessRules(true, true, typeof(NTAccount));
-
-            Console.WriteLine("\t\tSystem.IO rules found: [{0}]", accessRulesSystem.Count);
-            Console.WriteLine("\t\tAlphaFS   rules found: [{0}]", accessRulesAlpha.Count);
-            Assert.AreEqual(accessRulesSystem.Count, accessRulesAlpha.Count);
-
-            // Sanity check.
-            UnitTestConstants.TestAccessRules(dsSystem, dsAlpha);
-
-            // Remove inherited properties.
-            // Passing true for first parameter protects the new permission from inheritance, and second parameter removes the existing inherited permissions 
-            Console.WriteLine("\n\tRemove inherited properties and persist it.");
-            dsAlpha.SetAccessRuleProtection(true, false);
-            File.SetAccessControl(pathAlpha, dsAlpha, AccessControlSections.Access);
-
-            // Re-read, using instance methods.
-            System.IO.FileInfo fiSystem = new System.IO.FileInfo(Path.LocalToUnc(path));
-            FileInfo fiAlpha = new FileInfo(Path.LocalToUnc(path));
-
-            dsSystem = fiSystem.GetAccessControl(AccessControlSections.Access);
-            dsAlpha = fiAlpha.GetAccessControl(AccessControlSections.Access);
-
-            // Sanity check.
-            UnitTestConstants.TestAccessRules(dsSystem, dsAlpha);
-
-            // Restore inherited properties.
-            Console.WriteLine("\n\tRestore inherited properties and persist it.");
-            dsAlpha.SetAccessRuleProtection(false, true);
-            File.SetAccessControl(pathAlpha, dsAlpha, AccessControlSections.Access);
-
-            // Re-read.
-            dsSystem = System.IO.File.GetAccessControl(path, AccessControlSections.Access);
-            dsAlpha = File.GetAccessControl(pathAlpha, AccessControlSections.Access);
-
-            // Sanity check.
-            UnitTestConstants.TestAccessRules(dsSystem, dsAlpha);
-
-            fiSystem.Delete();
-            fiSystem.Refresh(); // Must Refresh() to get actual state.
-
-            fiAlpha.Delete();
-            fiAlpha.Refresh(); // Must Refresh() to get actual state.
-            Assert.IsFalse(fiAlpha.Exists);
-         }
-         catch (Exception ex)
-         {
-            Console.WriteLine("\n\tCaught (unexpected) {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
-            Assert.IsTrue(false);
-         }
-      }
-
-      #endregion // SetAccessControl
-
-      #region SetCreationTime
-
-      [TestMethod]
-      public void SetCreationTime()
-      {
-         Console.WriteLine("File.SetXxxTimeXxx()");
-
-         DumpSetXxxTimeXxx(true);
-         DumpSetXxxTimeXxx(false);
-      }
-
-      #endregion // SetCreationTime
-
       #region WriteAllBytes
 
       [TestMethod]
-      public void WriteAllBytes()
+      public void File_WriteAllBytes()
       {
          Console.WriteLine("File.WriteAllBytes()");
 
-         ReadAllBytes();
+         File_ReadAllBytes();
       }
 
       #endregion // WriteAllBytes
@@ -2298,27 +618,27 @@ namespace AlphaFS.UnitTest
       #region WriteAllLines
 
       [TestMethod]
-      public void WriteAllLines()
+      public void File_WriteAllLines()
       {
          Console.WriteLine("File.WriteAllLines()");
          Console.WriteLine("\n Default AlphaFS Encoding: [{0}]", NativeMethods.DefaultFileEncoding.EncodingName);
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
-         string[] allLines = new[] { UnitTestConstants.TenNumbers, UnitTestConstants.TextHelloWorld, UnitTestConstants.TextAppend, UnitTestConstants.TextUnicode };
+         var allLines = new[] { UnitTestConstants.TenNumbers, UnitTestConstants.TextHelloWorld, UnitTestConstants.TextGoodbyeWorld, UnitTestConstants.TextUnicode };
 
          // Create real UTF-8 file.
          File.WriteAllLines(tempFile, allLines, NativeMethods.DefaultFileEncoding);
 
          // Read filestream contents.
-         using (StreamReader streamRead = File.OpenText(tempFile))
+         using (var streamRead = File.OpenText(tempFile))
          {
-            string line = streamRead.ReadToEnd();
+            var line = streamRead.ReadToEnd();
 
             Console.WriteLine("\n Created: [{0}] filestream: [{1}]\n\n WriteAllLines content:\n{2}", streamRead.CurrentEncoding.EncodingName, tempFile, line);
 
-            foreach (string line2 in allLines)
+            foreach (var line2 in allLines)
                Assert.IsTrue(line.Contains(line2));
          }
 
@@ -2331,23 +651,23 @@ namespace AlphaFS.UnitTest
       #region WriteAllText
 
       [TestMethod]
-      public void WriteAllText()
+      public void File_WriteAllText()
       {
          Console.WriteLine("File.WriteAllText()");
          Console.WriteLine("\n\tDefault AlphaFS Encoding: [{0}]", NativeMethods.DefaultFileEncoding.EncodingName);
 
          // Create file and append text.
-         string tempFile = Path.GetTempFileName();
+         var tempFile = Path.GetTempFileName();
 
-         string allLines = UnitTestConstants.TextHelloWorld;
+         var allLines = UnitTestConstants.TextHelloWorld;
 
          // Create real UTF-8 file.
          File.WriteAllText(tempFile, allLines, NativeMethods.DefaultFileEncoding);
 
          // Read filestream contents.
-         using (StreamReader streamRead = File.OpenText(tempFile))
+         using (var streamRead = File.OpenText(tempFile))
          {
-            string line = streamRead.ReadToEnd();
+            var line = streamRead.ReadToEnd();
 
             Console.WriteLine("\n\tCreated: [{0}] filestream: [{1}]\n\n\tWriteAllText content:\n{2}", streamRead.CurrentEncoding.EncodingName, tempFile, line);
 
@@ -2361,9 +681,9 @@ namespace AlphaFS.UnitTest
          File.WriteAllText(tempFile, allLines);
 
          // Read filestream contents.
-         using (StreamReader streamRead = File.OpenText(tempFile))
+         using (var streamRead = File.OpenText(tempFile))
          {
-            string line = streamRead.ReadToEnd();
+            var line = streamRead.ReadToEnd();
 
             Console.WriteLine("\tWriteAllText content:\n{0}", line);
 
@@ -2379,52 +699,5 @@ namespace AlphaFS.UnitTest
       #endregion // WriteAllText
 
       #endregion // .NET
-
-      #region AlphaFS
-
-      #region SetTimestamps
-
-      [TestMethod]
-      public void AlphaFS_SetTimestamps()
-      {
-         Console.WriteLine("File.SetTimestamps()");
-
-         DumpSetTimestamps(true);
-         DumpSetTimestamps(false);
-      }
-
-      #endregion // SetTimestamps
-
-      #region TransferTimestamps
-
-      [TestMethod]
-      public void AlphaFS_TransferTimestamps()
-      {
-         Console.WriteLine("File.TransferTimestamps()");
-
-         DumpTransferTimestamps(true);
-         DumpTransferTimestamps(false);
-      }
-
-      #endregion // TransferTimestamps
-
-      #region AlphaFS___FileTrailingDotSpace
-
-      [TestMethod]
-      public void AlphaFS___FileTrailingDotSpace()
-      {
-         Console.WriteLine(".NET does not support the creation/manipulation of files with a trailing dot or space.");
-         Console.WriteLine("These will be stripped due to path normalization.");
-
-         Console.WriteLine("\nThe AlphaFS File() class contains overloaded methods which have the");
-         Console.WriteLine("isFullPath parameter that enables you to bypass this .NET limitation.\n");
-
-         DumpFileTrailingDotSpace(true);
-         DumpFileTrailingDotSpace(false);
-      }
-
-      #endregion // AlphaFS___FileTrailingDotSpace
-
-      #endregion // AlphaFS
    }
 }

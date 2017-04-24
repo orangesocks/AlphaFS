@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -320,7 +320,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          try
          {
-            safeHandle = CreateFileCore(transaction, path, attributes, fileSecurity, mode, (FileSystemRights)access, share, true, pathFormat);
+            safeHandle = CreateFileCore(transaction, path, attributes, fileSecurity, mode, (FileSystemRights) access, share, true, pathFormat);
 
             return new FileStream(safeHandle, access, bufferSize, (attributes & ExtendedFileAttributes.Overlapped) != 0);
          }
@@ -363,13 +363,16 @@ namespace Alphaleonis.Win32.Filesystem
          // the path string should be the following form: "\\.\X:"
          // Do not use a trailing backslash (\), which indicates the root.
 
-         string pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator);
+         var pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator);
 
          PrivilegeEnabler privilegeEnabler = null;
 
 
+         var isAppend = fileMode == FileMode.Append;
+
+
          // CreateFileXxx() does not support FileMode.Append mode.
-         if (fileMode == FileMode.Append)
+         if (isAppend)
          {
             fileMode = FileMode.OpenOrCreate;
             fileSystemRights &= FileSystemRights.AppendData; // Add right.
@@ -390,7 +393,7 @@ namespace Alphaleonis.Win32.Filesystem
          using (privilegeEnabler)
          using (var securityAttributes = new Security.NativeMethods.SecurityAttributes(fileSecurity))
          {
-            SafeFileHandle handle = transaction == null || !NativeMethods.IsAtLeastWindowsVista
+            var handle = transaction == null || !NativeMethods.IsAtLeastWindowsVista
 
                // CreateFile() / CreateFileTransacted()
                // In the ANSI version of this function, the name is limited to MAX_PATH characters.
@@ -400,12 +403,19 @@ namespace Alphaleonis.Win32.Filesystem
                ? NativeMethods.CreateFile(pathLp, fileSystemRights, fileShare, securityAttributes, fileMode, attributes, IntPtr.Zero)
                : NativeMethods.CreateFileTransacted(pathLp, fileSystemRights, fileShare, securityAttributes, fileMode, attributes, IntPtr.Zero, transaction.SafeHandle, IntPtr.Zero, IntPtr.Zero);
 
-            int lastError = Marshal.GetLastWin32Error();
+            var lastError = Marshal.GetLastWin32Error();
 
-            if (handle != null && handle.IsInvalid)
+            if (handle.IsInvalid)
             {
                handle.Close();
                NativeError.ThrowException(lastError, pathLp);
+            }
+
+
+            if (isAppend)
+            {
+               var stream = new FileStream(handle, FileAccess.Write, NativeMethods.DefaultFileBufferSize, (attributes & ExtendedFileAttributes.Overlapped) != 0);
+               stream.Seek(0, SeekOrigin.End);
             }
 
             return handle;

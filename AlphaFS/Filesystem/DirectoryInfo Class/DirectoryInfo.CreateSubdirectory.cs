@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Security;
 using System.Security.AccessControl;
 
@@ -54,6 +55,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// If the subdirectory already exists, this method does nothing.
       /// </remarks>
 
+      [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
       [SecurityCritical]
       public DirectoryInfo CreateSubdirectory(string path, DirectorySecurity directorySecurity)
       {
@@ -108,6 +110,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// If the subdirectory already exists, this method does nothing.
       /// </remarks>
 
+      [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
       [SecurityCritical]
       public DirectoryInfo CreateSubdirectory(string path, DirectorySecurity directorySecurity, bool compress)
       {
@@ -126,6 +129,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// If the subdirectory already exists, this method does nothing.
       /// </remarks>
 
+      [SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters")]
       [SecurityCritical]
       public DirectoryInfo CreateSubdirectory(string path, string templatePath, DirectorySecurity directorySecurity, bool compress)
       {
@@ -148,7 +152,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="directorySecurity">The <see cref="DirectorySecurity"/> security to apply.</param>
       /// <param name="compress">When <see langword="true"/> compresses the directory.</param>
       [SecurityCritical]
-      private DirectoryInfo CreateSubdirectoryCore(string path, string templatePath, DirectorySecurity directorySecurity, bool compress)
+      private DirectoryInfo CreateSubdirectoryCore(string path, string templatePath, ObjectSecurity directorySecurity, bool compress)
       {
          string pathLp = Path.CombineCore(false, LongFullName, path);
          string templatePathLp = templatePath == null ? null :

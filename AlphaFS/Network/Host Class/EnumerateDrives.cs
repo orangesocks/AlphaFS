@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -43,7 +43,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <param name="host">The DNS or NetBIOS name of the remote server. <see langword="null"/> refers to the local host.</param>
       /// <param name="continueOnException">
-      ///   <para><see langword="true"/> suppress any Exception that might be thrown a result from a failure,</para>
+      ///   <para><see langword="true"/> suppress any Exception that might be thrown as a result from a failure,</para>
       ///   <para>such as unavailable resources.</para>
       /// </param>
       [SecurityCritical]
@@ -60,7 +60,7 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <param name="host">The DNS or NetBIOS name of the remote server. <see langword="null"/> refers to the local host.</param>
       /// <param name="continueOnException">
-      ///   <para><see langword="true"/> suppress any Exception that might be thrown a result from a failure,</para>
+      ///   <para><see langword="true"/> suppress any Exception that might be thrown as a result from a failure,</para>
       ///   <para>such as unavailable resources.</para>
       /// </param>
       [SecurityCritical]
@@ -73,10 +73,9 @@ namespace Alphaleonis.Win32.Network
             (FunctionData functionData, out SafeGlobalMemoryBufferHandle buffer, int prefMaxLen, out uint entriesRead, out uint totalEntries, out uint resume) =>
             {
                // When host == null, the local computer is used.
-               // However, the resulting OpenResourceInfo.Host property will be empty.
+               // However, the resulting Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
-
                string stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
 
                return NativeMethods.NetServerDiskEnum(stripUnc, 0, out buffer, NativeMethods.MaxPreferredLength, out entriesRead, out totalEntries, out resume);

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -259,8 +259,8 @@ namespace Alphaleonis.Win32.Filesystem
          {
             options |= DirectoryEnumerationOptions.Recursive;
 
-            foreach (string fso in EnumerateFileSystemEntryInfosCore<string>(null, pathLp, Path.WildcardStarMatchAll, options, PathFormat.LongFullPath))
-               File.EncryptDecryptFileCore(true, fso, encrypt, PathFormat.LongFullPath);
+            foreach (string fsei in EnumerateFileSystemEntryInfosCore<string>(null, pathLp, Path.WildcardStarMatchAll, options, PathFormat.LongFullPath))
+               File.EncryptDecryptFileCore(true, fsei, encrypt, PathFormat.LongFullPath);
          }
 
          // Process the root folder, the given path.

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -39,7 +39,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static FileStream Open(string path, FileMode mode)
       {
-         return OpenCore(null, path, mode, FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, PathFormat.RelativePath);
+         return OpenCore(null, path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, PathFormat.RelativePath);
       }
 
       /// <summary>Opens a <see cref="FileStream"/> on the specified path, with the specified mode and access.</summary>
@@ -77,7 +77,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static FileStream Open(string path, FileMode mode, PathFormat pathFormat)
       {
-         return OpenCore(null, path, mode, FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, pathFormat);
+         return OpenCore(null, path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, pathFormat);
       }
 
       /// <summary>[AlphaFS] Opens a <see cref="FileStream"/> on the specified path, with the specified mode and access.</summary>
@@ -483,7 +483,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static FileStream OpenTransacted(KernelTransaction transaction, string path, FileMode mode)
       {
-         return OpenCore(transaction, path, mode, FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, PathFormat.RelativePath);
+         return OpenCore(transaction, path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] (Transacted) Opens a <see cref="FileStream"/> on the specified path with read/write access.</summary>
@@ -498,7 +498,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static FileStream OpenTransacted(KernelTransaction transaction, string path, FileMode mode, PathFormat pathFormat)
       {
-         return OpenCore(transaction, path, mode, FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, pathFormat);
+         return OpenCore(transaction, path, mode, mode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite, FileShare.None, ExtendedFileAttributes.Normal, null, null, pathFormat);
       }
 
       #region Using FileAccess
@@ -963,7 +963,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// </returns>
       internal static FileStream OpenCore(KernelTransaction transaction, string path, FileMode mode, FileAccess access, FileShare share, ExtendedFileAttributes attributes, int? bufferSize, FileSecurity security, PathFormat pathFormat)
       {
-         FileSystemRights rights = access == FileAccess.Read
+         var rights = access == FileAccess.Read
             ? FileSystemRights.Read
             : (access == FileAccess.Write ? FileSystemRights.Write : FileSystemRights.Read | FileSystemRights.Write);
 
@@ -988,15 +988,27 @@ namespace Alphaleonis.Win32.Filesystem
       [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
       internal static FileStream OpenCore(KernelTransaction transaction, string path, FileMode mode, FileSystemRights rights, FileShare share, ExtendedFileAttributes attributes, int? bufferSize, FileSecurity security, PathFormat pathFormat)
       {
-         FileAccess access = ((rights & FileSystemRights.ReadData) != 0 ? FileAccess.Read : 0) |
-                             ((rights & FileSystemRights.WriteData) != 0 || (rights & FileSystemRights.AppendData) != 0
-                                ? FileAccess.Write
-                                : 0);
+         var access = ((rights & FileSystemRights.ReadData) != 0 ? FileAccess.Read : 0) |
+                      ((rights & FileSystemRights.WriteData) != 0 || (rights & FileSystemRights.AppendData) != 0
+                         ? FileAccess.Write
+                         : 0);
 
 
-         SafeFileHandle safeHandle = CreateFileCore(transaction, path, attributes, security, mode, rights, share, true, pathFormat);
+         SafeFileHandle safeHandle = null;
 
-         return new FileStream(safeHandle, access, bufferSize ?? NativeMethods.DefaultFileBufferSize, (attributes & ExtendedFileAttributes.Overlapped) != 0);
+         try
+         {
+            safeHandle = CreateFileCore(transaction, path, attributes, security, mode, rights, share, true, pathFormat);
+
+            return new FileStream(safeHandle, access, bufferSize ?? NativeMethods.DefaultFileBufferSize, (attributes & ExtendedFileAttributes.Overlapped) != 0);
+         }
+         catch
+         {
+            if (safeHandle != null)
+               safeHandle.Dispose();
+
+            throw;
+         }
       }
 
       #endregion // Internal Methods

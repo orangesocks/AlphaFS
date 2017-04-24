@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -69,27 +69,11 @@ namespace AlphaFS.UnitTest
          try
          {
             if (isDisposing)
-            {
-               Directory.Refresh();
-
-               if (Directory.Exists)
-                  Directory.Delete(true);
-
-               else
-                  Console.WriteLine("\n\nThe TemporaryDirectory was already removed: [{0}]", Directory.FullName);
-            }
+               Alphaleonis.Win32.Filesystem.Directory.Delete(Directory.FullName, true, Alphaleonis.Win32.Filesystem.PathFormat.FullPath);
          }
          catch (Exception ex)
          {
-            try
-            {
-               // In case it's a long path.
-               Alphaleonis.Win32.Filesystem.Directory.Delete(Directory.FullName, true);
-            }
-            catch
-            {
-               Console.WriteLine("\n\nFailed to delete TemporaryDirectory: [{0}]: [{1}]", Directory, ex.Message);
-            }
+            Console.WriteLine("\n\nFailed to delete TemporaryDirectory: [{0}]: [{1}]", Directory.FullName, ex.Message);
          }
       }
 

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -96,7 +96,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       internal static void CreateHardlinkCore(KernelTransaction transaction, string fileName, string existingFileName, PathFormat pathFormat)
       {
-         var options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
+         const GetFullPathOptions options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
 
          string fileNameLp = Path.GetExtendedLengthPathCore(transaction, fileName, pathFormat, options);
          string existingFileNameLp = Path.GetExtendedLengthPathCore(transaction, existingFileName, pathFormat, options);

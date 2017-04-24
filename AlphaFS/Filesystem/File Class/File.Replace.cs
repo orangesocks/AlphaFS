@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -151,11 +151,11 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       internal static void ReplaceCore(string sourceFileName, string destinationFileName, string destinationBackupFileName, bool ignoreMetadataErrors, PathFormat pathFormat)
       {
-         var options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
+         const GetFullPathOptions options = GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck;
 
          string sourceFileNameLp = Path.GetExtendedLengthPathCore(null, sourceFileName, pathFormat, options);
          string destinationFileNameLp = Path.GetExtendedLengthPathCore(null, destinationFileName, pathFormat, options);
-         
+
          // Pass null to the destinationBackupFileName parameter if you do not want to create a backup of the file being replaced.
          string destinationBackupFileNameLp = destinationBackupFileName == null
             ? null
@@ -164,9 +164,9 @@ namespace Alphaleonis.Win32.Filesystem
          const int replacefileWriteThrough = 1;
          const int replacefileIgnoreMergeErrors = 2;
 
-         FileSystemRights dwReplaceFlags = (FileSystemRights)replacefileWriteThrough;
+         FileSystemRights dwReplaceFlags = (FileSystemRights) replacefileWriteThrough;
          if (ignoreMetadataErrors)
-            dwReplaceFlags |= (FileSystemRights)replacefileIgnoreMergeErrors;
+            dwReplaceFlags |= (FileSystemRights) replacefileIgnoreMergeErrors;
 
          // ReplaceFile()
          // In the ANSI version of this function, the name is limited to MAX_PATH characters.

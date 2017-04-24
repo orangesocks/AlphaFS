@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -126,7 +126,6 @@ namespace Alphaleonis.Win32.Filesystem
          {
             NativeMethods.WIN32_FIND_DATA findData;
 
-            // ChangeErrorMode is for the Win32 SetThreadErrorMode() method, used to suppress possible pop-ups.
             using (new NativeMethods.ChangeErrorMode(NativeMethods.ErrorMode.FailCriticalErrors))
             {
                bool error = false;
@@ -144,7 +143,7 @@ namespace Alphaleonis.Win32.Filesystem
 
                try
                {
-                  if (handle != null && handle.IsInvalid)
+                  if (handle.IsInvalid)
                   {
                      error = true;
                      dataInitialised = Marshal.GetLastWin32Error();

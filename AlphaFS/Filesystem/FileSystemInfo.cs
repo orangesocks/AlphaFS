@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -266,7 +266,7 @@ namespace Alphaleonis.Win32.Filesystem
          [SecurityCritical]
          set
          {
-            File.SetAttributesCore(IsDirectory, Transaction, LongFullName, value, false, PathFormat.LongFullPath);
+            File.SetAttributesCore(IsDirectory, Transaction, LongFullName, value, PathFormat.LongFullPath);
             Reset();
          }
       }
@@ -547,7 +547,7 @@ namespace Alphaleonis.Win32.Filesystem
       #region DisplayPath
 
       /// <summary>Returns the path as a string.</summary>
-      protected internal string DisplayPath { get; set; }
+      protected internal string DisplayPath { get; protected set; }
 
       #endregion // DisplayPath
 
@@ -590,7 +590,7 @@ namespace Alphaleonis.Win32.Filesystem
       #region IsDirectory
 
       /// <summary>[AlphaFS] The initial "IsDirectory" indicator that was passed to the constructor.</summary>
-      protected internal bool IsDirectory { get; set; }
+      protected bool IsDirectory { get; set; }
 
       #endregion // IsDirectory
 
@@ -603,14 +603,8 @@ namespace Alphaleonis.Win32.Filesystem
 
       #region Transaction
 
-      [NonSerialized] private KernelTransaction _transaction;
-
       /// <summary>[AlphaFS] Represents the KernelTransaction that was passed to the constructor.</summary>
-      public KernelTransaction Transaction
-      {
-         get { return _transaction; }
-         internal set { _transaction = value; }
-      }
+      protected KernelTransaction Transaction { get; set; }
 
       #endregion // Transaction
 

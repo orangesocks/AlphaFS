@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -51,7 +51,7 @@ namespace Alphaleonis.Win32.Network
       /// <param name="host">The DNS or NetBIOS name of the remote server. <see langword="null"/> refers to the local host.</param>
       /// <param name="share">The name of the Server Message Block (SMB) share.</param>
       /// <param name="continueOnException">
-      ///   <para><see langword="true"/> suppress any Exception that might be thrown a result from a failure,</para>
+      ///   <para><see langword="true"/> suppress any Exception that might be thrown as a result from a failure,</para>
       ///   <para>such as unavailable resources.</para>
       /// </param>
       [SecurityCritical]
@@ -76,7 +76,7 @@ namespace Alphaleonis.Win32.Network
       /// <summary>Enumerates Server Message Block (SMB) shares from the local host.</summary>
       /// <returns><see cref="IEnumerable{ShareInfo}"/> shares from the specified host.</returns>
       /// <remarks>This method also enumerates hidden shares.</remarks>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static IEnumerable<ShareInfo> EnumerateShares(bool continueOnException)
       {
@@ -87,7 +87,7 @@ namespace Alphaleonis.Win32.Network
       /// <returns><see cref="IEnumerable{ShareInfo}"/> shares from the specified host.</returns>
       /// <remarks>This method also enumerates hidden shares.</remarks>
       /// <param name="shareType">The type of the shared resource to retrieve.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static IEnumerable<ShareInfo> EnumerateShares(ShareType shareType, bool continueOnException)
       {
@@ -108,7 +108,7 @@ namespace Alphaleonis.Win32.Network
       /// <returns><see cref="IEnumerable{ShareInfo}"/> shares from the specified host.</returns>
       /// <remarks>This method also enumerates hidden shares.</remarks>
       /// <param name="host">The DNS or NetBIOS name of the specified host.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static IEnumerable<ShareInfo> EnumerateShares(string host, bool continueOnException)
       {
@@ -120,7 +120,7 @@ namespace Alphaleonis.Win32.Network
       /// <remarks>This method also enumerates hidden shares.</remarks>
       /// <param name="host">The DNS or NetBIOS name of the specified host.</param>
       /// <param name="shareType">The type of the shared resource to retrieve.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static IEnumerable<ShareInfo> EnumerateShares(string host, ShareType shareType, bool continueOnException)
       {
@@ -164,11 +164,11 @@ namespace Alphaleonis.Win32.Network
       /// <summary>Retrieves information about the Server Message Block (SMB) share as defined on the specified host.</summary>
       /// <returns>A <see cref="ShareInfo"/> class, or <see langword="null"/> on failure or when not available, and <paramref name="continueOnException"/> is <see langword="true"/>.</returns>
       /// <param name="uncPath">The share in the format: \\host\share.</param>
-      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static ShareInfo GetShareInfo(string uncPath, bool continueOnException)
       {
-         string[] unc = GetHostShareFromPath(uncPath);
+         var unc = GetHostShareFromPath(uncPath);
          return GetShareInfoCore(ShareInfoLevel.Info503, unc[0], unc[1], continueOnException);
       }
 
@@ -176,11 +176,11 @@ namespace Alphaleonis.Win32.Network
       /// <returns>A <see cref="ShareInfo"/> class, or <see langword="null"/> on failure or when not available, and <paramref name="continueOnException"/> is <see langword="true"/>.</returns>
       /// <param name="shareLevel">One of the <see cref="ShareInfoLevel"/> options.</param>
       /// <param name="uncPath">The share in the format: \\host\share.</param>
-      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static ShareInfo GetShareInfo(ShareInfoLevel shareLevel, string uncPath, bool continueOnException)
       {
-         string[] unc = GetHostShareFromPath(uncPath);
+         var unc = GetHostShareFromPath(uncPath);
          return GetShareInfoCore(shareLevel, unc[0], unc[1], continueOnException);
       }
 
@@ -188,7 +188,7 @@ namespace Alphaleonis.Win32.Network
       /// <returns>A <see cref="ShareInfo"/> class, or <see langword="null"/> on failure or when not available, and <paramref name="continueOnException"/> is <see langword="true"/>.</returns>
       /// <param name="host">The DNS or NetBIOS name of the specified host.</param>
       /// <param name="share">The name of the Server Message Block (SMB) share.</param>
-      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static ShareInfo GetShareInfo(string host, string share, bool continueOnException)
       {
@@ -200,7 +200,7 @@ namespace Alphaleonis.Win32.Network
       /// <param name="shareLevel">One of the <see cref="ShareInfoLevel"/> options.</param>
       /// <param name="host">A string that specifies the DNS or NetBIOS name of the specified <paramref name="host"/>.</param>
       /// <param name="share">A string that specifies the name of the Server Message Block (SMB) share.</param>
-      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public static ShareInfo GetShareInfo(ShareInfoLevel shareLevel, string host, string share, bool continueOnException)
       {
@@ -213,13 +213,13 @@ namespace Alphaleonis.Win32.Network
 
       #region EnumerateOpenConnectionsCore
 
-      /// <summary>Enumerates open connections from the specified host.</summary>
+      /// <summary>Enumerates open connections from the specified host and <paramref name="share"/>.</summary>
       /// <returns><see cref="OpenConnectionInfo"/> connection information from the specified <paramref name="host"/>.</returns>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NetworkInformationException"/>
       /// <param name="host">The DNS or NetBIOS name of the remote server. <see langword="null"/> refers to the local host.</param>
       /// <param name="share">The name of the Server Message Block (SMB) share.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       private static IEnumerable<OpenConnectionInfo> EnumerateOpenConnectionsCore(string host, string share, bool continueOnException)
       {
@@ -241,6 +241,7 @@ namespace Alphaleonis.Win32.Network
                return NativeMethods.NetConnectionEnum(stripUnc, functionData.ExtraData1, 1, out buffer, NativeMethods.MaxPreferredLength, out entriesRead, out totalEntries, out resumeHandle);
 
             },
+
             continueOnException);
       }
 
@@ -255,21 +256,19 @@ namespace Alphaleonis.Win32.Network
       /// <exception cref="NetworkInformationException"/>
       /// <param name="host">The DNS or NetBIOS name of the specified host.</param>
       /// <param name="shareType">The type of the shared resource to retrieve.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       internal static IEnumerable<ShareInfo> EnumerateSharesCore(string host, ShareType shareType, bool continueOnException)
       {
          // When host == null, the local computer is used.
-         // However, the resulting OpenResourceInfo.Host property will be empty.
+         // However, the resulting Host property will be empty.
          // So, explicitly state Environment.MachineName to prevent this.
          // Furthermore, the UNC prefix: \\ is not required and always removed.
-         string stripUnc = Utils.IsNullOrWhiteSpace(host)
-            ? Environment.MachineName
-            : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
+         var stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
 
          var fd = new FunctionData();
-         bool hasItems = false;
-         bool yieldAll = shareType == ShareType.All;
+         var hasItems = false;
+         var yieldAll = shareType == ShareType.All;
 
          // Try SHARE_INFO_503 structure.
          foreach (var si in EnumerateNetworkObjectCore(fd, (NativeMethods.SHARE_INFO_503 structure, SafeGlobalMemoryBufferHandle buffer) =>
@@ -315,7 +314,7 @@ namespace Alphaleonis.Win32.Network
       /// <param name="shareLevel">One of the <see cref="ShareInfoLevel"/> options.</param>
       /// <param name="host">A string that specifies the DNS or NetBIOS name of the specified <paramref name="host"/>.</param>
       /// <param name="share">A string that specifies the name of the Server Message Block (SMB) share.</param>
-      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><see langword="true"/> to suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       internal static ShareInfo GetShareInfoCore(ShareInfoLevel shareLevel, string host, string share, bool continueOnException)
       {
@@ -323,14 +322,12 @@ namespace Alphaleonis.Win32.Network
             return null;
 
          // When host == null, the local computer is used.
-         // However, the resulting OpenResourceInfo.Host property will be empty.
+         // However, the resulting Host property will be empty.
          // So, explicitly state Environment.MachineName to prevent this.
          // Furthermore, the UNC prefix: \\ is not required and always removed.
-         string stripUnc = Utils.IsNullOrWhiteSpace(host)
-            ? Environment.MachineName
-            : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
+         var stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
 
-         bool fallback = false;
+         var fallback = false;
 
 
          startNetShareGetInfo:
@@ -338,7 +335,7 @@ namespace Alphaleonis.Win32.Network
          SafeGlobalMemoryBufferHandle safeBuffer;
 
          uint structureLevel = Convert.ToUInt16(shareLevel, CultureInfo.InvariantCulture);
-         uint lastError = NativeMethods.NetShareGetInfo(stripUnc, share, structureLevel, out safeBuffer);
+         var lastError = NativeMethods.NetShareGetInfo(stripUnc, share, structureLevel, out safeBuffer);
 
          using (safeBuffer)
          {

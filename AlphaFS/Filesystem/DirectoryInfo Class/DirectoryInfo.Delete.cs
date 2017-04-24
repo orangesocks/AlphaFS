@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2015 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -39,7 +39,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public override void Delete()
       {
-         Directory.DeleteDirectoryCore(null, Transaction, LongFullName, false, false, true, false, PathFormat.LongFullPath);
+         Directory.DeleteDirectoryCore(EntryInfo, Transaction, null, false, false, false, PathFormat.LongFullPath);
       }
 
       /// <summary>Deletes this instance of a <see cref="DirectoryInfo"/>, specifying whether to delete subdirectories and files.</summary>
@@ -57,7 +57,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Delete(bool recursive)
       {
-         Directory.DeleteDirectoryCore(null, Transaction, LongFullName, recursive, false, !recursive, false, PathFormat.LongFullPath);
+         Directory.DeleteDirectoryCore(EntryInfo, Transaction, null, recursive, false, false, PathFormat.LongFullPath);
       }
 
       #endregion // .NET
@@ -80,7 +80,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Delete(bool recursive, bool ignoreReadOnly)
       {
-         Directory.DeleteDirectoryCore(null, Transaction, LongFullName, recursive, ignoreReadOnly, !recursive, false, PathFormat.LongFullPath);
+         Directory.DeleteDirectoryCore(EntryInfo, Transaction, null, recursive, ignoreReadOnly, false, PathFormat.LongFullPath);
       }
 
       #endregion // AlphaFS
