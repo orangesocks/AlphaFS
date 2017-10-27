@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -986,7 +986,7 @@ namespace Alphaleonis.Win32.Filesystem
             throw new ArgumentNullException("encoding");
 
 
-         using (FileStream stream = OpenCore(transaction, path, (isAppend ? FileMode.OpenOrCreate : FileMode.Create), FileSystemRights.AppendData, FileShare.ReadWrite, ExtendedFileAttributes.Normal, null, null, pathFormat))
+         using (FileStream stream = OpenCore(transaction, path, isAppend ? FileMode.OpenOrCreate : FileMode.Create, FileSystemRights.AppendData, FileShare.ReadWrite, ExtendedFileAttributes.Normal, null, null, pathFormat))
          {
             if (isAppend)
                stream.Seek(0, SeekOrigin.End);

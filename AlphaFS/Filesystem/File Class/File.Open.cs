@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -963,10 +963,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// </returns>
       internal static FileStream OpenCore(KernelTransaction transaction, string path, FileMode mode, FileAccess access, FileShare share, ExtendedFileAttributes attributes, int? bufferSize, FileSecurity security, PathFormat pathFormat)
       {
-         var rights = access == FileAccess.Read
-            ? FileSystemRights.Read
-            : (access == FileAccess.Write ? FileSystemRights.Write : FileSystemRights.Read | FileSystemRights.Write);
-
+         var rights = access == FileAccess.Read ? FileSystemRights.Read : (access == FileAccess.Write ? FileSystemRights.Write : FileSystemRights.Read | FileSystemRights.Write);
 
          return OpenCore(transaction, path, mode, rights, share, attributes, bufferSize, security, pathFormat);
       }
@@ -998,13 +995,13 @@ namespace Alphaleonis.Win32.Filesystem
 
          try
          {
-            safeHandle = CreateFileCore(transaction, path, attributes, security, mode, rights, share, true, pathFormat);
+            safeHandle = CreateFileCore(transaction, path, attributes, security, mode, rights, share, true, false, pathFormat);
 
             return new FileStream(safeHandle, access, bufferSize ?? NativeMethods.DefaultFileBufferSize, (attributes & ExtendedFileAttributes.Overlapped) != 0);
          }
          catch
          {
-            if (safeHandle != null)
+            if (null != safeHandle)
                safeHandle.Dispose();
 
             throw;

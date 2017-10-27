@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -25,13 +25,12 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Security.Principal;
 using System.Text;
 
 namespace AlphaFS.UnitTest
 {
    /// <summary>Containts static variables, used by unit tests.</summary>
-   public static class UnitTestConstants
+   public static partial class UnitTestConstants
    {
       #region Fields
 
@@ -41,7 +40,7 @@ namespace AlphaFS.UnitTest
       public const string EMspace = "\u3000";
 
       public static readonly string LocalHost = Environment.MachineName;
-      public static readonly string LocalHostShare = Environment.SystemDirectory;
+      public static readonly string LocalHostShare = Environment.GetEnvironmentVariable("Temp");
 
       public static readonly string SysDrive = Environment.GetEnvironmentVariable("SystemDrive");
       public static readonly string SysRoot = Environment.GetEnvironmentVariable("SystemRoot");
@@ -161,91 +160,7 @@ namespace AlphaFS.UnitTest
       #endregion // Fields
 
       #region Methods
-
-      // A high "max" increases the change of path too long.
-      public static void CreateDirectoriesAndFiles(string rootPath, int max, bool recurse)
-      {
-         for (var i = 0; i < max; i++)
-         {
-            var file = System.IO.Path.Combine(rootPath, System.IO.Path.GetRandomFileName());
-            var dir = file + "-" + i + "-dir";
-            file = file + "-" + i + "-file";
-
-            System.IO.Directory.CreateDirectory(dir);
-
-            // Some directories will remain empty.
-            if (i % 2 != 0)
-            {
-               //System.IO.File.WriteAllText(file, TextHelloWorld);
-               CreateFile(dir);
-
-               System.IO.File.WriteAllText(System.IO.Path.Combine(dir, System.IO.Path.GetFileName(file)), TextGoodbyeWorld);
-            }
-         }
-
-         if (recurse)
-         {
-            foreach (var dir in System.IO.Directory.EnumerateDirectories(rootPath))
-               CreateDirectoriesAndFiles(dir, max, false);
-         }
-      }
-
-
-      public static System.IO.FileInfo CreateFile(string rootFolder, int fileLength = 0)
-      {
-         var file = System.IO.Path.Combine(rootFolder, System.IO.Path.GetRandomFileName());
-
-         using (var fs = System.IO.File.Create(file))
-         {
-            if (fileLength <= 0)
-               fileLength = new Random().Next(1, 10485760);
-
-            fs.SetLength(fileLength);
-         }
-
-         return new System.IO.FileInfo(file);
-      }
-
-
-      public static void FolderDenyPermission(bool create, string tempPath)
-      {
-         var user = (Environment.UserDomainName + @"\" + Environment.UserName).TrimStart('\\');
-
-         var dirInfo = new System.IO.DirectoryInfo(tempPath);
-         System.Security.AccessControl.DirectorySecurity dirSecurity;
-
-         // ╔═════════════╦═════════════╦═══════════════════════════════╦════════════════════════╦══════════════════╦═══════════════════════╦═════════════╦═════════════╗
-         // ║             ║ folder only ║ folder, sub-folders and files ║ folder and sub-folders ║ folder and files ║ sub-folders and files ║ sub-folders ║    files    ║
-         // ╠═════════════╬═════════════╬═══════════════════════════════╬════════════════════════╬══════════════════╬═══════════════════════╬═════════════╬═════════════╣
-         // ║ Propagation ║ none        ║ none                          ║ none                   ║ none             ║ InheritOnly           ║ InheritOnly ║ InheritOnly ║
-         // ║ Inheritance ║ none        ║ Container|Object              ║ Container              ║ Object           ║ Container|Object      ║ Container   ║ Object      ║
-         // ╚═════════════╩═════════════╩═══════════════════════════════╩════════════════════════╩══════════════════╩═══════════════════════╩═════════════╩═════════════╝
-
-         var rule = new System.Security.AccessControl.FileSystemAccessRule(user,
-            System.Security.AccessControl.FileSystemRights.FullControl,
-            System.Security.AccessControl.InheritanceFlags.ContainerInherit |
-            System.Security.AccessControl.InheritanceFlags.ObjectInherit,
-            System.Security.AccessControl.PropagationFlags.None, System.Security.AccessControl.AccessControlType.Deny);
-
-         if (create)
-         {
-            dirInfo.Create();
-
-            // Set DENY for current user.
-            dirSecurity = dirInfo.GetAccessControl();
-            dirSecurity.AddAccessRule(rule);
-            dirInfo.SetAccessControl(dirSecurity);
-         }
-         else
-         {
-            // Remove DENY for current user.
-            dirSecurity = dirInfo.GetAccessControl();
-            dirSecurity.RemoveAccessRule(rule);
-            dirInfo.SetAccessControl(dirSecurity);
-         }
-      }
-
-
+      
       public static string StopWatcher(bool start = false)
       {
          if (_stopWatcher == null)
@@ -261,7 +176,7 @@ namespace AlphaFS.UnitTest
          var ms = _stopWatcher.ElapsedMilliseconds;
          var elapsed = _stopWatcher.Elapsed;
 
-         return string.Format(CultureInfo.CurrentCulture, "*Duration: [{0}] ms. ({1})", ms, elapsed);
+         return string.Format(CultureInfo.InvariantCulture, "*Duration: [{0}] ms. ({1})", ms, elapsed);
       }
 
 
@@ -272,61 +187,11 @@ namespace AlphaFS.UnitTest
          StopWatcher();
 
          return onlyTime
-            ? string.Format(CultureInfo.CurrentCulture, "\t\t{0}", StopWatcher())
-            : string.Format(CultureInfo.CurrentCulture, "\t{0} [{1}: {2}]", StopWatcher(), lastError.NativeErrorCode, lastError.Message);
+            ? string.Format(CultureInfo.InvariantCulture, "\t\t{0}", StopWatcher())
+            : string.Format(CultureInfo.InvariantCulture, "\t{0} [{1}: {2}]", StopWatcher(), lastError.NativeErrorCode, lastError.Message);
       }
 
       
-      public static bool IsAdmin()
-      {
-         var isAdmin = new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
-
-         if (!isAdmin)
-            Console.WriteLine("\nThis Unit Test must be run as Administrator.\n");
-
-         return isAdmin;
-      }
-
-
-      /// <summary>Shows the Object's available Properties and Values.</summary>
-      public static bool Dump(object obj, int width = -35, bool indent = false)
-      {
-         var cnt = 0;
-         const string nulll = "\t\tnull";
-         var template = "\t{0}#{1:000}\t{2, " + width + "} = [{3}]";
-
-         if (obj == null)
-         {
-            Console.WriteLine(nulll);
-            return false;
-         }
-
-         Console.WriteLine("\n\t{0}Instance: [{1}]\n", indent ? "\t" : "", obj.GetType().FullName);
-
-         var loopOk = false;
-         foreach (var descriptor in TypeDescriptor.GetProperties(obj).Sort().Cast<PropertyDescriptor>().Where(descriptor => descriptor != null))
-         {
-            string propValue;
-            try
-            {
-               var value = descriptor.GetValue(obj);
-               propValue = (value == null) ? "null" : value.ToString();
-
-               loopOk = true;
-            }
-            catch (Exception ex)
-            {
-               // Please do tell, oneliner preferably.
-               propValue = ex.Message.Replace(Environment.NewLine, "  ");
-            }
-
-            Console.WriteLine(template, indent ? "\t" : "", ++cnt, descriptor.Name, propValue);
-         }
-
-         return loopOk;
-      }
-
-
       public static byte[] StringToByteArray(string str, params Encoding[] encoding)
       {
          var encode = encoding != null && encoding.Any() ? encoding[0] : new UTF8Encoding(true, true);

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -22,10 +22,8 @@
 using Alphaleonis;
 using Alphaleonis.Win32.Filesystem;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32.SafeHandles;
 using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Directory = Alphaleonis.Win32.Filesystem.Directory;
 using DriveInfo = Alphaleonis.Win32.Filesystem.DriveInfo;
@@ -266,7 +264,7 @@ namespace AlphaFS.UnitTest
          File.Delete(fileName);
 
          var fileStream = File.Create(fileName);
-         var fileStreamName = Alphaleonis.Win32.Filesystem.Path.GetFinalPathNameByHandle(fileStream.SafeFileHandle);
+         var fileStreamName = Path.GetFinalPathNameByHandle(fileStream.SafeFileHandle);
 
          Assert.AreNotEqual(fileName, fileStream.Name);
          Assert.AreEqual(fileName, Path.GetRegularPath(fileStreamName));
@@ -385,17 +383,6 @@ namespace AlphaFS.UnitTest
       #region Unit Test Callers
 
       #region .NET
-
-      #region ChangeExtension (.NET)
-
-      [TestMethod]
-      public void Path_ChangeExtension_NET()
-      {
-         Console.WriteLine("Path.ChangeExtension()");
-         Console.WriteLine("\nThe .NET method is used.");
-      }
-
-      #endregion // ChangeExtension (.NET)
 
       #region Combine
 
@@ -564,38 +551,6 @@ namespace AlphaFS.UnitTest
 
       #endregion // GetFileNameWithoutExtension
 
-      #region GetInvalidFileNameChars (.NET)
-
-      [TestMethod]
-      public void Path_GetInvalidFileNameChars_NET()
-      {
-         Console.WriteLine("Path.GetInvalidFileNameChars()");
-         Console.WriteLine("\nThe .NET method is used.\n");
-
-         UnitTestConstants.StopWatcher(true);
-         foreach (var c in Path.GetInvalidFileNameChars())
-            Console.WriteLine("\tChar: [{0}]", c);
-         Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
-      }
-
-      #endregion // GetInvalidFileNameChars (.NET)
-
-      #region GetInvalidPathChars (.NET)
-
-      [TestMethod]
-      public void Path_GetInvalidPathChars_NET()
-      {
-         Console.WriteLine("Path.GetInvalidPathChars()");
-         Console.WriteLine("\nThe .NET method is used.\n");
-
-         UnitTestConstants.StopWatcher(true);
-         foreach (var c in Path.GetInvalidPathChars())
-            Console.WriteLine("\tChar: [{0}]", c);
-         Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
-      }
-
-      #endregion // GetInvalidPathChars (.NET)
-
       #region GetPathRoot
 
       [TestMethod]
@@ -668,58 +623,8 @@ namespace AlphaFS.UnitTest
 
       #endregion // GetPathRoot
 
-      #region GetRandomFileName (.NET)
+      
 
-      [TestMethod]
-      public void Path_GetRandomFileName_NET()
-      {
-         Console.WriteLine("Path.GetRandomFileName()");
-         Console.WriteLine("\nThe .NET method is used.");
-      }
-
-      #endregion //GetRandomFileName (.NET)
-
-      #region GetTempFileName (.NET)
-
-      [TestMethod]
-      public void Path_GetTempFileName_NET()
-      {
-         Console.WriteLine("Path.GetTempFileName()");
-         Console.WriteLine("\nThe .NET method is used.");
-      }
-
-      #endregion // GetTempFileName (.NET)
-
-      #region GetTempPath (.NET)
-
-      [TestMethod]
-      public void Path_GetTempPath_NET()
-      {
-         Console.WriteLine("Path.GetTempPath()");
-         Console.WriteLine("\nThe .NET method is used.");
-      }
-
-      #endregion // GetTempPath (.NET)
-
-      #region HasExtension (.NET)
-
-      [TestMethod]
-      public void Path_HasExtension_NET()
-      {
-         Console.WriteLine("Path.HasExtension()");
-         Console.WriteLine("\nThe .NET method is used.\n");
-
-         UnitTestConstants.StopWatcher(true);
-         foreach (var path in UnitTestConstants.InputPaths)
-         {
-            var action = Path.HasExtension(path);
-            Console.WriteLine("\tHasExtension: [{0}]\t\tInput Path: [{1}]", action, path);
-            Assert.AreEqual(System.IO.Path.HasExtension(path), action);
-         }
-         Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
-      }
-
-      #endregion // HasExtension (.NET)
 
       #endregion // .NET
 
@@ -742,7 +647,7 @@ namespace AlphaFS.UnitTest
 
          // True, add AltDirectorySeparatorChar.
          var hasSlash = Path.AddTrailingDirectorySeparator(nonSlashedString, true);
-         var addedSlash = hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && (nonSlashedString + Path.AltDirectorySeparatorChar).Equals(hasSlash);
+         var addedSlash = hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) && (nonSlashedString + Path.AltDirectorySeparatorChar).Equals(hasSlash);
          Console.WriteLine("\tAddTrailingDirectorySeparator(string, true);\n\tAdded == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, addedSlash, hasSlash);
 
          Assert.IsTrue(addedBackslash);
@@ -838,7 +743,7 @@ namespace AlphaFS.UnitTest
                else
                {
                   var c = path[0];
-                  if (!Path.IsPathRooted(path) && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
+                  if (!Path.IsPathRooted(path) && (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'))
                      Assert.IsFalse(actual.StartsWith(Path.LongPathPrefix), "Path should not start with a long path prefix.");
                   else
                   {
@@ -1067,7 +972,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
 
          if (cnt == 0)
-            Assert.Inconclusive("Nothing was enumerated, but it was expected.");
+            Assert.Inconclusive("Nothing is enumerated, but it is expected.");
 
          Console.WriteLine();
       }
@@ -1085,13 +990,13 @@ namespace AlphaFS.UnitTest
          const string slashedString = "Slashed/";
          // True, add DirectorySeparatorChar.
          var hasBackslash = Path.RemoveTrailingDirectorySeparator(backslashedString);
-         var removedBackslash = !hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !backslashedString.Equals(hasBackslash);
+         var removedBackslash = !hasBackslash.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) && !backslashedString.Equals(hasBackslash);
          Console.WriteLine("\tstring = @[{0}];\n", backslashedString);
          Console.WriteLine("\tRemoveTrailingDirectorySeparator(string);\n\tRemoved == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, removedBackslash, hasBackslash);
 
          // True, add AltDirectorySeparatorChar.
          var hasSlash = Path.RemoveTrailingDirectorySeparator(slashedString, true);
-         var removedSlash = !hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.CurrentCulture)) && !slashedString.Equals(hasSlash);
+         var removedSlash = !hasSlash.EndsWith(Path.AltDirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) && !slashedString.Equals(hasSlash);
          Console.WriteLine("\tstring: [{0}];\n", slashedString);
          Console.WriteLine("\tRemoveTrailingDirectorySeparator(string, true);\n\tRemoved == [{0}]: {1}\n\tResult: [{2}]\n", UnitTestConstants.TextTrue, removedSlash, hasSlash);
 

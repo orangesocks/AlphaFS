@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -22,6 +22,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Globalization;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
@@ -80,13 +81,13 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.CountFileSystemObjects"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             const int expectedFso = 10;
-            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, false);
+            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, false, false, false);
             
 
             var fsoCount = Alphaleonis.Win32.Filesystem.Directory.CountFileSystemObjects(folder, "*", Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Folders);
@@ -109,14 +110,14 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.CountFileSystemObjects"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             const int expectedFso = 10;
             const int expectedSubfolders = expectedFso * expectedFso + expectedFso;
-            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, true);
+            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, false, false, true);
 
 
             var fsoCount = Alphaleonis.Win32.Filesystem.Directory.CountFileSystemObjects(folder, "*", Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Folders | Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Recursive);
@@ -138,13 +139,13 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.CountFileSystemObjects"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             const int expectedFso = 0;
-            UnitTestConstants.CreateDirectoriesAndFiles(folder, 10, false);
+            UnitTestConstants.CreateDirectoriesAndFiles(folder, 10, false, false, false);
 
 
             var fsoCount = Alphaleonis.Win32.Filesystem.Directory.CountFileSystemObjects(folder, "*", Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Files);
@@ -167,13 +168,13 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.CountFileSystemObjects"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             const int expectedFso = 10;
-            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, false);
+            UnitTestConstants.CreateDirectoriesAndFiles(folder, expectedFso, false, false, false);
 
 
             var fsoCount = Alphaleonis.Win32.Filesystem.Directory.CountFileSystemObjects(folder, "*", Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Files | Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Recursive);
@@ -196,13 +197,13 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.CountFileSystemObjects"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             const int expectedFso = 200;
-            UnitTestConstants.CreateDirectoriesAndFiles(folder, 100, false);
+            UnitTestConstants.CreateDirectoriesAndFiles(folder, 100, false, false, false);
 
 
             var fsoCount = Alphaleonis.Win32.Filesystem.Directory.CountFileSystemObjects(folder, "*", Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.FilesAndFolders | Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Recursive);

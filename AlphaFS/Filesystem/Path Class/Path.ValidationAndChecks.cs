@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -92,8 +92,8 @@ namespace Alphaleonis.Win32.Filesystem
 
             var length = path.Length;
 
-            if ((length >= 1 && IsDVsc(path[0], false)) ||
-                (length >= 2 && IsDVsc(path[1], true)))
+            if (length >= 1 && IsDVsc(path[0], false) ||
+                length >= 2 && IsDVsc(path[1], true))
                return true;
          }
 
@@ -128,32 +128,34 @@ namespace Alphaleonis.Win32.Filesystem
             var tackle = GetRegularPathCore(path, GetFullPathOptions.None, false).TrimStart(DirectorySeparatorChar, AltDirectorySeparatorChar);
 
             if (tackle.Length >= 2 && tackle[0] == CurrentDirectoryPrefixChar)
-               throw new ArgumentException(Resources.UNC_Path_Should_Match_Format);
+               throw new ArgumentException(Resources.UNC_Path_Should_Match_Format, "path");
          }
       }
 
       /// <summary>Checks that the given path format is supported.</summary>
       /// <exception cref="ArgumentException"/>
+      /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
       /// <param name="path">A path to the file or directory.</param>
       /// <param name="checkInvalidPathChars">Checks that the path contains only valid path-characters.</param>
       /// <param name="checkAdditional">.</param>
       internal static void CheckSupportedPathFormat(string path, bool checkInvalidPathChars, bool checkAdditional)
       {
-         if (Utils.IsNullOrWhiteSpace(path) || path.Length < 2)
+         // "."
+         if (Utils.IsNullOrWhiteSpace(path) || path.Length == 1)
             return;
 
          var regularPath = GetRegularPathCore(path, GetFullPathOptions.None, false);
 
-         var isArgumentException = (regularPath[0] == VolumeSeparatorChar);
-         var throwException = (isArgumentException || (regularPath.Length >= 2 && regularPath.IndexOf(VolumeSeparatorChar, 2) != -1));
+         var isArgumentException = regularPath[0] == VolumeSeparatorChar;
+         var throwException = isArgumentException || regularPath.Length >= 2 && regularPath.IndexOf(VolumeSeparatorChar, 2) != -1;
 
          if (throwException)
          {
             if (isArgumentException)
-               throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Unsupported_Path_Format, regularPath));
+               throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Unsupported_Path_Format, regularPath), "path");
 
-            throw new NotSupportedException(string.Format(CultureInfo.CurrentCulture, Resources.Unsupported_Path_Format, regularPath));
+            throw new NotSupportedException(string.Format(CultureInfo.InvariantCulture, Resources.Unsupported_Path_Format, regularPath));
          }
 
          if (checkInvalidPathChars)
@@ -161,8 +163,8 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
       /// <summary>Checks that the path contains only valid path-characters.</summary>
-      /// <exception cref="ArgumentNullException"/>
       /// <exception cref="ArgumentException"/>
+      /// <exception cref="ArgumentNullException"/>
       /// <param name="path">A path to the file or directory.</param>
       /// <param name="checkAdditional"><see langword="true"/> also checks for ? and * characters.</param>
       /// <param name="allowEmpty">When <see langword="false"/>, throws an <see cref="ArgumentException"/>.</param>
@@ -196,7 +198,7 @@ namespace Alphaleonis.Win32.Filesystem
                case 60:    // <  (less than)
                case 62:    // >  (greater than)
                case 124:   // |  (pipe)
-                  throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, Resources.Illegal_Characters_In_Path, (char) num), pathRp);
+                  throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Illegal_Characters_In_Path, (char) num), "path");
 
                default:
                   // 32: space
@@ -207,7 +209,7 @@ namespace Alphaleonis.Win32.Filesystem
             }
          }
       }
-      
+
       /// <summary>Tranlates DosDevicePath, Volume GUID. For example: "\Device\HarddiskVolumeX\path\filename.ext" can translate to: "\path\filename.ext" or: "\\?\Volume{GUID}\path\filename.ext".</summary>
       /// <returns>A translated dos path.</returns>
       /// <param name="dosDevice">A DosDevicePath, for example: \Device\HarddiskVolumeX\path\filename.ext.</param>
@@ -223,7 +225,7 @@ namespace Alphaleonis.Win32.Filesystem
          {
             try
             {
-               var path = RemoveTrailingDirectorySeparator(drive, false);
+               var path = RemoveTrailingDirectorySeparator(drive);
                foreach (var devNt in Volume.QueryDosDevice(path).Where(dosDevice.StartsWith))
                   return dosDevice.Replace(devNt, deviceReplacement ?? path);
             }
@@ -290,6 +292,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+      [SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals")]
       private static string NormalizePath(string path, GetFullPathOptions options)
       {
          var newBuffer = new StringBuilder(NativeMethods.MaxPathUnicode);
@@ -297,7 +300,7 @@ namespace Alphaleonis.Win32.Filesystem
          uint numSpaces = 0;
          uint numDots = 0;
          var fixupDirectorySeparator = false;
-         
+
          // Number of significant chars other than potentially suppressible
          // dots and spaces since the last directory or volume separator char
          uint numSigChars = 0;
@@ -315,7 +318,7 @@ namespace Alphaleonis.Win32.Filesystem
          // turned into \foo.cs\bar.cs.
          if (path.Length > 0 && (path[0] == DirectorySeparatorChar || path[0] == AltDirectorySeparatorChar))
          {
-            newBuffer.Append('\\');
+            newBuffer.Append(DirectorySeparatorChar);
             index++;
             lastSigChar = 0;
          }
@@ -355,15 +358,14 @@ namespace Alphaleonis.Win32.Filesystem
                      // Look for ".[space]*" or "..[space]*"
                      var start = lastSigChar + 1;
                      if (path[start] != CurrentDirectoryPrefixChar)
-                        throw new ArgumentException(path);
+                        throw new ArgumentException(path, "path");
 
-                     // Only allow "[dot]+[space]*", and normalize the 
-                     // legal ones to "." or ".."
+                     // Only allow "[dot]+[space]*", and normalize the legal ones to "." or ".."
                      if (numDots >= 2)
                      {
                         // Reject "C:..."
                         if (startedWithVolumeSeparator && numDots > 2)
-                           throw new ArgumentException(path);
+                           throw new ArgumentException(path, "path");
 
 
                         if (path[start + 1] == CurrentDirectoryPrefixChar)
@@ -372,7 +374,7 @@ namespace Alphaleonis.Win32.Filesystem
                            for (var i = start + 2; i < start + numDots; i++)
                            {
                               if (path[i] != CurrentDirectoryPrefixChar)
-                                 throw new ArgumentException(path);
+                                 throw new ArgumentException(path, "path");
                            }
 
                            numDots = 2;
@@ -381,7 +383,7 @@ namespace Alphaleonis.Win32.Filesystem
                         else
                         {
                            if (numDots > 1)
-                              throw new ArgumentException(path);
+                              throw new ArgumentException(path, "path");
 
                            numDots = 1;
                         }
@@ -453,11 +455,11 @@ namespace Alphaleonis.Win32.Filesystem
                {
                   // Only accept "C:", not "c :" or ":"
                   // Get a drive letter or ' ' if index is 0.
-                  var driveLetter = (index > 0) ? path[index - 1] : ' ';
+                  var driveLetter = index > 0 ? path[index - 1] : ' ';
 
-                  var validPath = (numDots == 0) && (numSigChars >= 1) && (driveLetter != ' ');
+                  var validPath = numDots == 0 && numSigChars >= 1 && driveLetter != ' ';
                   if (!validPath)
-                     throw new ArgumentException(path);
+                     throw new ArgumentException(path, "path");
 
                   startedWithVolumeSeparator = true;
                   // We need special logic to make " c:" work, we should not fix paths like "  foo::$DATA"
@@ -465,7 +467,7 @@ namespace Alphaleonis.Win32.Filesystem
                   {
                      // Common case, simply do nothing
                      var spaceCount = 0; // How many spaces did we write out, numSpaces has already been reset.
-                     while ((spaceCount < newBuffer.Length) && newBuffer[spaceCount] == ' ')
+                     while (spaceCount < newBuffer.Length && newBuffer[spaceCount] == ' ')
                         spaceCount++;
 
                      if (numSigChars - spaceCount == 1)
@@ -473,7 +475,7 @@ namespace Alphaleonis.Win32.Filesystem
                         //Safe to update stack ptr directly
                         newBuffer.Length = 0;
                         newBuffer.Append(driveLetter);
-                           // Overwrite spaces, we need a special case to not break "  foo" as a relative path.
+                        // Overwrite spaces, we need a special case to not break "  foo" as a relative path.
                      }
                   }
 
@@ -521,15 +523,15 @@ namespace Alphaleonis.Win32.Filesystem
                var start = lastSigChar + 1;
 
                if (path[start] != CurrentDirectoryPrefixChar)
-                  throw new ArgumentException(path);
+                  throw new ArgumentException(path, "path");
 
-               
+
                // Only allow "[dot]+[space]*", and normalize the legal ones to "." or ".."
                if (numDots >= 2)
                {
                   // Reject "C:..."
                   if (startedWithVolumeSeparator && numDots > 2)
-                     throw new ArgumentException(path);
+                     throw new ArgumentException(path, "path");
 
 
                   if (path[start + 1] == CurrentDirectoryPrefixChar)
@@ -537,7 +539,7 @@ namespace Alphaleonis.Win32.Filesystem
                      // Search for a space in the middle of the dots and throw
                      for (var i = start + 2; i < start + numDots; i++)
                         if (path[i] != CurrentDirectoryPrefixChar)
-                           throw new ArgumentException(path);
+                           throw new ArgumentException(path, "path");
 
                      numDots = 2;
                   }
@@ -545,7 +547,7 @@ namespace Alphaleonis.Win32.Filesystem
                   else
                   {
                      if (numDots > 1)
-                        throw new ArgumentException(path);
+                        throw new ArgumentException(path, "path");
 
                      numDots = 1;
                   }
@@ -561,7 +563,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          // If we ended up eating all the characters, bail out.
          if (newBuffer.Length == 0)
-            throw new ArgumentException(path);
+            throw new ArgumentException(path, "path");
 
 
          // Disallow URL's here.  Some of our other Win32 API calls will reject
@@ -572,42 +574,54 @@ namespace Alphaleonis.Win32.Filesystem
          if ((options & GetFullPathOptions.FullCheck) != 0)
          {
             var newBufferString = newBuffer.ToString();
-            if (newBufferString.StartsWith("http:", StringComparison.OrdinalIgnoreCase) || newBufferString.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
-               throw new ArgumentException(path);
+            if (newBufferString.StartsWith(Uri.UriSchemeHttp + ":", StringComparison.OrdinalIgnoreCase) || newBufferString.StartsWith(Uri.UriSchemeFile + ":", StringComparison.OrdinalIgnoreCase))
+               throw new ArgumentException(path, "path");
          }
+
 
          // Call the Win32 API to do the final canonicalization step.
-         var result = 1;
+         const int result = 1;
 
+         /* Throw an ArgumentException for paths like \\, \\server, \\server\
+            This check can only be properly done after normalizing, so
+            \\foo\.. will be properly rejected.  Also, reject \\?\GLOBALROOT\
+            (an internal kernel path) because it provides aliases for drives. */
 
-         if (result != 0)
+         if (newBuffer.Length > 1 && newBuffer[0] == DirectorySeparatorChar && newBuffer[1] == DirectorySeparatorChar)
          {
-            /* Throw an ArgumentException for paths like \\, \\server, \\server\
-               This check can only be properly done after normalizing, so
-               \\foo\.. will be properly rejected.  Also, reject \\?\GLOBALROOT\
-               (an internal kernel path) because it provides aliases for drives. */
-            if (newBuffer.Length > 1 && newBuffer[0] == '\\' && newBuffer[1] == '\\')
+            var startIndex = 2;
+            while (startIndex < result)
             {
-               var startIndex = 2;
-               while (startIndex < result)
+               if (newBuffer[startIndex] == DirectorySeparatorChar)
                {
-                  if (newBuffer[startIndex] == '\\')
-                  {
-                     startIndex++;
-                     break;
-                  }
-
                   startIndex++;
+                  break;
                }
 
-               if (startIndex == result)
-                  throw new ArgumentException(path);
+               startIndex++;
             }
+
+            if (startIndex == result)
+               throw new ArgumentException(path, "path");
          }
 
-         
+
          return newBuffer.ToString();
       }
+
+
+      //// Input to this method should already be fullpath. This method will ensure that we append 
+      //// the trailing slash only when appropriate and when thisDirOnly is specified append a "." 
+      //// at the end of the path to indicate that the demand is only for the fullpath and not 
+      //// everything underneath it.
+      //internal static string GetDemandDir(string fullPath, bool thisDirOnly)
+      //{
+      //   var endWithSeparator = fullPath.EndsWith(DirectorySeparator, StringComparison.Ordinal) || fullPath.EndsWith(AltDirectorySeparator, StringComparison.Ordinal);
+
+      //   return thisDirOnly
+      //      ? (endWithSeparator ? fullPath + CurrentDirectoryPrefix : fullPath + DirectorySeparator + CurrentDirectoryPrefix)
+      //      : (!endWithSeparator ? fullPath + DirectorySeparator : fullPath);
+      //}
 
       #endregion // Internal Methods
    }

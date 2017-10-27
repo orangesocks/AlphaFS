@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -78,7 +78,7 @@ namespace Alphaleonis.Win32.Filesystem
       public KernelTransaction(ObjectSecurity securityDescriptor, int timeout, string description)
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
          using (var securityAttributes = new Security.NativeMethods.SecurityAttributes(securityDescriptor))
          {
@@ -98,7 +98,7 @@ namespace Alphaleonis.Win32.Filesystem
       public void Commit()
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
          if (!NativeMethods.CommitTransaction(_hTrans))
             CheckTransaction();
@@ -111,7 +111,7 @@ namespace Alphaleonis.Win32.Filesystem
       public void Rollback()
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
          if (!NativeMethods.RollbackTransaction(_hTrans))
             CheckTransaction();

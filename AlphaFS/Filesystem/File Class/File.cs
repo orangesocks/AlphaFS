@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,6 +20,8 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
 
 namespace Alphaleonis.Win32.Filesystem
 {
@@ -29,6 +31,11 @@ namespace Alphaleonis.Win32.Filesystem
    [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]   
    public static partial class File
    {
-      // This file only exists for the documentation.
+      internal static void ThrowIOExceptionIfFsoExist(KernelTransaction transaction, bool isFolder, string fsoPath, PathFormat pathFormat)
+      {
+         if (ExistsCore(transaction, isFolder, fsoPath, pathFormat))
+            throw new IOException(string.Format(CultureInfo.InvariantCulture, "({0}) {1}", Win32Errors.ERROR_ALREADY_EXISTS,
+               string.Format(CultureInfo.InvariantCulture, isFolder ? Resources.Target_File_Is_A_Directory : Resources.Target_Directory_Is_A_File, fsoPath)), (int) Win32Errors.ERROR_ALREADY_EXISTS);
+      }
    }
 }

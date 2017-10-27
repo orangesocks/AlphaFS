@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -152,7 +152,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path)
       {
-         DeleteDirectoryCore(null, transaction, path, false, false, false, PathFormat.RelativePath);
+         DeleteDirectoryCore(transaction, null, path, false, false, false, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Deletes an empty directory from a specified path.</summary>
@@ -169,10 +169,10 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
       {
-         DeleteDirectoryCore(null, transaction, path, false, false, false, pathFormat);
+         DeleteDirectoryCore(transaction, null, path, false, false, false, pathFormat);
       }
 
-      
+
       /// <summary>[AlphaFS] Deletes the specified directory and, if indicated, any subdirectories in the directory.</summary>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
@@ -187,7 +187,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path, bool recursive)
       {
-         DeleteDirectoryCore(null, transaction, path, recursive, false, false, PathFormat.RelativePath);
+         DeleteDirectoryCore(transaction, null, path, recursive, false, false, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Deletes the specified directory and, if indicated, any subdirectories in the directory.</summary>
@@ -205,9 +205,9 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path, bool recursive, PathFormat pathFormat)
       {
-         DeleteDirectoryCore(null, transaction, path, recursive, false, false, pathFormat);
+         DeleteDirectoryCore(transaction, null, path, recursive, false, false, pathFormat);
       }
-      
+
 
       /// <summary>[AlphaFS] Deletes the specified directory and, if indicated, any subdirectories in the directory.</summary>
       /// <exception cref="ArgumentException"/>
@@ -224,7 +224,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path, bool recursive, bool ignoreReadOnly)
       {
-         DeleteDirectoryCore(null, transaction, path, recursive, ignoreReadOnly, false, PathFormat.RelativePath);
+         DeleteDirectoryCore(transaction, null, path, recursive, ignoreReadOnly, false, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Deletes the specified directory and, if indicated, any subdirectories in the directory.</summary>
@@ -243,7 +243,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static void DeleteTransacted(KernelTransaction transaction, string path, bool recursive, bool ignoreReadOnly, PathFormat pathFormat)
       {
-         DeleteDirectoryCore(null, transaction, path, recursive, ignoreReadOnly, false, pathFormat);
+         DeleteDirectoryCore(transaction, null, path, recursive, ignoreReadOnly, false, pathFormat);
       }
 
       #endregion // Transactional
@@ -260,20 +260,17 @@ namespace Alphaleonis.Win32.Filesystem
       /// <exception cref="NotSupportedException"/>
       /// <exception cref="UnauthorizedAccessException"/>
       /// <exception cref="DirectoryReadOnlyException"/>
-      /// <param name="fsEntryInfo">A FileSystemEntryInfo instance. Use either <paramref name="fsEntryInfo"/> or <paramref name="path"/>, not both.</param>
       /// <param name="transaction">The transaction.</param>
+      /// <param name="fsEntryInfo">A FileSystemEntryInfo instance. Use either <paramref name="fsEntryInfo"/> or <paramref name="path"/>, not both.</param>
       /// <param name="path">The name of the directory to remove. Use either <paramref name="path"/> or <paramref name="fsEntryInfo"/>, not both.</param>
       /// <param name="recursive"><see langword="true"/> to remove all files and subdirectories recursively; <see langword="false"/> otherwise only the top level empty directory.</param>
       /// <param name="ignoreReadOnly"><see langword="true"/> overrides read only attribute of files and directories.</param>
-      /// <param name="continueOnNotFound">When <see langword="true"/> does not throw an Exception when the directory does not exist.</param>
+      /// <param name="continueOnNotFound">When <see langword="true"/> does not throw an <see cref="DirectoryNotFoundException"/> when the directory does not exist.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
       [SecurityCritical]
-      internal static void DeleteDirectoryCore(FileSystemEntryInfo fsEntryInfo, KernelTransaction transaction, string path, bool recursive, bool ignoreReadOnly, bool continueOnNotFound, PathFormat pathFormat)
+      internal static void DeleteDirectoryCore(KernelTransaction transaction, FileSystemEntryInfo fsEntryInfo, string path, bool recursive, bool ignoreReadOnly, bool continueOnNotFound, PathFormat pathFormat)
       {
-         #region Setup
-
-         if (fsEntryInfo == null)
+         if (null == fsEntryInfo)
          {
             // MSDN: .NET 3.5+: DirectoryNotFoundException:
             // Path does not exist or could not be found.
@@ -283,13 +280,13 @@ namespace Alphaleonis.Win32.Filesystem
             if (pathFormat == PathFormat.RelativePath)
                Path.CheckSupportedPathFormat(path, true, true);
 
-            fsEntryInfo = File.GetFileSystemEntryInfoCore(true, transaction, Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator), continueOnNotFound, pathFormat);
+            fsEntryInfo = File.GetFileSystemEntryInfoCore(transaction, true, Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator), continueOnNotFound, pathFormat);
 
-            if (fsEntryInfo == null)
+            if (null == fsEntryInfo)
                return;
          }
 
-         #endregion // Setup
+         pathFormat = PathFormat.LongFullPath;
 
 
          // Do not follow mount points nor symbolic links, but do delete the reparse point itself.
@@ -299,20 +296,21 @@ namespace Alphaleonis.Win32.Filesystem
          {
             var dirs = new Stack<string>(1000);
 
-            foreach (var fsei in EnumerateFileSystemEntryInfosCore<FileSystemEntryInfo>(transaction, fsEntryInfo.LongFullPath, Path.WildcardStarMatchAll, DirectoryEnumerationOptions.FilesAndFolders | DirectoryEnumerationOptions.Recursive, PathFormat.LongFullPath))
+            foreach (var fsei in EnumerateFileSystemEntryInfosCore<FileSystemEntryInfo>(null, transaction, fsEntryInfo.LongFullPath, Path.WildcardStarMatchAll, SearchOption.AllDirectories, null, null, pathFormat))
             {
                if (fsei.IsDirectory)
                {
                   // Check to see if this is a mount point, and unmount it.
                   // Now it is safe to delete the actual directory.
                   if (fsei.IsMountPoint)
-                     Volume.DeleteVolumeMountPointCore(fsei.LongFullPath, false);
+                     DeleteJunctionCore(transaction, fsei, null, false, pathFormat);
+                     //Volume.DeleteVolumeMountPointCore(transaction, fsei.LongFullPath, false, true, pathFormat);
 
                   dirs.Push(fsei.LongFullPath);
                }
 
                else
-                  File.DeleteFileCore(transaction, fsei.LongFullPath, ignoreReadOnly, PathFormat.LongFullPath);
+                  File.DeleteFileCore(transaction, fsei.LongFullPath, ignoreReadOnly, pathFormat);
             }
 
 
@@ -324,15 +322,18 @@ namespace Alphaleonis.Win32.Filesystem
          // Check to see if this is a mount point, and unmount it.
          // Now it is safe to delete the actual directory.
          if (fsEntryInfo.IsMountPoint)
-            Volume.DeleteVolumeMountPointCore(fsEntryInfo.LongFullPath, false);
+            DeleteJunctionCore(transaction, fsEntryInfo, null, false, pathFormat);
+            //Volume.DeleteVolumeMountPointCore(transaction, fsEntryInfo.LongFullPath, false, true, pathFormat);
 
          DeleteDirectoryCore(transaction, fsEntryInfo.LongFullPath, ignoreReadOnly, continueOnNotFound);
       }
-      
 
+
+      [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
       private static void DeleteDirectoryCore(KernelTransaction transaction, string pathLp, bool ignoreReadOnly, bool continueOnNotFound)
       {
-         startRemoveDirectory:
+
+      startRemoveDirectory:
 
          var success = transaction == null || !NativeMethods.IsAtLeastWindowsVista
 
@@ -354,13 +355,13 @@ namespace Alphaleonis.Win32.Filesystem
             {
                case Win32Errors.ERROR_DIR_NOT_EMPTY:
                   // MSDN: .NET 3.5+: IOException: The directory specified by path is not an empty directory. 
-                  throw new DirectoryNotEmptyException(pathLp);
+                  throw new DirectoryNotEmptyException(pathLp, true);
 
 
                case Win32Errors.ERROR_DIRECTORY:
                   // MSDN: .NET 3.5+: DirectoryNotFoundException: Path refers to a file instead of a directory.
-                  if (File.ExistsCore(false, transaction, pathLp, PathFormat.LongFullPath))
-                     throw new DirectoryNotFoundException(string.Format(CultureInfo.CurrentCulture, "({0}) {1}", Win32Errors.ERROR_INVALID_PARAMETER, string.Format(CultureInfo.CurrentCulture, Resources.Target_Directory_Is_A_File, pathLp)));
+                  if (File.ExistsCore(transaction, false, pathLp, PathFormat.LongFullPath))
+                     throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, "({0}) {1}", lastError, string.Format(CultureInfo.InvariantCulture, Resources.Target_Directory_Is_A_File, pathLp)));
                   break;
 
 
@@ -369,33 +370,33 @@ namespace Alphaleonis.Win32.Filesystem
                      return;
                   break;
 
-               
+
                case Win32Errors.ERROR_SHARING_VIOLATION:
                   // MSDN: .NET 3.5+: IOException: The directory is being used by another process or there is an open handle on the directory.
                   NativeError.ThrowException(lastError, pathLp);
                   break;
 
-               
+
                case Win32Errors.ERROR_ACCESS_DENIED:
-                  var data = new NativeMethods.WIN32_FILE_ATTRIBUTE_DATA();
-                  var dataInitialised = File.FillAttributeInfoCore(transaction, pathLp, ref data, false, true);
+                  var attrs = new NativeMethods.WIN32_FILE_ATTRIBUTE_DATA();
+                  var dataInitialised = File.FillAttributeInfoCore(transaction, pathLp, ref attrs, false, true);
 
-                  if (data.dwFileAttributes != (FileAttributes) (-1))
+                  
+                  if (File.IsReadOnly(attrs.dwFileAttributes))
                   {
-                     if ((data.dwFileAttributes & FileAttributes.ReadOnly) != 0)
+                     // MSDN: .NET 3.5+: IOException: The directory specified by path is read-only.
+
+                     if (ignoreReadOnly)
                      {
-                        // MSDN: .NET 3.5+: IOException: The directory specified by path is read-only.
+                        // Reset directory attributes to Normal.
+                        File.SetAttributesCore(transaction, true, pathLp, FileAttributes.Normal, PathFormat.LongFullPath);
 
-                        if (ignoreReadOnly)
-                        {
-                           // Reset directory attributes.
-                           File.SetAttributesCore(true, transaction, pathLp, FileAttributes.Normal, PathFormat.LongFullPath);
-                           goto startRemoveDirectory;
-                        }
-
-                        // MSDN: .NET 3.5+: IOException: The directory is read-only.
-                        throw new DirectoryReadOnlyException(pathLp);
+                        goto startRemoveDirectory;
                      }
+
+
+                     // MSDN: .NET 3.5+: IOException: The directory is read-only.
+                     throw new DirectoryReadOnlyException(pathLp);
                   }
 
 

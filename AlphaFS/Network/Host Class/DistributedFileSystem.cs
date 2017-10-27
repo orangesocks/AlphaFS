@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -22,6 +22,7 @@
 using Alphaleonis.Win32.Filesystem;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -46,16 +47,18 @@ namespace Alphaleonis.Win32.Network
       public static IEnumerable<DfsInfo> EnumerateDfsLinks(string dfsName)
       {
          if (!Filesystem.NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
+
 
          if (Utils.IsNullOrWhiteSpace(dfsName))
             throw new ArgumentNullException("dfsName");
+
 
          var fd = new FunctionData();
 
          return EnumerateNetworkObjectCore(fd, (NativeMethods.DFS_INFO_9 structure, SafeGlobalMemoryBufferHandle buffer) =>
 
-            new DfsInfo(structure),
+               new DfsInfo(structure),
 
             (FunctionData functionData, out SafeGlobalMemoryBufferHandle buffer, int prefMaxLen, out uint entriesRead, out uint totalEntries, out uint resumeHandle1) =>
             {
@@ -188,21 +191,22 @@ namespace Alphaleonis.Win32.Network
       private static IEnumerable<string> EnumerateDfsRootCore(string host, bool continueOnException)
       {
          if (!Filesystem.NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
+
 
          return EnumerateNetworkObjectCore(new FunctionData(), (NativeMethods.DFS_INFO_300 structure, SafeGlobalMemoryBufferHandle buffer) =>
 
-            new DfsInfo { EntryPath = structure.DfsName },
+               new DfsInfo { EntryPath = structure.DfsName },
 
             (FunctionData functionData, out SafeGlobalMemoryBufferHandle buffer, int prefMaxLen, out uint entriesRead, out uint totalEntries, out uint resumeHandle) =>
             {
                totalEntries = 0;
 
                // When host == null, the local computer is used.
-               // However, the resulting Host property will be empty.
+               // However, the resulting OpenResourceInfo.Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
-               string stripUnc = Utils.IsNullOrWhiteSpace(host) ? Environment.MachineName : Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
+               var stripUnc = !Utils.IsNullOrWhiteSpace(host) ? Path.GetRegularPathCore(host, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty) : Environment.MachineName;
 
                return NativeMethods.NetDfsEnum(stripUnc, 300, prefMaxLen, out buffer, out entriesRead, out resumeHandle);
 
@@ -222,11 +226,12 @@ namespace Alphaleonis.Win32.Network
       private static IEnumerable<string> EnumerateDomainDfsRootCore(string domain, bool continueOnException)
       {
          if (!Filesystem.NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
+
 
          return EnumerateNetworkObjectCore(new FunctionData(), (NativeMethods.DFS_INFO_200 structure, SafeGlobalMemoryBufferHandle buffer) =>
 
-            new DfsInfo { EntryPath = string.Format(CultureInfo.CurrentCulture, "{0}{1}{2}{3}", Path.UncPrefix, NativeMethods.ComputerDomain, Path.DirectorySeparatorChar, structure.FtDfsName) },
+               new DfsInfo { EntryPath = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}{3}", Path.UncPrefix, !Utils.IsNullOrWhiteSpace(domain) ? domain : NativeMethods.ComputerDomain, Path.DirectorySeparatorChar, structure.FtDfsName) },
 
             (FunctionData functionData, out SafeGlobalMemoryBufferHandle buffer, int prefMaxLen, out uint entriesRead, out uint totalEntries, out uint resumeHandle) =>
             {
@@ -236,7 +241,7 @@ namespace Alphaleonis.Win32.Network
                // However, the resulting Host property will be empty.
                // So, explicitly state Environment.MachineName to prevent this.
                // Furthermore, the UNC prefix: \\ is not required and always removed.
-               string stripUnc = Utils.IsNullOrWhiteSpace(domain) ? NativeMethods.ComputerDomain : Path.GetRegularPathCore(domain, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty);
+               var stripUnc = !Utils.IsNullOrWhiteSpace(domain) ? Path.GetRegularPathCore(domain, GetFullPathOptions.CheckInvalidPathChars, false).Replace(Path.UncPrefix, string.Empty) : NativeMethods.ComputerDomain;
 
                return NativeMethods.NetDfsEnum(stripUnc, 200, prefMaxLen, out buffer, out entriesRead, out resumeHandle);
 
@@ -267,19 +272,21 @@ namespace Alphaleonis.Win32.Network
       private static DfsInfo GetDfsInfoCore(bool getFromClient, string dfsName, string serverName, string shareName)
       {
          if (!Filesystem.NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
+
 
          if (Utils.IsNullOrWhiteSpace(dfsName))
             throw new ArgumentNullException("dfsName");
 
-         serverName = Utils.IsNullOrWhiteSpace(serverName) ? null : serverName;
-         shareName = Utils.IsNullOrWhiteSpace(shareName) ? null : shareName;
+
+         serverName = !Utils.IsNullOrWhiteSpace(serverName) ? serverName : null;
+         shareName = !Utils.IsNullOrWhiteSpace(shareName) ? shareName : null;
 
          SafeGlobalMemoryBufferHandle safeBuffer;
 
          // Level 9 = DFS_INFO_9
 
-         uint lastError = getFromClient
+         var lastError = getFromClient
             ? NativeMethods.NetDfsGetClientInfo(dfsName, serverName, shareName, 9, out safeBuffer)
             : NativeMethods.NetDfsGetInfo(dfsName, null, null, 9, out safeBuffer);
 

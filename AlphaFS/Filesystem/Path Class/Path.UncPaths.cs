@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -209,19 +209,19 @@ namespace Alphaleonis.Win32.Filesystem
                // Only leave trailing backslash if "localPath" also ends with backslash.
                return localPath.EndsWith(DirectorySeparator, StringComparison.OrdinalIgnoreCase)
                   ? AddTrailingDirectorySeparator(unc.lpConnectionName, false)
-                  : RemoveTrailingDirectorySeparator(unc.lpConnectionName, false);
+                  : RemoveTrailingDirectorySeparator(unc.lpConnectionName);
 
             // Split: localDrive[0] = "C", localDrive[1] = "\Windows"
             string[] localDrive = localPath.Split(VolumeSeparatorChar);
 
             // Return: "\\MachineName\C$\Windows"
-            localPath = string.Format(CultureInfo.CurrentCulture, "{0}{1}{2}${3}", Host.GetUncName(), DirectorySeparatorChar, localDrive[0], localDrive[1]);
+            localPath = string.Format(CultureInfo.InvariantCulture, "{0}{1}{2}${3}", Host.GetUncName(), DirectorySeparatorChar, localDrive[0], localDrive[1]);
          }
 
 
          // Only leave trailing backslash if "localPath" also ends with backslash.
          addTrailingDirectorySeparator = addTrailingDirectorySeparator ||
-                                         (localPath.EndsWith(DirectorySeparator, StringComparison.OrdinalIgnoreCase) && !removeTrailingDirectorySeparator);
+                                         localPath.EndsWith(DirectorySeparator, StringComparison.OrdinalIgnoreCase) && !removeTrailingDirectorySeparator;
 
          var options = (addTrailingDirectorySeparator ? GetFullPathOptions.AddTrailingDirectorySeparator : 0) |
                        (removeTrailingDirectorySeparator ? GetFullPathOptions.RemoveTrailingDirectorySeparator : 0);

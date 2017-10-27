@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -68,7 +68,7 @@ namespace Alphaleonis.Win32.Security
             throw new ArgumentOutOfRangeException("length", Resources.Negative_Length);
 
          if (destinationOffset + length > destination.Length)
-            throw new ArgumentException(Resources.Destination_Buffer_Not_Large_Enough);
+            throw new ArgumentException(Resources.Destination_Buffer_Not_Large_Enough, "length");
 
          Marshal.Copy(handle, destination, destinationOffset, length);
       }

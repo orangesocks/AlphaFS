@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Reflection;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -41,10 +42,10 @@ namespace AlphaFS.UnitTest
 
 
       [TestMethod]
-      public void AlphaFS_File_TransferTimestamps_LocalAndNetwork_Success()
+      public void AlphaFS_File_CopyTimestamps_LocalAndNetwork_Success()
       {
-         File_TransferTimestamps(false);
-         File_TransferTimestamps(true);
+         File_CopyTimestamps(false);
+         File_CopyTimestamps(true);
       }
 
 
@@ -61,7 +62,7 @@ namespace AlphaFS.UnitTest
          var rnd = new Random();
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "File.SetTimestampsXxx"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
             var file = UnitTestConstants.CreateFile(rootDir.Directory.FullName);
             var symlinkPath = System.IO.Path.Combine(rootDir.Directory.FullName, System.IO.Path.GetRandomFileName()) + "-symlink";
@@ -69,7 +70,7 @@ namespace AlphaFS.UnitTest
             Console.WriteLine("\nInput File Path: [{0}]", file);
 
 
-            Alphaleonis.Win32.Filesystem.File.CreateSymbolicLink(symlinkPath, file.FullName, Alphaleonis.Win32.Filesystem.SymbolicLinkTarget.File);
+            Alphaleonis.Win32.Filesystem.File.CreateSymbolicLink(symlinkPath, file.FullName);
 
 
             var creationTime = new DateTime(rnd.Next(1971, 2071), rnd.Next(1, 12), rnd.Next(1, 28), rnd.Next(0, 23), rnd.Next(0, 59), rnd.Next(0, 59));
@@ -116,7 +117,7 @@ namespace AlphaFS.UnitTest
       }
 
 
-      private void File_TransferTimestamps(bool isNetwork)
+      private void File_CopyTimestamps(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
 
@@ -125,7 +126,7 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "File.TransferTimestamps"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
             var file = rootDir.RandomFileFullPath;
             var file2 = rootDir.RandomFileFullPath;
@@ -148,7 +149,7 @@ namespace AlphaFS.UnitTest
             Assert.AreNotEqual(System.IO.File.GetLastAccessTime(file), System.IO.File.GetLastAccessTime(file2));
             Assert.AreNotEqual(System.IO.File.GetLastWriteTime(file), System.IO.File.GetLastWriteTime(file2));
 
-            Alphaleonis.Win32.Filesystem.File.TransferTimestamps(file, file2);
+            Alphaleonis.Win32.Filesystem.File.CopyTimestamps(file, file2);
 
             Assert.AreEqual(System.IO.File.GetCreationTime(file), System.IO.File.GetCreationTime(file2));
             Assert.AreEqual(System.IO.File.GetLastAccessTime(file), System.IO.File.GetLastAccessTime(file2));

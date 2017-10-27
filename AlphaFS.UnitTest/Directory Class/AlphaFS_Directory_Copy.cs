@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
@@ -41,6 +42,17 @@ namespace AlphaFS.UnitTest
       {
          Directory_Copy_Overwrite_DestinationFileAlreadyExists(false);
          Directory_Copy_Overwrite_DestinationFileAlreadyExists(true);
+      }
+
+
+      [TestMethod]
+      public void AlphaFS_Directory_Copy_CopyOptions_CopySymbolicLink_SourceIsASymbolicLink_TargetMustAlsoBeASymbolicLink_LocalAndNetwork_Success()
+      {
+         if (!UnitTestConstants.IsAdmin())
+            Assert.Inconclusive();
+
+         Directory_Copy_CopyOptions_CopySymbolicLink_SourceIsASymbolicLink_TargetMustAlsoBeASymbolicLink(false);
+         Directory_Copy_CopyOptions_CopySymbolicLink_SourceIsASymbolicLink_TargetMustAlsoBeASymbolicLink(true);
       }
 
 
@@ -81,7 +93,7 @@ namespace AlphaFS.UnitTest
          Directory_Copy_CatchDirectoryNotFoundException_NonExistingDirectory(false);
          Directory_Copy_CatchDirectoryNotFoundException_NonExistingDirectory(true);
       }
-      
+
 
       [TestMethod]
       public void AlphaFS_Directory_Copy_CatchNotSupportedException_PathContainsColon_LocalAndNetwork_Success()
@@ -110,14 +122,14 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source-") + System.IO.Path.GetRandomFileName());
-            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination-") + System.IO.Path.GetRandomFileName());
+            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source Folder"));
+            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination Folder"));
             Console.WriteLine("\nSrc Directory Path: [{0}]", folderSrc.FullName);
             Console.WriteLine("Dst Directory Path: [{0}]", folderDst.FullName);
 
-            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), true);
+            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), false, false, true);
 
 
             var dirEnumOptions = Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.FilesAndFolders | Alphaleonis.Win32.Filesystem.DirectoryEnumerationOptions.Recursive;
@@ -130,6 +142,8 @@ namespace AlphaFS.UnitTest
 
             var copyResult = Alphaleonis.Win32.Filesystem.Directory.Copy(folderSrc.FullName, folderDst.FullName, Alphaleonis.Win32.Filesystem.CopyOptions.FailIfExists);
 
+            UnitTestConstants.Dump(copyResult, -16);
+
 
             props = Alphaleonis.Win32.Filesystem.Directory.GetProperties(folderDst.FullName, dirEnumOptions);
             Assert.AreEqual(sourceTotal, props["Total"], "The number of total file system objects do not match.");
@@ -140,12 +154,13 @@ namespace AlphaFS.UnitTest
 
             // Test against copyResult results.
 
-            UnitTestConstants.Dump(copyResult, -12);
-            
             Assert.AreEqual(sourceTotal, copyResult.TotalFolders + copyResult.TotalFiles, "The number of total file system objects do not match.");
             Assert.AreEqual(sourceTotalFiles, copyResult.TotalFiles, "The number of total files do not match.");
             Assert.AreEqual(sourceTotalSize, copyResult.TotalBytes, "The total file size does not match.");
-
+            Assert.IsTrue(copyResult.IsCopy);
+            Assert.IsFalse(copyResult.IsMove);
+            Assert.IsTrue(copyResult.IsDirectory);
+            Assert.IsFalse(copyResult.IsFile);
 
             Assert.IsTrue(System.IO.Directory.Exists(folderSrc.FullName), "The original directory does not exist, but is expected to.");
          }
@@ -163,15 +178,15 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source-") + System.IO.Path.GetRandomFileName());
-            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination-") + System.IO.Path.GetRandomFileName());
+            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source Folder"));
+            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination Folder"));
             Console.WriteLine("\nSrc Directory Path: [{0}]", folderSrc.FullName);
             Console.WriteLine("Dst Directory Path: [{0}]", folderDst.FullName);
 
 
-            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), true);
+            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), false, false, true);
             Alphaleonis.Win32.Filesystem.Directory.Copy(folderSrc.FullName, folderDst.FullName);
 
 
@@ -184,7 +199,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("AlreadyExistsException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -211,11 +226,56 @@ namespace AlphaFS.UnitTest
 
             // Test against copyResult results.
 
-            UnitTestConstants.Dump(copyResult, -12);
+            UnitTestConstants.Dump(copyResult, -16);
 
             Assert.AreEqual(sourceTotal, copyResult.TotalFolders + copyResult.TotalFiles, "The number of total file system objects do not match.");
             Assert.AreEqual(sourceTotalFiles, copyResult.TotalFiles, "The number of total files do not match.");
             Assert.AreEqual(sourceTotalSize, copyResult.TotalBytes, "The total file size does not match.");
+         }
+
+         Console.WriteLine();
+      }
+
+
+      private void Directory_Copy_CopyOptions_CopySymbolicLink_SourceIsASymbolicLink_TargetMustAlsoBeASymbolicLink(bool isNetwork)
+      {
+         UnitTestConstants.PrintUnitTestHeader(isNetwork);
+
+         var tempPath = System.IO.Path.GetTempPath();
+         if (isNetwork)
+            tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
+
+
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
+         {
+            var sourceFolderLink = System.IO.Path.Combine(rootDir.Directory.FullName, "SourceDirectoryLink-ToOriginalDirectory");
+
+            var dirInfo = new System.IO.DirectoryInfo(System.IO.Path.Combine(rootDir.Directory.FullName, "OriginalDirectory"));
+            dirInfo.Create();
+
+            Console.WriteLine("\nInput Directory Path: [{0}]", dirInfo.FullName);
+            Console.WriteLine("Input Directory Link: [{0}]", sourceFolderLink);
+
+            Alphaleonis.Win32.Filesystem.Directory.CreateSymbolicLink(sourceFolderLink, dirInfo.FullName);
+
+
+            var destinationFolderLink = System.IO.Path.Combine(rootDir.Directory.FullName, "DestinationDirectoryLink-ToOriginalDirectory");
+
+            Alphaleonis.Win32.Filesystem.Directory.Copy(sourceFolderLink, destinationFolderLink, Alphaleonis.Win32.Filesystem.CopyOptions.CopySymbolicLink);
+
+
+            var lviSrc = Alphaleonis.Win32.Filesystem.Directory.GetLinkTargetInfo(sourceFolderLink);
+            var lviDst = Alphaleonis.Win32.Filesystem.Directory.GetLinkTargetInfo(destinationFolderLink);
+
+            Console.WriteLine("\n\tLink Info of source Link:");
+            UnitTestConstants.Dump(lviSrc, -14);
+
+            Console.WriteLine("\n\tLink Info of copied Link:");
+            UnitTestConstants.Dump(lviDst, -14);
+
+
+            Assert.AreEqual(lviSrc.PrintName, lviDst.PrintName);
+            Assert.AreEqual(lviSrc.SubstituteName, lviDst.SubstituteName);
          }
 
          Console.WriteLine();
@@ -231,15 +291,15 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source-") + System.IO.Path.GetRandomFileName());
-            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination-") + System.IO.Path.GetRandomFileName());
+            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source Folder"));
+            var folderDst = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Destination Folder"));
             Console.WriteLine("\nSrc Directory Path: [{0}]", folderSrc.FullName);
             Console.WriteLine("Dst Directory Path: [{0}]", folderDst.FullName);
 
 
-            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), true);
+            UnitTestConstants.CreateDirectoriesAndFiles(folderSrc.FullName, new Random().Next(5, 15), false, false, true);
             Alphaleonis.Win32.Filesystem.Directory.Copy(folderSrc.FullName, folderDst.FullName);
 
 
@@ -252,7 +312,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("AlreadyExistsException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
          }
@@ -278,7 +338,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -303,14 +363,14 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
          Console.WriteLine();
       }
 
-      
+
       private void Directory_Copy_CatchNotSupportedException_PathContainsColon(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
@@ -330,7 +390,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("NotSupportedException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -345,11 +405,11 @@ namespace AlphaFS.UnitTest
          var tempPath = System.IO.Path.GetTempPath();
          if (isNetwork)
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
-         
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = Alphaleonis.Win32.Filesystem.DriveInfo.GetFreeDriveLetter() + @":\NonExistingFolder";
+            var folder = Alphaleonis.Win32.Filesystem.DriveInfo.GetFreeDriveLetter() + @":\NonExisting Source Folder";
             if (isNetwork)
                folder = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(folder);
 
@@ -365,7 +425,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals(isNetwork ? "IOException" : "DirectoryNotFoundException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
          }
@@ -383,10 +443,10 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folderSrc = System.IO.Path.Combine(rootDir.Directory.FullName, "Source-") + System.IO.Path.GetRandomFileName();
-            var folderDst = System.IO.Path.Combine(rootDir.Directory.FullName, "Destination-") + System.IO.Path.GetRandomFileName();
+            var folderSrc = System.IO.Path.Combine(rootDir.Directory.FullName, "Source");
+            var folderDst = System.IO.Path.Combine(rootDir.Directory.FullName, "Destination");
             Console.WriteLine("\nSrc Directory Path: [{0}]", folderSrc);
             Console.WriteLine("Dst Directory Path: [{0}]", folderDst);
 
@@ -400,7 +460,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("DirectoryNotFoundException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
          }
@@ -418,9 +478,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Copy"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folderSrc = rootDir.RandomFileFullPath;
+            var folderSrc = System.IO.Directory.CreateDirectory(System.IO.Path.Combine(rootDir.Directory.FullName, "Source Folder"));
             Console.WriteLine("\nSrc Directory Path: [{0}]", folderSrc);
 
 
@@ -435,13 +495,13 @@ namespace AlphaFS.UnitTest
             var user = (Environment.UserDomainName + @"\" + Environment.UserName).TrimStart('\\');
             var rule = new System.Security.AccessControl.FileSystemAccessRule(user, System.Security.AccessControl.FileSystemRights.FullControl, System.Security.AccessControl.InheritanceFlags.ContainerInherit | System.Security.AccessControl.InheritanceFlags.ObjectInherit, System.Security.AccessControl.PropagationFlags.None, System.Security.AccessControl.AccessControlType.Deny);
 
-            var dirInfo = System.IO.Directory.CreateDirectory(folderSrc);
+            var dirInfo = System.IO.Directory.CreateDirectory(folderSrc.FullName);
 
             // Set DENY for current user.
             var dirSecurity = dirInfo.GetAccessControl();
             dirSecurity.AddAccessRule(rule);
             dirInfo.SetAccessControl(dirSecurity);
-            
+
 
             var gotException = false;
             try
@@ -452,7 +512,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("UnauthorizedAccessException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 

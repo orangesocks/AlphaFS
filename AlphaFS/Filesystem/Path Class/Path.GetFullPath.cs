@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -57,8 +57,6 @@ namespace Alphaleonis.Win32.Filesystem
 
       #endregion // .NET
 
-
-      #region AlphaFS
 
       /// <summary>Returns the absolute path for the specified path string.</summary>
       /// <returns>The fully qualified location of path, such as "C:\MyFile.txt".</returns>
@@ -143,9 +141,8 @@ namespace Alphaleonis.Win32.Filesystem
          return GetFullPathTackleCore(transaction, path, options);
       }
 
-      #endregion // AlphaFS
 
-      #region Internal Methods
+
 
       /// <summary>Retrieves the absolute path for the specified <paramref name="path"/> string.</summary>
       /// <returns>The fully qualified location of <paramref name="path"/>, such as "C:\MyFile.txt".</returns>
@@ -171,10 +168,15 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       internal static string GetFullPathCore(KernelTransaction transaction, string path, GetFullPathOptions options)
       {
-         if (path != null)
-            if (path.StartsWith(GlobalRootPrefix, StringComparison.OrdinalIgnoreCase) ||path.StartsWith(VolumePrefix, StringComparison.OrdinalIgnoreCase))
+         // Skip the special paths recognised by Windows kernel only.
+
+         if (null != path)
+            if (path.StartsWith(GlobalRootPrefix, StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(VolumePrefix, StringComparison.OrdinalIgnoreCase) ||
+                path.StartsWith(NonInterpretedPathPrefix, StringComparison.Ordinal))
                return path;
-         
+
+
          if (options != GetFullPathOptions.None)
          {
             if ((options & GetFullPathOptions.CheckInvalidPathChars) != 0)
@@ -193,7 +195,8 @@ namespace Alphaleonis.Win32.Filesystem
             // Do not remove trailing directory separator when path points to a drive like: "C:\"
             // Doing so makes path point to the current directory.
 
-            if (path == null || path.Length <= 3 || (!path.StartsWith(LongPathPrefix, StringComparison.OrdinalIgnoreCase) && path[1] != VolumeSeparatorChar))
+            // ".", "C:", "C:\"
+            if (null == path || path.Length <= 3 || !path.StartsWith(LongPathPrefix, StringComparison.OrdinalIgnoreCase) && path[1] != VolumeSeparatorChar)
                options &= ~GetFullPathOptions.RemoveTrailingDirectorySeparator;
          }
 
@@ -203,10 +206,11 @@ namespace Alphaleonis.Win32.Filesystem
 
          using (new NativeMethods.ChangeErrorMode(NativeMethods.ErrorMode.FailCriticalErrors))
          {
-            startGetFullPathName:
+         
+         startGetFullPathName:
 
-            var buffer = new StringBuilder((int)bufferSize);
-            var returnLength = (transaction == null || !NativeMethods.IsAtLeastWindowsVista
+            var buffer = new StringBuilder((int) bufferSize);
+            var returnLength = null == transaction || !NativeMethods.IsAtLeastWindowsVista
 
                // GetFullPathName() / GetFullPathNameTransacted()
                // In the ANSI version of this function, the name is limited to MAX_PATH characters.
@@ -214,7 +218,8 @@ namespace Alphaleonis.Win32.Filesystem
                // 2013-04-15: MSDN confirms LongPath usage.
 
                ? NativeMethods.GetFullPathName(pathLp, bufferSize, buffer, IntPtr.Zero)
-               : NativeMethods.GetFullPathNameTransacted(pathLp, bufferSize, buffer, IntPtr.Zero, transaction.SafeHandle));
+               : NativeMethods.GetFullPathNameTransacted(pathLp, bufferSize, buffer, IntPtr.Zero, transaction.SafeHandle);
+
 
             if (returnLength != Win32Errors.NO_ERROR)
             {
@@ -229,7 +234,7 @@ namespace Alphaleonis.Win32.Filesystem
                if ((options & GetFullPathOptions.ContinueOnNonExist) != 0)
                   return null;
 
-               NativeError.ThrowException(pathLp);
+               NativeError.ThrowException(returnLength, pathLp);
             }
 
 
@@ -243,7 +248,7 @@ namespace Alphaleonis.Win32.Filesystem
 
             if ((options & GetFullPathOptions.KeepDotOrSpace) != 0)
             {
-               if (pathLp.EndsWith(".", StringComparison.OrdinalIgnoreCase))
+               if (pathLp.EndsWith(".", StringComparison.Ordinal))
                   finalFullPath += ".";
 
                var lastChar = pathLp[pathLp.Length - 1];
@@ -251,10 +256,11 @@ namespace Alphaleonis.Win32.Filesystem
                   finalFullPath += lastChar;
             }
 
-            
+
             return finalFullPath;
          }
       }
+
 
       private static string GetFullPathTackleCore(KernelTransaction transaction, string path, GetFullPathOptions options)
       {
@@ -273,8 +279,8 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Applies the <seealso cref="GetFullPathOptions"/> to <paramref name="path"/></summary>
       /// <returns><paramref name="path"/> with applied <paramref name="options"/>.</returns>
-      /// <exception cref="ArgumentNullException"/>
       /// <exception cref="ArgumentException"/>
+      /// <exception cref="ArgumentNullException"/>
       /// <param name="path"></param>
       /// <param name="options"></param>
       private static string ApplyFullPathOptions(string path, GetFullPathOptions options)
@@ -287,7 +293,7 @@ namespace Alphaleonis.Win32.Filesystem
             path = AddTrailingDirectorySeparator(path, false);
 
          if ((options & GetFullPathOptions.RemoveTrailingDirectorySeparator) != 0)
-            path = RemoveTrailingDirectorySeparator(path, false);
+            path = RemoveTrailingDirectorySeparator(path);
 
          if ((options & GetFullPathOptions.CheckInvalidPathChars) != 0)
             CheckInvalidPathChars(path, (options & GetFullPathOptions.CheckAdditional) != 0, false);
@@ -299,7 +305,5 @@ namespace Alphaleonis.Win32.Filesystem
 
          return path;
       }
-
-      #endregion // Internal Methods
    }
 }

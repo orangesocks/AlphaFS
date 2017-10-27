@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AlphaFS.UnitTest
@@ -35,32 +36,24 @@ namespace AlphaFS.UnitTest
          if (!UnitTestConstants.IsAdmin())
             Assert.Inconclusive();
 
-         File_CreateEnumerateHardlinks(false);
-         File_CreateEnumerateHardlinks(true);
+         File_CreateHardlink_And_EnumerateHardlinks(false);
       }
 
 
-      private void File_CreateEnumerateHardlinks(bool isNetwork)
+      private void File_CreateHardlink_And_EnumerateHardlinks(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
          
          var tempPath = System.IO.Path.GetTempPath();
-         if (isNetwork)
-         {
-            //tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
-            Console.WriteLine("\nEnumerating Hardlinks does not work with UNC paths.");
-            return;
-         }
 
-
-         using (var rootDir = new TemporaryDirectory(tempPath, "File.EnumerateHardlinks"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
             var hardlinkFolder = System.IO.Path.Combine(rootDir.Directory.FullName, "Hardlinks");
             System.IO.Directory.CreateDirectory(hardlinkFolder);
 
 
             var file = System.IO.Path.Combine(rootDir.Directory.FullName, "OriginalFile.txt");
-            Console.WriteLine("\n\tInput File Path: [{0}]\n", file);
+            Console.WriteLine("\nInput File Path: [{0}]\n", file);
 
             // Create original file with text content.
             System.IO.File.WriteAllText(file, UnitTestConstants.TextHelloWorld);

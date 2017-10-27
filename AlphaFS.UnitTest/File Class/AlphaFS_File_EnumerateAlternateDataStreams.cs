@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -34,7 +34,7 @@ namespace AlphaFS.UnitTest
       // Pattern: <class>_<function>_<scenario>_<expected result>
 
       [TestMethod]
-      public void File_EnumerateAlternateDataStreams_LocalAndNetwork_Success()
+      public void AlphaFS_File_EnumerateAlternateDataStreams_LocalAndNetwork_Success()
       {
          File_EnumerateAlternateDataStreams(false);
          File_EnumerateAlternateDataStreams(true);

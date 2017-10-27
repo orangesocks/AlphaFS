@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -58,7 +58,7 @@ namespace AlphaFS.UnitTest
 
                Console.WriteLine("\tCaught [System.IO] {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
             }
-            Console.WriteLine("\t   System.IO : [{0}]", expected ?? "null");
+            Console.WriteLine("\t   System.IO : [{0}]", expected ?? "NULL");
 
 
             // AlphaFS
@@ -73,11 +73,11 @@ namespace AlphaFS.UnitTest
             {
                errorCnt++;
 
-               Console.WriteLine("\tCaught [AlphaFS] {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
+               Console.WriteLine("\tCaught [AlphaFS]   {0}: [{1}]", ex.GetType().FullName, ex.Message.Replace(Environment.NewLine, "  "));
             }
-            Console.WriteLine("\t   AlphaFS   : [{0}]", actual ?? "null");
+            Console.WriteLine("\t   AlphaFS   : [{0}]", actual ?? "NULL");
          }
-         Console.WriteLine("\n{0}", UnitTestConstants.Reporter(true));
+         Console.WriteLine();
 
          Assert.AreEqual(0, errorCnt, "Encountered paths where AlphaFS != System.IO");
       }
@@ -98,7 +98,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
       }
@@ -116,7 +116,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
       }
@@ -134,7 +134,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("NotSupportedException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
       }

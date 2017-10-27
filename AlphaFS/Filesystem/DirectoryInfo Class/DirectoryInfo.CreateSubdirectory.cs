@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -159,7 +159,7 @@ namespace Alphaleonis.Win32.Filesystem
             Path.GetExtendedLengthPathCore(Transaction, templatePath, PathFormat.RelativePath, GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator);
 
          if (string.Compare(LongFullName, 0, pathLp, 0, LongFullName.Length, StringComparison.OrdinalIgnoreCase) != 0)
-            throw new ArgumentException(Resources.Invalid_Subpath, pathLp);
+            throw new ArgumentException(Resources.Invalid_Subpath, "path");
 
          return Directory.CreateDirectoryCore(Transaction, pathLp, templatePathLp, directorySecurity, compress, PathFormat.LongFullPath);
       }

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -29,7 +29,7 @@ namespace AlphaFS.UnitTest
    internal sealed class TemporaryDirectory : IDisposable
    {
       public TemporaryDirectory(string prefix = null) : this(System.IO.Path.GetTempPath(), prefix) { }
-      
+
       public TemporaryDirectory(string root, string prefix)
       {
          if (Utils.IsNullOrWhiteSpace(prefix))
@@ -37,7 +37,7 @@ namespace AlphaFS.UnitTest
 
          do
          {
-            Directory = new System.IO.DirectoryInfo(System.IO.Path.Combine(root, prefix + "-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture).Substring(0, 6)));
+            Directory = new System.IO.DirectoryInfo(System.IO.Path.Combine(root, prefix + "." + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture).Substring(0, 6)));
 
          } while (Directory.Exists);
 
@@ -46,9 +46,19 @@ namespace AlphaFS.UnitTest
 
       public System.IO.DirectoryInfo Directory { get; private set; }
 
+      public string RandomDirectoryFullPath
+      {
+         get { return System.IO.Path.Combine(Directory.FullName, "Directory-" + System.IO.Path.GetRandomFileName()); }
+      }
+
       public string RandomFileFullPath
       {
-         get { return System.IO.Path.Combine(Directory.FullName, System.IO.Path.GetRandomFileName()); }
+         get { return RandomFileFullPathNoExtension + ".txt"; }
+      }
+
+      public string RandomFileFullPathNoExtension
+      {
+         get { return System.IO.Path.Combine(Directory.FullName, "File-" + System.IO.Path.GetRandomFileName()); }
       }
 
       #region Disposable Members
@@ -69,11 +79,29 @@ namespace AlphaFS.UnitTest
          try
          {
             if (isDisposing)
-               Alphaleonis.Win32.Filesystem.Directory.Delete(Directory.FullName, true, Alphaleonis.Win32.Filesystem.PathFormat.FullPath);
+               System.IO.Directory.Delete(Directory.FullName, true);
          }
          catch (Exception ex)
          {
-            Console.WriteLine("\n\nFailed to delete TemporaryDirectory: [{0}]: [{1}]", Directory.FullName, ex.Message);
+            Console.WriteLine("\n\nSystem.IO failed to delete TemporaryDirectory: [{0}]\nError: [{1}]", Directory.FullName, ex.Message);
+            Console.Write("Retry using AlphaFS... ");
+
+            try
+            {
+               var dirInfo = new Alphaleonis.Win32.Filesystem.DirectoryInfo(Directory.FullName, Alphaleonis.Win32.Filesystem.PathFormat.FullPath);
+               if (dirInfo.Exists)
+               {
+                  dirInfo.Delete(true, true);
+                  Console.WriteLine("Success.");
+               }
+
+               else
+                  Console.WriteLine("TemporaryDirectory was already removed.");
+            }
+            catch (Exception ex2)
+            {
+               Console.WriteLine("Failed to delete TemporaryDirectory.\nError: {0}", ex2.Message);
+            }
          }
       }
 

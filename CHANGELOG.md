@@ -1,19 +1,77 @@
 ﻿Changelog
 =========
 
-Version vNext  (20xx-xx-xx)
+Version vNext  (xxxx-xx-xx)
 -----------
+
+### Bugs Fixed
+
+- Issue #268: There are multiple warnings when building the documentation.
+- Issue #286: Property `FileSystemEntryInfo.AlternateFileName` is always an empty string.
+- Issue #292: `CopyOptions.CopySymbolicLink` not working in 2.1.2  (Thx v2kiran)
+- Issue #325: `DeleteEmptySubdirectories` (with `recursive=true`) throws `System.IO.DirectoryNotFoundException`  (Thx kryvoplias)
+- Issue #328: Several instances of `ArgumentException.ParamName` not set/used correctly  (Thx elgonzo)
+- Issue #330: Correct the parameter order for Privilege class constructors using the `ArgumentNullException`.
+- Issue #339: `Directory/File.Encrypt/Decrypt` should restore read-only attribute.
+- Issue #340: DirectoryReadOnlyException inherits from System.IO.IOException, wrong?
+- Issue #344: `Directory.Copy` throws `UnauthorizedAccessException` "The target file is a directory, not a file", while it is a file.
+- Issue #349: `File.GetFileSystemEntryInfoCore` should throw `Directory/FileNotFoundException`, depending on `isFolder` argument.
 
 ### New Features/Enhancements
 
+- Issue #212: Provide a way to retrieve errors when you choose to `ContinueOnException`
 - Issue #273: Improve methods `Directory/File.CopyMoveCore`: Make code recursive-aware, skip additional path checks and validations.
 - Issue #274: Improve methods `Directory/File.CopyMoveCore`: Improve detection of same volume.
 - Issue #275: Improve methods `Directory/File.CopyMoveCore`: Eliminate recursion.
 - Issue #277: `Directory.DeleteDirectoryCore()`: Eliminate recursion. 
 - Issue #278: `Directory.DeleteEmptySubdirectoriesCore()`: Eliminate recursion.
+- Issue #303: `Path.Constants.cs`: Don't use `CurrentCulture`  (Thx HugoRoss)
+- Issue #306: Include `ShareInfoLevel.Info502` and set as a fallback in `GetShareInfoCore()`  (Thx damiarnold)
+- Issue #314: Added Feature: `Directory.GetFileSystemEntryInfo`  (Thx besoft)
+- Issue #331: Rename method `File/Directory.TransferTimestamps` to `CopyTimestamps`.
+- Issue #335: Add overloaded methods to `File/Directory.TransferTimestamps` to apply to ReparsePoint.
+- Issue #336: Implement methods for `Directory` class: `CreateJunction`, `DeleteJunction` and `ExistsJunction`.
+- Issue #338: Add convenience method `Directory.IsEmpty`
+- Issue #342: Add instance method: `FileInfo.IsLocked()`
+- Issue #343: Add method `File.GetProcessForFileLock`
+- Issue #345: `AlreadyExistsException` should only throw message from 1 error.
+- Issue #348: Implement method `Directory.GetLinkTargetInfo`
+- Issue #350: Add overloaded methods `Directory.GetFileSystemEntryInfo`
+- Issue #351: Enable copying of Directory symbolic links.
+- Issue #352: Ignore `NonInterpretedPathPrefix` in methods: `Path.GetFullPathCore` and `Path.GetLongPathCore`  (Thx besoft)
+- Issue #353: Modify method `Directory.GetFileSystemEntryInfo` to return `FileSystemEntryInfo` structure for directories supporting also root directories, e.g., `C:\`  (Thx besoft)
+- Issue #354: Add methods `File.GetFileId` and `Directory.GetFileId` to return a unique file identifier.  (Thx besoft)
+- Issue #355: Methods throwing an `IOException` due to error code 17 (`ERROR_NOT_SAME_DEVICE`) now throw a specific exception (`NotSameDeviceException`)
+- Issue #357: Added new Windows 10 property: `FILE_DAX_VOLUME` to `VolumeInfo` class.
+
+### Breaking Changes
+
+- Issue #350: Add overloaded methods `Directory.GetFileSystemEntryInfo`
+
+   Current code to retrieve a directory using `File.GetFileSystemEntryInfo` will now fail.
+   Use Directory.GetFileSystemEntryInfo instead.
+
+- Issue #331: Rename method `File/Directory.TransferTimestamps` to `CopyTimestamps`.
+   Currently non-breaking, the old methods are still there.
 
 
-Version 2.1.2  (2016-10-30)
+Version 2.1.3 (2017-06-05)
+-------------
+
+### Bugs Fixed
+
+- Issue #288: `Directory.Exists` on root drive problem has come back with recent updates  (Thx warrenlbrown)
+- Issue #289: `Alphaleonis.Win32.Network.Host.GetShareInfo` doesn't work since 2.1.0  (Thx Schoolmonkey/damiarnold)
+- Issue #296: Folder rename (casing) throws IOException with HResult `ERROR_SAME_DRIVE`  (Thx doormalena)
+- Issue #297: Incorrect domain returned from `Host.EnumerateDomainDfsRoot` when specifying domain  (Thx damiarnold)
+- Issue #299: `FileInfo.MoveTo` and `DirectoryInfo.MoveTo` throw `ArgumentNullException` on empty destination path  (Thx doormalena)
+- Issue #312: `Volume.EnumerateVolumes` skips first volume  (Thx springy76)
+- Issue #313: `GetHostShareFromPath()` fails with spaces in share name  (Thx damiarnold)
+- Issue #320: Minor changes in comments in `Win32Errors.cs` to eliminate compiler warnings.  (Thx besoft)
+- Issue #321: `DirectoryInfo.CopyToMoveToCore()` calls `Path.GetExtendedLengthPathCore()` without `Transaction` parameter.
+
+
+Version 2.1.2 (2016-10-30)
 -------------
 
 ### Bugs Fixed

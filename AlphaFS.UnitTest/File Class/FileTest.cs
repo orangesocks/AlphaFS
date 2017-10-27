@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -131,7 +131,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine("\nInput Path: [{0}]", tempPath);
 
          // Create some folders and files.
-         UnitTestConstants.CreateDirectoriesAndFiles(tempPath, 10, true);
+         UnitTestConstants.CreateDirectoriesAndFiles(tempPath, 10, false, false, true);
 
          var apply = FileAttributes.Hidden | FileAttributes.Archive | FileAttributes.System | FileAttributes.ReadOnly;
          Console.WriteLine("\nSetAttributes(): [{0}]", apply);
@@ -151,7 +151,7 @@ namespace AlphaFS.UnitTest
                Console.WriteLine("\n\t#{0:000}\tFile     : [{1}]\n\t\tAlphaFS  : [{2}]\n\t\tSystem.IO: [{3}]", ++cnt, file, expected, actual);
 
                if (cnt == 0)
-                  Assert.Inconclusive("Nothing was enumerated, but it was expected.");
+                  Assert.Inconclusive("Nothing is enumerated, but it is expected.");
 
                Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
             }
@@ -184,7 +184,7 @@ namespace AlphaFS.UnitTest
                Console.WriteLine("\n\t#{0:000}\tFile     : [{1}]\n\t\tAlphaFS  : [{2}]\n\t\tSystem.IO: [{3}]", ++cnt, file, expected, actual);
 
                if (cnt == 0)
-                  Assert.Inconclusive("Nothing was enumerated, but it was expected.");
+                  Assert.Inconclusive("Nothing is enumerated, but it is expected.");
 
                Assert.AreEqual(expected, actual, "AlphaFS != System.IO");
             }
@@ -198,7 +198,7 @@ namespace AlphaFS.UnitTest
          Console.WriteLine(UnitTestConstants.Reporter());
 
 
-         Directory.Delete(tempPath, true);
+         Directory.Delete(tempPath, true, true);
          Assert.IsFalse(Directory.Exists(tempPath), "Cleanup failed: Directory should have been removed.");
          Assert.IsTrue(allOk);
          Console.WriteLine();
@@ -229,7 +229,7 @@ namespace AlphaFS.UnitTest
          }
 
          Console.WriteLine("\nFile.ReadLines()\n");
-         foreach (var s in File.ReadLines((tempFile)))
+         foreach (var s in File.ReadLines(tempFile))
          {
             Console.WriteLine("\t{0}", s);
             Assert.IsTrue(createText.Contains(s));

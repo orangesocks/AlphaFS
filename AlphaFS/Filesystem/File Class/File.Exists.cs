@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,7 +20,6 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
@@ -53,7 +52,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static bool Exists(string path)
       {
-         return ExistsCore(false, null, path, PathFormat.RelativePath);
+         return ExistsCore(null, false, path, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Determines whether the specified file exists.</summary>
@@ -83,7 +82,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static bool Exists(string path, PathFormat pathFormat)
       {
-         return ExistsCore(false, null, path, pathFormat);
+         return ExistsCore(null, false, path, pathFormat);
       }
 
       #region Transactional
@@ -118,7 +117,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static bool ExistsTransacted(KernelTransaction transaction, string path)
       {
-         return ExistsCore(false, transaction, path, PathFormat.RelativePath);
+         return ExistsCore(transaction, false, path, PathFormat.RelativePath);
       }
 
       /// <summary>
@@ -152,7 +151,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static bool ExistsTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
       {
-         return ExistsCore(false, transaction, path, pathFormat);
+         return ExistsCore(transaction, false, path, pathFormat);
       }
 
       #endregion // Transacted
@@ -176,8 +175,8 @@ namespace Alphaleonis.Win32.Filesystem
       ///   <para>Be aware that another process can potentially do something with the file in between
       ///   the time you call the Exists method and perform another operation on the file, such as Delete.</para>
       /// </remarks>
-      /// <param name="isFolder">Specifies that <paramref name="path"/> is a file or directory.</param>
       /// <param name="transaction">The transaction.</param>
+      /// <param name="isFolder">Specifies that <paramref name="path"/> is a file or directory.</param>
       /// <param name="path">The file to check.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
       /// <returns>
@@ -186,7 +185,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// </returns>
       [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
       [SecurityCritical]
-      internal static bool ExistsCore(bool isFolder, KernelTransaction transaction, string path, PathFormat pathFormat)
+      internal static bool ExistsCore(KernelTransaction transaction, bool isFolder, string path, PathFormat pathFormat)
       {
          // Will be caught later and be thrown as an ArgumentException or ArgumentNullException.
          // Let's take a shorter route, preventing an Exception from being thrown altogether.
@@ -194,28 +193,25 @@ namespace Alphaleonis.Win32.Filesystem
             return false;
 
 
-         // DriveInfo.IsReady() will fail.
-         //
-         //// After normalizing, check whether path ends in directory separator.
-         //// Otherwise, FillAttributeInfoCore removes it and we may return a false positive.
-         //string pathRp = Path.GetRegularPathCore(path, true, false, false, false);
+         // Check for driveletter, such as: "C:"
+         var pathRp = Path.GetRegularPathCore(path, GetFullPathOptions.None, false);
 
-         //if (pathRp.Length > 0 && Path.IsDVsc(pathRp[pathRp.Length - 1], false))
-         //   return false;
+         if (pathRp.Length == 2 && Path.IsPathRooted(pathRp, false))
+            path = pathRp;
 
 
          try
          {
-            string pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.CheckInvalidPathChars | GetFullPathOptions.ContinueOnNonExist);
+            var pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat,
+               GetFullPathOptions.TrimEnd | GetFullPathOptions.RemoveTrailingDirectorySeparator |
+               GetFullPathOptions.CheckInvalidPathChars | GetFullPathOptions.ContinueOnNonExist);
 
-            var data = new NativeMethods.WIN32_FILE_ATTRIBUTE_DATA();
-            int dataInitialised = FillAttributeInfoCore(transaction, pathLp, ref data, false, true);
+            var attrs = new NativeMethods.WIN32_FILE_ATTRIBUTE_DATA();
+            var dataInitialised = FillAttributeInfoCore(transaction, pathLp, ref attrs, false, true);
 
-            return (dataInitialised == Win32Errors.ERROR_SUCCESS &&
-                    data.dwFileAttributes != (FileAttributes) (-1) &&
-                    (isFolder
-                       ? (data.dwFileAttributes & FileAttributes.Directory) != 0
-                       : (data.dwFileAttributes & FileAttributes.Directory) == 0));
+            var attrIsFolder = IsDirectory(attrs.dwFileAttributes);
+
+            return dataInitialised == Win32Errors.ERROR_SUCCESS && (isFolder ? attrIsFolder : !attrIsFolder);
          }
          catch
          {

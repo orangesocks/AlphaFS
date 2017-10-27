@@ -143,16 +143,29 @@
     <Compile Include="..\AlphaFS\AssemblyVersionInfo.cs">
       <Link>AssemblyVersionInfo.cs</Link>
     </Compile>
-    <Compile Include="Classes\AlphaFS_FileSystemEntryInfo.cs" />
-    <Compile Include="Crc Class\AlphaFS_Class_Crc32.cs" />
-    <Compile Include="Device Class\AlphaFS_DeviceInfo_EnumerateDevices.cs" />
-    <Compile Include="Classes\AlphaFS_BackupFileStream.cs" />
-    <Compile Include="Crc Class\AlphaFS_Class_Crc64.cs" />
-    <Compile Include="Device Class\AlphaFS_DeviceInfo_InitializeInstance.cs" />
+    <Compile Include="FileIdInfo\AlphaFS_Directory_GetFileId_LocalAndNetwork_Success.cs" />
+    <Compile Include="FileIdInfo\AlphaFS_File_GetFileId_LocalAndNetwork_Success.cs" />
+    <Compile Include="ByHandleFileInfo Class\AlphaFS_Directory_GetFileInfo_LocalAndNetwork_Success.cs" />
+    <Compile Include="CRC Class\AlphaFS_Crc64Iso_StaticDefaultSeedAndPolynomialWithShortAsciiString2.cs" />
+    <Compile Include="CRC Class\AlphaFS_Crc64Iso_StaticDefaultSeedAndPolynomialWithShortAsciiString.cs" />
+    <Compile Include="CRC Class\AlphaFS_Crc32_StaticDefaultSeedAndPolynomialWithShortAsciiString2.cs" />
+    <Compile Include="CRC Class\AlphaFS_Crc32_StaticDefaultSeedAndPolynomialWithShortAsciiString.cs" />
+    <Compile Include="ByHandleFileInfo Class\AlphaFS_File_GetFileInfoByHandle_LocalAndNetwork_Success.cs" />
+    <Compile Include="FileSystemEntryInfo Class\AlphaFS_Directory_GetFileSystemEntryInfo_LocalAndNetwork_Success.cs" />
+    <Compile Include="FileSystemEntryInfo Class\AlphaFS_File_GetFileSystemEntryInfo_LocalAndNetwork_Success.cs" />
+    <Compile Include="DeviceInfo Class\AlphaFS_Device_EnumerateDevices_Local_Success.cs" />
+    <Compile Include="BackupStreamInfo Class\AlphaFS_BackupFileStream_InitializeInstance_LocalAndNetwork_Success.cs" />
+    <Compile Include="DeviceInfo Class\AlphaFS_DeviceInfo_InitializeInstance_LocalAndNetwork_Success.cs" />
     <Compile Include="Directory Class\AlphaFS_Directory_Compress_Decompress.cs" />
+    <Compile Include="Directory Class\AlphaFS_Directory_Encryption.cs" />
+    <Compile Include="Directory Class\AlphaFS_Directory_IsEmpty.cs" />
     <Compile Include="Directory Class\AlphaFS_Directory_EnumerateFileSystemEntryInfos.cs" />
+    <Compile Include="Directory Class\AlphaFS_Directory_CreateSymbolicLink_And_GetLinkTargetInfo.cs" />
+    <Compile Include="Directory Class\AlphaFS_Directory_Junction.cs" />
     <Compile Include="Directory Class\Directory_CurrentDirectory.cs" />
     <Compile Include="Directory Class\AlphaFS_Directory_DeleteEmptySubdirectories.cs" />
+    <Compile Include="Directory Class\Directory_EnumerateDirectories.cs" />
+    <Compile Include="DirectoryInfo Class\DirectoryInfo_Junction.cs" />
     <Compile Include="Directory Class\Directory_Move.cs" />
     <Compile Include="Directory Class\AlphaFS_Directory_CountFileSystemObjects.cs" />
     <Compile Include="Directory Class\AlphaFS_Directory_Copy.cs" />
@@ -166,8 +179,11 @@
     <Compile Include="Directory Class\Directory_SetTimestamps.cs" />
     <Compile Include="Directory Class\Directory_GetTimestamps.cs" />
     <Compile Include="Directory Class\Directory_SetAccessControl.cs" />
+    <Compile Include="DirectoryInfo Class\DirectoryInfo_FolderName255Characters.cs" />
+    <Compile Include="DirectoryInfo Class\DirectoryInfo_MoveTo.cs" />
     <Compile Include="DirectoryInfo Class\DirectoryInfo_Attributes.cs" />
     <Compile Include="DirectoryInfo Class\DirectoryInfo_Refresh.cs" />
+    <Compile Include="DriveInfo Class\DriveInfo_InitializeInstance_LocalAndNetwork_Success.cs" />
     <Compile Include="File Class\AlphaFS_File_GetHash.cs" />
     <Compile Include="File Class\File_CreateText.cs" />
     <Compile Include="File Class\File_OpenWrite.cs" />
@@ -179,7 +195,7 @@
     <Compile Include="File Class\File_Delete.cs" />
     <Compile Include="File Class\File_SetTimestamps.cs" />
     <Compile Include="File Class\AlphaFS_File_IsLocked.cs" />
-    <Compile Include="File Class\AlphaFS_File_CreateSymbolicLink_GetLinkTargetInfo.cs" />
+    <Compile Include="File Class\AlphaFS_File_CreateSymbolicLinkAndGetLinkTargetInfo.cs" />
     <Compile Include="File Class\AlphaFS_File_CreateHardlink_EnumerateHardlinks.cs" />
     <Compile Include="File Class\AlphaFS_File_Compress_Decompress.cs" />
     <Compile Include="File Class\AlphaFS_File_GetCompressedSize.cs" />
@@ -192,17 +208,25 @@
     <Compile Include="File Class\File_Exists.cs" />
     <Compile Include="File Class\File_SetAccessControl.cs" />
     <Compile Include="File Class\File_GetAccessControl.cs" />
-    <Compile Include="FileInfo Class\FileInfo_Attributes.cs" />
-    <Compile Include="FileInfo Class\FileInfo_InitializeInstance.cs" />
-    <Compile Include="FileInfo Class\FileInfo_Refresh.cs" />
+    <Compile Include="FileInfo Class\FileInfo_Attributes_LocalAndNetwork_Success.cs" />
+    <Compile Include="FileInfo Class\FileInfo_InitializeInstance_ExistingFile_LocalAndNetwork_Success.cs" />
+    <Compile Include="FileInfo Class\FileInfo_Refresh_LocalAndNetwork_Success.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_EnumerateDomainDfsRoot.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_EnumerateDfsRoot.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_EnumerateDfsLinks.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_ConnectTo.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_ConnectDrive.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_EnumerateDrives.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_GetHostShareFromPath.cs" />
     <Compile Include="Host Class\AlphaFS_Host_DriveConnection.cs" />
+    <Compile Include="Host Class\AlphaFS_Host_GetUncName.cs" />
     <Compile Include="Host Class\AlphaFS_Host_EnumerateOpenResources.cs" />
     <Compile Include="Host Class\AlphaFS_Host_EnumerateOpenConnections.cs" />
     <Compile Include="Host Class\AlphaFS_Host_EnumerateShares.cs" />
-    <Compile Include="Host Class\HostTest.cs" />
-    <Compile Include="Classes\ClassesTest.cs" />
-    <Compile Include="Directory Class\Directory_CreateDirectory.cs" />
+    <Compile Include="DFS Class\AlphaFS_Network_DfsXxx.cs" />
+    <Compile Include="Directory Class\Directory_CreateDirectory_And_Delete.cs" />
     <Compile Include="Directory Class\DirectoryTest.cs" />
+    <Compile Include="OperatingSystem Class\AlphaFS_BackupFileStream_InitializeInstance_LocalAndNetwork_Success.cs" />
     <Compile Include="Path Class\Path_GetFullPath.cs" />
     <Compile Include="Path Class\Path_IsPathRooted.cs" />
     <Compile Include="Path Class\Path_GetExtension.cs" />
@@ -210,6 +234,10 @@
     <Compile Include="Shell32 Class\AlphaFS_Shell32Info_GetFileIcon.cs" />
     <Compile Include="Shell32 Class\AlphaFS_Shell32Info_GetVerbCommand.cs" />
     <Compile Include="Shell32 Class\AlphaFS_Shell32Info_InitializeInstance.cs" />
+    <Compile Include="Utils\FolderDenyPermission.cs" />
+    <Compile Include="Utils\IsAdmin.cs" />
+    <Compile Include="Utils\Dump.cs" />
+    <Compile Include="Utils\CreateFile.cs" />
     <Compile Include="Utils\DirectoryAssert.cs" />
     <Compile Include="Utils\FileAssert.cs" />
     <Compile Include="Shell32 Class\Shell32Test.cs" />
@@ -217,11 +245,13 @@
     <Compile Include="File Class\FileTest.cs" />
     <Compile Include="Path Class\PathTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Volume Class\VolumeInfo_InitializeInstance.cs" />
+    <Compile Include="Utils\CreateDirectoriesAndFiles.cs" />
+    <Compile Include="Volume Class\AlphaFS_Volume_SetVolumeMountPoint_Local_Success.cs" />
     <Compile Include="Volume Class\Volume_GetVolumeInfo.cs" />
     <Compile Include="Volume Class\VolumeTest.cs" />
     <Compile Include="Utils\UnitTestConstants.cs" />
     <Compile Include="Utils\TemporaryDirectory.cs" />
+    <Compile Include="VolumeInfo\AlphaFS_InitializeInstance_LocalAndNetwork_Success.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\AlphaFS.snk">
@@ -235,6 +265,7 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

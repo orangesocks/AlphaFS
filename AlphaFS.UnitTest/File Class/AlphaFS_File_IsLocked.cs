@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
@@ -36,6 +37,24 @@ namespace AlphaFS.UnitTest
       }
 
 
+      [TestMethod]
+      public void AlphaFS_File_GetProcessForFileLock_LocalAndNetwork_Success()
+      {
+         File_GetProcessForFileLock(false);
+         File_GetProcessForFileLock(true);
+      }
+
+
+      [TestMethod]
+      public void AlphaFS_File_GetProcessForFileLock_NoLockReturnsNull_LocalAndNetwork_Success()
+      {
+         File_GetProcessForFileLock_NoLockReturnsNull(false);
+         File_GetProcessForFileLock_NoLockReturnsNull(true);
+      }
+
+
+
+
       private void File_IsLocked(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
@@ -45,9 +64,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "File.IsLocked"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var file = rootDir.RandomFileFullPath + ".txt";
+            var file = rootDir.RandomFileFullPath;
             var fi = new System.IO.FileInfo(file);
 
             Console.WriteLine("\nInput File Path: [{0}]]", file);
@@ -57,6 +76,78 @@ namespace AlphaFS.UnitTest
                Assert.IsTrue(Alphaleonis.Win32.Filesystem.File.IsLocked(fi.FullName), "The file is not locked, but is expected to be.");
 
             Assert.IsFalse(Alphaleonis.Win32.Filesystem.File.IsLocked(fi.FullName), "The file is locked, but is expected not to be.");
+         }
+
+         Console.WriteLine();
+      }
+
+
+      private void File_GetProcessForFileLock(bool isNetwork)
+      {
+         UnitTestConstants.PrintUnitTestHeader(isNetwork);
+
+         var tempPath = System.IO.Path.GetTempPath();
+         if (isNetwork)
+            tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
+
+
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
+         {
+            var file = rootDir.RandomFileFullPath;
+            var fi = new System.IO.FileInfo(file);
+
+            Console.WriteLine("\nInput File Path: [{0}]]", file);
+
+
+            using (fi.CreateText())
+            {
+               var processes = Alphaleonis.Win32.Filesystem.File.GetProcessForFileLock(fi.FullName);
+               var processesFound = processes.Count;
+
+               Console.WriteLine("\n\tProcesses found: [{0}]", processesFound);
+
+
+               Assert.AreEqual(1, processesFound);
+
+
+               foreach (var process in processes)
+                  using (process)
+                  {
+                     UnitTestConstants.Dump(process, -26);
+
+
+                     // The name(s) of the Visual Studio unit test process.
+                     Assert.IsTrue(process.ProcessName.StartsWith("QTAgent", StringComparison.OrdinalIgnoreCase) ||
+                                   process.ProcessName.Equals("vstest.executionengine.x86", StringComparison.OrdinalIgnoreCase));
+                  }
+            }
+         }
+
+         Console.WriteLine();
+      }
+
+
+      private void File_GetProcessForFileLock_NoLockReturnsNull(bool isNetwork)
+      {
+         UnitTestConstants.PrintUnitTestHeader(isNetwork);
+
+         var tempPath = System.IO.Path.GetTempPath();
+         if (isNetwork)
+            tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
+
+
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
+         {
+            var file = rootDir.RandomFileFullPath;
+            var fi = new System.IO.FileInfo(file);
+
+            Console.WriteLine("\nInput File Path: [{0}]]\n", file);
+
+
+            using (fi.CreateText()) { }
+
+
+            Assert.IsNull(Alphaleonis.Win32.Filesystem.File.GetProcessForFileLock(fi.FullName));
          }
 
          Console.WriteLine();

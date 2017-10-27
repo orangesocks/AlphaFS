@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -19,13 +19,13 @@
  *  THE SOFTWARE. 
  */
 
-using Alphaleonis.Win32.Network;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
 namespace AlphaFS.UnitTest
 {
    /// <summary>This is a test class for Host and is intended to contain all Host Unit Tests.</summary>
+   [TestClass]
    public partial class HostTest
    {
       [TestMethod]
@@ -33,7 +33,7 @@ namespace AlphaFS.UnitTest
       {
          var share = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(UnitTestConstants.LocalHostShare);
 
-         using (var connection = new DriveConnection(share))
+         using (var connection = new Alphaleonis.Win32.Network.DriveConnection(share))
          {
             Console.WriteLine("\nUsing DriveConnection(): [{0}] to: [{1}]", connection.LocalName, share);
 

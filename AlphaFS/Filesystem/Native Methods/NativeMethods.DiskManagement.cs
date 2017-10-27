@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -47,7 +47,7 @@ namespace Alphaleonis.Win32.Filesystem
       ///   <para>If the function succeeds, the return value is nonzero.</para>
       ///   <para>If the function fails, the return value is zero. To get extended error information, call GetLastError.</para>
       /// </returns>
-      [SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "GetDiskFreeSpaceW"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.Bool)]
       internal static extern bool GetDiskFreeSpace([MarshalAs(UnmanagedType.LPWStr)] string lpRootPathName, [MarshalAs(UnmanagedType.U4)] out int lpSectorsPerCluster, [MarshalAs(UnmanagedType.U4)] out int lpBytesPerSector, [MarshalAs(UnmanagedType.U4)] out int lpNumberOfFreeClusters, [MarshalAs(UnmanagedType.U4)] out uint lpTotalNumberOfClusters);
@@ -76,7 +76,7 @@ namespace Alphaleonis.Win32.Filesystem
       ///   <para>If the function succeeds, the return value is nonzero.</para>
       ///   <para>If the function fails, the return value is zero (0). To get extended error information, call GetLastError.</para>
       /// </returns>
-      [SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "GetDiskFreeSpaceExW"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.Bool)]
       internal static extern bool GetDiskFreeSpaceEx([MarshalAs(UnmanagedType.LPWStr)] string lpDirectoryName, [MarshalAs(UnmanagedType.U8)] out long lpFreeBytesAvailable, [MarshalAs(UnmanagedType.U8)] out long lpTotalNumberOfBytes, [MarshalAs(UnmanagedType.U8)] out long lpTotalNumberOfFreeBytes);

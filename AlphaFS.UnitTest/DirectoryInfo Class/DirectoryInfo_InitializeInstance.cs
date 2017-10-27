@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -22,6 +22,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
@@ -76,9 +77,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "DirectoryInfo.Initialize_Instance_ExistingDirectory"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             var dirInfo = new System.IO.DirectoryInfo(folder);
             dirInfo.Create();
 
@@ -98,9 +99,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "DirectoryInfo.Initialize_Instance_NonExistingDirectory"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             CompareDirectoryInfos(new System.IO.DirectoryInfo(folder), new Alphaleonis.Win32.Filesystem.DirectoryInfo(folder), false);
          }
 

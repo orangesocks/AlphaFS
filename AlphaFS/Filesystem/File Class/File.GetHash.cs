@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -22,6 +22,7 @@
 using System.Globalization;
 using System.IO;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using Alphaleonis.Win32.Security;
 
@@ -29,9 +30,12 @@ namespace Alphaleonis.Win32.Filesystem
 {
    public static partial class File
    {
-      /// <summary>[AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.</summary>
+      /// <summary>
+      /// [AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.
+      /// </summary>
       /// <param name="fileFullPath">The name of the file.</param>
       /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
+      /// <returns>The hash.</returns>
       [SecurityCritical]
       public static string GetHash(string fileFullPath, HashType hashType)
       {
@@ -39,10 +43,13 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>[AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.</summary>
+      /// <summary>
+      /// [AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.
+      /// </summary>
       /// <param name="fileFullPath">The name of the file.</param>
       /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
+      /// <returns>The hash.</returns>
       [SecurityCritical]
       public static string GetHash(string fileFullPath, HashType hashType, PathFormat pathFormat)
       {
@@ -50,10 +57,13 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>[AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.</summary>
+      /// <summary>
+      /// [AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.
+      /// </summary>
       /// <param name="transaction">The transaction.</param>
       /// <param name="fileFullPath">The name of the file.</param>
       /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
+      /// <returns>The hash.</returns>
       [SecurityCritical]
       public static string GetHash(KernelTransaction transaction, string fileFullPath, HashType hashType)
       {
@@ -61,11 +71,14 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>[AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.</summary>
+      /// <summary>
+      /// [AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.
+      /// </summary>
       /// <param name="transaction">The transaction.</param>
       /// <param name="fileFullPath">The name of the file.</param>
       /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
+      /// <returns>The hash.</returns>
       [SecurityCritical]
       public static string GetHash(KernelTransaction transaction, string fileFullPath, HashType hashType, PathFormat pathFormat)
       {
@@ -73,13 +86,14 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-
-
-      /// <summary>[AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.</summary>
+      /// <summary>
+      /// [AlphaFS] Calculates the hash/checksum for the given <paramref name="fileFullPath"/>.
+      /// </summary>
       /// <param name="transaction">The transaction.</param>
-      /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
       /// <param name="fileFullPath">The name of the file.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param> 
+      /// <param name="hashType">One of the <see cref="HashType"/> values.</param>
+      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
+      /// <returns>The hash core.</returns>
       [SecurityCritical]
       internal static string GetHashCore(KernelTransaction transaction, string fileFullPath, HashType hashType, PathFormat pathFormat)
       {
@@ -106,37 +120,37 @@ namespace Alphaleonis.Win32.Filesystem
 
 
                case HashType.MD5:
-                  using (var hType = System.Security.Cryptography.MD5.Create())
+                  using (var hType = MD5.Create())
                      hash = hType.ComputeHash(fs);
                   break;
 
 
                case HashType.RIPEMD160:
-                  using (var hType = System.Security.Cryptography.RIPEMD160.Create())
+                  using (var hType = RIPEMD160.Create())
                      hash = hType.ComputeHash(fs);
                   break;
 
 
                case HashType.SHA1:
-                  using (var hType = System.Security.Cryptography.SHA1.Create())
+                  using (var hType = SHA1.Create())
                      hash = hType.ComputeHash(fs);
                   break;
 
 
                case HashType.SHA256:
-                  using (var hType = System.Security.Cryptography.SHA256.Create())
+                  using (var hType = SHA256.Create())
                      hash = hType.ComputeHash(fs);
                   break;
 
 
                case HashType.SHA384:
-                  using (var hType = System.Security.Cryptography.SHA384.Create())
+                  using (var hType = SHA384.Create())
                      hash = hType.ComputeHash(fs);
                   break;
 
 
                case HashType.SHA512:
-                  using (var hType = System.Security.Cryptography.SHA512.Create())
+                  using (var hType = SHA512.Create())
                      hash = hType.ComputeHash(fs);
                   break;
             }
@@ -147,7 +161,7 @@ namespace Alphaleonis.Win32.Filesystem
          {
             var sb = new StringBuilder(hash.Length);
 
-            foreach (byte b in hash)
+            foreach (var b in hash)
                sb.Append(b.ToString("X2", CultureInfo.InvariantCulture));
 
             return sb.ToString().ToUpperInvariant();

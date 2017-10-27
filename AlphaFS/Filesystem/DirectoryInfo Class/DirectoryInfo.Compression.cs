@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -42,7 +42,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Compress()
       {
-         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, DirectoryEnumerationOptions.FilesAndFolders, true, PathFormat.LongFullPath);
+         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, null, null, true, PathFormat.LongFullPath);
       }
 
       /// <summary>[AlphaFS] Compresses a directory using NTFS compression.</summary>
@@ -56,7 +56,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Compress(DirectoryEnumerationOptions options)
       {
-         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, options, true, PathFormat.LongFullPath);
+         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, options, null, true, PathFormat.LongFullPath);
       }
 
       #endregion // Compress
@@ -74,7 +74,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Decompress()
       {
-         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, DirectoryEnumerationOptions.FilesAndFolders, false, PathFormat.LongFullPath);
+         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, null, null, false, PathFormat.LongFullPath);
       }
 
       /// <summary>[AlphaFS] Decompresses an NTFS compressed directory.</summary>
@@ -88,7 +88,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void Decompress(DirectoryEnumerationOptions options)
       {
-         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, options, false, PathFormat.LongFullPath);
+         Directory.CompressDecompressCore(Transaction, LongFullName, Path.WildcardStarMatchAll, options, null, false, PathFormat.LongFullPath);
       }
 
       #endregion // Decompress
@@ -103,7 +103,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void DisableCompression()
       {
-         Device.ToggleCompressionCore(true, Transaction, LongFullName, false, PathFormat.LongFullPath);
+         Device.ToggleCompressionCore(Transaction, true, LongFullName, false, PathFormat.LongFullPath);
       }
 
       #endregion // DisableCompression
@@ -118,7 +118,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public void EnableCompression()
       {
-         Device.ToggleCompressionCore(true, Transaction, LongFullName, true, PathFormat.LongFullPath);
+         Device.ToggleCompressionCore(Transaction, true, LongFullName, true, PathFormat.LongFullPath);
       }
 
       #endregion // EnableCompression

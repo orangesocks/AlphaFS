@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -33,11 +33,13 @@ namespace Alphaleonis.Win32.Filesystem
       {
       }
 
+
       /// <summary>Initializes a new instance of the <see cref="TransactionException"/> class.</summary>
       /// <param name="message">The message.</param>
       public TransactionException(string message) : base(message)
       {
       }
+
 
       /// <summary>Initializes a new instance of the <see cref="TransactionException"/> class.</summary>
       /// <param name="message">The message.</param>
@@ -45,6 +47,7 @@ namespace Alphaleonis.Win32.Filesystem
       public TransactionException(string message, Exception innerException) : base(message, innerException)
       {
       }
+
 
       /// <summary>Initializes a new instance of the <see cref="TransactionException"/> class.</summary>
       /// <param name="info">The data for serializing or deserializing the object.</param>

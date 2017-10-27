@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -26,11 +26,15 @@ namespace Alphaleonis.Win32
       /// <summary>Use this to translate error codes into HRESULTs like 0x80070006 for ERROR_INVALID_HANDLE.</summary>
       public static int GetHrFromWin32Error(uint errorCode)
       {
-         return (int) unchecked(((int) 0x80070000) | errorCode);
+         return (int) unchecked((int) 0x80070000 | errorCode);
       }
 
-      // System Error Codes
+      // System Error Codes.
       // http://msdn.microsoft.com/en-us/library/windows/desktop/ms681381%28v=vs.85%29.aspx
+
+      // Win32 Error Codes.
+      // https://infosys.beckhoff.com/content/1033/tcdiagnostics/html/tcdiagnostics_win32_errorcodes.htm
+
 
       public const uint ERROR_INVALID_FILE_SIZE = 0xFFFFFFFF;
 
@@ -106,7 +110,7 @@ namespace Alphaleonis.Win32
       public const uint ERROR_HANDLE_EOF = 38;
 
       //public const uint ERROR_HANDLE_DISK_FULL = 39;
-      //public const uint ERROR_NOT_SUPPORTED = 50;
+      public const uint ERROR_NOT_SUPPORTED = 50;
       //public const uint ERROR_REM_NOT_LIST = 51;
       //public const uint ERROR_DUP_NAME = 52;
 
@@ -188,7 +192,10 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_WAIT_NO_CHILDREN = 128;
       //public const uint ERROR_CHILD_NOT_COMPLETE = 129;
       //public const uint ERROR_DIRECT_ACCESS_HANDLE = 130;
-      //public const uint ERROR_NEGATIVE_SEEK = 131;
+
+      /// <summary>(131) An attempt was made to move the file pointer before the beginning of the file.</summary>
+      public const uint ERROR_NEGATIVE_SEEK = 131;
+
       //public const uint ERROR_SEEK_ON_DEVICE = 132;
       //public const uint ERROR_IS_JOIN_TARGET = 133;
       //public const uint ERROR_IS_JOINED = 134;
@@ -222,7 +229,7 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_SIGNAL_REFUSED = 156;
       //public const uint ERROR_DISCARDED = 157;
 
-      // <summary>(158) The segment is already unlocked.</summary>
+      //// <summary>(158) The segment is already unlocked.</summary>
       //public const uint ERROR_NOT_LOCKED = 158;
 
       //public const uint ERROR_BAD_THREADID_ADDR = 159;
@@ -258,7 +265,7 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_RELOC_CHAIN_XEEDS_SEGLIM = 201;
       //public const uint ERROR_INFLOOP_IN_RELOC_CHAIN = 202;
 
-      /// <summary>(203) The system could not find the environment option that was entered.</summary>
+      //// <summary>(203) The system could not find the environment option that was entered.</summary>
       //public const uint ERROR_ENVVAR_NOT_FOUND = 203;
 
       //public const uint ERROR_NO_SIGNAL_SENT = 205;
@@ -319,7 +326,7 @@ namespace Alphaleonis.Win32
 
       //public const uint ERROR_IO_INCOMPLETE = 996;
 
-      /// <summary>(997) Overlapped I/O operation is in progress.</summary>
+      //// <summary>(997) Overlapped I/O operation is in progress.</summary>
       //public const uint ERROR_IO_PENDING = 997;
 
       //public const uint ERROR_NOACCESS = 998;
@@ -416,7 +423,10 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_SET_POWER_STATE_VETOED = 1140;
       //public const uint ERROR_SET_POWER_STATE_FAILED = 1141;
       //public const uint ERROR_TOO_MANY_LINKS = 1142;
-      //public const uint ERROR_OLD_WIN_VERSION = 1150;
+
+      /// <summary>(1150) The specified program requires a newer version of Windows.</summary>
+      public const uint ERROR_OLD_WIN_VERSION = 1150;
+
       //public const uint ERROR_APP_WRONG_OS = 1151;
       //public const uint ERROR_SINGLE_INSTANCE_APP = 1152;
       //public const uint ERROR_RMODE_APP = 1153;
@@ -448,7 +458,7 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_POTENTIAL_FILE_FOUND = 1180;
       //public const uint ERROR_JOURNAL_ENTRY_DELETED = 1181;
 
-      /// <summary>(1200) The specified device name is invalid.</summary>
+      //// <summary>(1200) The specified device name is invalid.</summary>
       //public const uint ERROR_BAD_DEVICE = 1200;
 
       //public const uint ERROR_CONNECTION_UNAVAIL = 1201;
@@ -459,7 +469,7 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_BAD_PROFILE = 1206;
       //public const uint ERROR_NOT_CONTAINER = 1207;
 
-      /// <summary>(1208) An extended error has occurred.</summary>
+      //// <summary>(1208) An extended error has occurred.</summary>
       //public const uint ERROR_EXTENDED_ERROR = 1208;
 
       //public const uint ERROR_INVALID_GROUPNAME = 1209;
@@ -476,7 +486,7 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_REMOTE_SESSION_LIMIT_EXCEEDED = 1220;
       //public const uint ERROR_DUP_DOMAINNAME = 1221;
 
-      /// <summary>(1222) The network is not present or not started.</summary>
+      //// <summary>(1222) The network is not present or not started.</summary>
       //public const uint ERROR_NO_NETWORK = 1222;
 
       //public const uint ERROR_CANCELLED = 1223;
@@ -579,7 +589,10 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_INVALID_SUB_AUTHORITY = 1335;
       //public const uint ERROR_INVALID_ACL = 1336;
       //public const uint ERROR_INVALID_SID = 1337;
-      //public const uint ERROR_INVALID_SECURITY_DESCR = 1338;
+
+      /// <summary>(1338) The security descriptor structure is invalid.</summary>
+      public const uint ERROR_INVALID_SECURITY_DESCR = 1338;
+
       //public const uint ERROR_BAD_INHERITANCE_ACL = 1340;
       //public const uint ERROR_SERVER_DISABLED = 1341;
       //public const uint ERROR_SERVER_NOT_DISABLED = 1342;
@@ -1046,7 +1059,10 @@ namespace Alphaleonis.Win32
       public const uint ERROR_NOT_A_REPARSE_POINT = 4390;
 
       //public const uint ERROR_REPARSE_ATTRIBUTE_CONFLICT = 4391;
-      //public const uint ERROR_INVALID_REPARSE_DATA = 4392;
+
+      /// <summary>The data present in the reparse point buffer is invalid.</summary>
+      public const uint ERROR_INVALID_REPARSE_DATA = 4392;
+
       //public const uint ERROR_REPARSE_TAG_INVALID = 4393;
       //public const uint ERROR_REPARSE_TAG_MISMATCH = 4394;
       //public const uint ERROR_VOLUME_NOT_SIS_ENABLED = 4500;
@@ -1163,7 +1179,6 @@ namespace Alphaleonis.Win32
       //public const uint ERROR_NO_USER_KEYS = 6006;
       //public const uint ERROR_FILE_NOT_ENCRYPTED = 6007;
       //public const uint ERROR_NOT_EXPORT_FORMAT = 6008;
-
 
       /// <summary>(6009) The specified file is read only.</summary>
       public const uint ERROR_FILE_READ_ONLY = 6009;
@@ -3226,7 +3241,7 @@ namespace Alphaleonis.Win32
       // http://msdn.microsoft.com/en-us/library/windows/desktop/aa370674%28v=vs.85%29.aspx
 
       /// <summary>(0) The operation completed successfully.</summary>
-      public const uint NERR_Success = ERROR_SUCCESS;
+      public const uint NERR_Success = 0;
 
       ///// <summary>The workstation driver is not installed.</summary>
       //public const uint NERR_NetNotStarted = 2102;
@@ -3558,7 +3573,7 @@ namespace Alphaleonis.Win32
       ///// <summary>This replicant database is outdated; synchronization is required.</summary>
       //public const uint NERR_SyncRequired = 2249;
 
-      /// <summary>(2250) The network connection could not be found.</summary>
+      //// <summary>(2250) The network connection could not be found.</summary>
       //public const uint NERR_UseNotFound = 2250;
 
       ///// <summary>This asg_type is invalid.</summary>
@@ -3645,7 +3660,7 @@ namespace Alphaleonis.Win32
       ///// <summary>This operation is not supported on computers with multiple networks.</summary>
       //public const uint NERR_MultipleNets = 2300;
 
-      /// <summary>(2310) This shared resource does not exist.</summary>
+      //// <summary>(2310) This shared resource does not exist.</summary>
       //public const uint NERR_NetNameNotFound = 2310;
 
       ///// <summary>This device is not shared.</summary>

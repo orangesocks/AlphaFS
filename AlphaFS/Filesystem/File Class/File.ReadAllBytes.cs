@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -96,7 +96,7 @@ namespace Alphaleonis.Win32.Filesystem
             long length = fs.Length;
 
             if (length > int.MaxValue)
-               throw new IOException(string.Format(CultureInfo.CurrentCulture, "File larger than 2GB: [{0}]", path));
+               throw new IOException(string.Format(CultureInfo.InvariantCulture, "File larger than 2GB: [{0}]", path));
 
             int count = (int)length;
             buffer = new byte[count];

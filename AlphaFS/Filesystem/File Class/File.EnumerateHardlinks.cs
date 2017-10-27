@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -89,33 +90,34 @@ namespace Alphaleonis.Win32.Filesystem
       internal static IEnumerable<string> EnumerateHardlinksCore(KernelTransaction transaction, string path, PathFormat pathFormat)
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
-         string pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck);
+         var pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck);
 
          // Default buffer length, will be extended if needed, although this should not happen.
          uint length = NativeMethods.MaxPathUnicode;
-         StringBuilder builder = new StringBuilder((int)length);
+         var builder = new StringBuilder((int) length);
 
 
       getFindFirstFileName:
 
-         using (SafeFindFileHandle handle = transaction == null
+         using (var handle = transaction == null
 
             // FindFirstFileName() / FindFirstFileNameTransacted()
             // In the ANSI version of this function, the name is limited to MAX_PATH characters.
             // To extend this limit to 32,767 wide characters, call the Unicode version of the function and prepend "\\?\" to the path.
             // 2013-01-13: MSDN does not confirm LongPath usage but a Unicode version of this function exists.
+            // 2017-05-30: MSDN confirms LongPath usage: Starting with Windows 10, version 1607
 
             ? NativeMethods.FindFirstFileName(pathLp, 0, out length, builder)
             : NativeMethods.FindFirstFileNameTransacted(pathLp, 0, out length, builder, transaction.SafeHandle))
          {
-         	int lastError = Marshal.GetLastWin32Error();
+            var lastError = Marshal.GetLastWin32Error();
 
             if (handle.IsInvalid)
             {
                handle.Close();
-               
+
                switch ((uint) lastError)
                {
                   case Win32Errors.ERROR_MORE_DATA:
@@ -131,9 +133,6 @@ namespace Alphaleonis.Win32.Filesystem
 
             yield return builder.ToString();
 
-
-            //length = NativeMethods.MaxPathUnicode;
-            //builder = new StringBuilder((int)length);
 
             do
             {
@@ -152,11 +151,12 @@ namespace Alphaleonis.Win32.Filesystem
                         continue;
 
                      default:
-                        //If the function fails, the return value is zero (0).
+                        // If the function fails, the return value is zero (0).
                         NativeError.ThrowException(lastError);
                         break;
                   }
                }
+
 
                yield return builder.ToString();
 

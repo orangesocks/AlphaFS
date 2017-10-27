@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -38,7 +38,7 @@ namespace Alphaleonis.Win32.Network
       /// <para>Minimum supported client: Windows 2000 Professional [desktop apps only]</para>
       /// <para>Minimum supported server: Windows 2000 Server [desktop apps only]</para>
       /// </remarks>
-      [SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("mpr.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "WNetCancelConnection2W"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.U4)]
       internal static extern uint WNetCancelConnection([MarshalAs(UnmanagedType.LPWStr)] string lpName, Connect dwFlags, [MarshalAs(UnmanagedType.Bool)] bool fForce);
@@ -53,7 +53,7 @@ namespace Alphaleonis.Win32.Network
       /// <para>Minimum supported client: Windows 2000 Professional [desktop apps only]</para>
       /// <para>Minimum supported server: Windows 2000 Server [desktop apps only]</para>
       /// </remarks>
-      [SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("mpr.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "WNetGetUniversalNameW"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.U4)]
       internal static extern uint WNetGetUniversalName([MarshalAs(UnmanagedType.LPWStr)] string lpLocalPath, [MarshalAs(UnmanagedType.U4)] uint dwInfoLevel, SafeGlobalMemoryBufferHandle lpBuffer, [MarshalAs(UnmanagedType.U4)] out uint lpBufferSize);
@@ -68,7 +68,7 @@ namespace Alphaleonis.Win32.Network
       /// <para>Minimum supported client: Windows 2000 Professional [desktop apps only]</para>
       /// <para>Minimum supported server: Windows 2000 Server [desktop apps only]</para>
       /// </remarks>
-      [SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
+      [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("mpr.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "WNetUseConnectionW"), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.U4)]
       internal static extern uint WNetUseConnection(IntPtr hwndOwner, [MarshalAs(UnmanagedType.Struct)] ref NETRESOURCE lpNetResource, [MarshalAs(UnmanagedType.LPWStr)] string lpPassword, [MarshalAs(UnmanagedType.LPWStr)] string lpUserId, [MarshalAs(UnmanagedType.U4)] Connect dwFlags, StringBuilder lpAccessName, [MarshalAs(UnmanagedType.U4)] out uint lpBufferSize, [MarshalAs(UnmanagedType.U4)] out uint lpResult);

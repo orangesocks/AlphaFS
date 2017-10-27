@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -87,7 +87,7 @@ namespace AlphaFS.UnitTest
             count++;
          }
 
-         Assert.IsTrue(count > 0, "Nothing was enumerated, but it was expected.");
+         Assert.IsTrue(count > 0, "Nothing is enumerated, but it is expected.");
       }
 
 
@@ -109,7 +109,7 @@ namespace AlphaFS.UnitTest
             count++;
          }
 
-         Assert.IsTrue(count > 0, "Nothing was enumerated, but it was expected.");
+         Assert.IsTrue(count > 0, "Nothing is enumerated, but it is expected.");
       }
 
 
@@ -131,7 +131,7 @@ namespace AlphaFS.UnitTest
             count++;
          }
 
-         Assert.IsTrue(count > 0, "Nothing was enumerated, but it was expected.");
+         Assert.IsTrue(count > 0, "Nothing is enumerated, but it is expected.");
       }
 
 
@@ -153,7 +153,7 @@ namespace AlphaFS.UnitTest
             count++;
          }
 
-         Assert.IsTrue(count > 0, "Nothing was enumerated, but it was expected.");
+         Assert.IsTrue(count > 0, "Nothing is enumerated, but it is expected.");
       }
 
 
@@ -177,7 +177,7 @@ namespace AlphaFS.UnitTest
       //      count++;
       //   }
 
-      //   Assert.IsTrue(count > 0, "Nothing was enumerated, but it was expected.");
+      //   Assert.IsTrue(count > 0, "Nothing is enumerated, but it is expected.");
       //}
    }
 }

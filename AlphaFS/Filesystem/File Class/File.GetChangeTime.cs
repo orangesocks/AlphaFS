@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using Microsoft.Win32.SafeHandles;
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -40,7 +41,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTime(string path, PathFormat pathFormat)
       {
-         return GetChangeTimeCore(false, null, null, path, false, pathFormat);
+         return GetChangeTimeCore(null, false, null, path, false, pathFormat);
       }
 
 
@@ -50,16 +51,16 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTime(string path)
       {
-         return GetChangeTimeCore(false, null, null, path, false, PathFormat.RelativePath);
+         return GetChangeTimeCore(null, false, null, path, false, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time of the specified file.</summary>
       /// <returns>A <see cref="System.DateTime"/> structure set to the change date and time for the specified file. This value is expressed in local time.</returns>
-      /// <param name="safeHandle">An open handle to the file or directory from which to retrieve information.</param>
+      /// <param name="safeFileHandle">An open handle to the file or directory from which to retrieve information.</param>
       [SecurityCritical]
-      public static DateTime GetChangeTime(SafeFileHandle safeHandle)
+      public static DateTime GetChangeTime(SafeFileHandle safeFileHandle)
       {
-         return GetChangeTimeCore(false, null, safeHandle, null, false, PathFormat.LongFullPath);
+         return GetChangeTimeCore(null, false, safeFileHandle, null, false, PathFormat.LongFullPath);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time of the specified file.</summary>
@@ -70,7 +71,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
       {
-         return GetChangeTimeCore(false, transaction, null, path, false, pathFormat);
+         return GetChangeTimeCore(transaction, false, null, path, false, pathFormat);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time of the specified file.</summary>
@@ -80,7 +81,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeTransacted(KernelTransaction transaction, string path)
       {
-         return GetChangeTimeCore(false, transaction, null, path, false, PathFormat.RelativePath);
+         return GetChangeTimeCore(transaction, false, null, path, false, PathFormat.RelativePath);
       }
 
       #endregion // GetChangeTime
@@ -94,7 +95,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeUtc(string path, PathFormat pathFormat)
       {
-         return GetChangeTimeCore(false, null, null, path, true, pathFormat);
+         return GetChangeTimeCore(null, false, null, path, true, pathFormat);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time, in Coordinated Universal Time (UTC) format, of the specified file.</summary>
@@ -103,16 +104,16 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeUtc(string path)
       {
-         return GetChangeTimeCore(false, null, null, path, true, PathFormat.RelativePath);
+         return GetChangeTimeCore(null, false, null, path, true, PathFormat.RelativePath);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time, in Coordinated Universal Time (UTC) format, of the specified file.</summary>
       /// <returns>A <see cref="System.DateTime"/> structure set to the change date and time for the specified file. This value is expressed in UTC time.</returns>
-      /// <param name="safeHandle">An open handle to the file or directory from which to retrieve information.</param>
+      /// <param name="safeFileHandle">An open handle to the file or directory from which to retrieve information.</param>
       [SecurityCritical]
-      public static DateTime GetChangeTimeUtc(SafeFileHandle safeHandle)
+      public static DateTime GetChangeTimeUtc(SafeFileHandle safeFileHandle)
       {
-         return GetChangeTimeCore(false, null, safeHandle, null, true, PathFormat.LongFullPath);
+         return GetChangeTimeCore(null, false, safeFileHandle, null, true, PathFormat.LongFullPath);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time, in Coordinated Universal Time (UTC) format, of the specified file.</summary>
@@ -123,7 +124,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeUtcTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
       {
-         return GetChangeTimeCore(false, transaction, null, path, true, pathFormat);
+         return GetChangeTimeCore(transaction, false, null, path, true, pathFormat);
       }
 
       /// <summary>[AlphaFS] Gets the change date and time, in Coordinated Universal Time (UTC) format, of the specified file.</summary>
@@ -133,7 +134,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public static DateTime GetChangeTimeUtcTransacted(KernelTransaction transaction, string path)
       {
-         return GetChangeTimeCore(false, transaction, null, path, true, PathFormat.RelativePath);
+         return GetChangeTimeCore(transaction, false, null, path, true, PathFormat.RelativePath);
       }
 
       #endregion // GetChangeTimeUtc
@@ -142,59 +143,63 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Gets the change date and time of the specified file.</summary>
       /// <returns>A <see cref="System.DateTime"/> structure set to the change date and time for the specified file. This value is expressed in local time.</returns>
-      /// <remarks><para>Use either <paramref name="path"/> or <paramref name="safeHandle"/>, not both.</para></remarks>
+      /// <remarks><para>Use either <paramref name="path"/> or <paramref name="safeFileHandle"/>, not both.</para></remarks>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="PlatformNotSupportedException"/>
-      /// <param name="isFolder">Specifies that <paramref name="path"/> is a file or directory.</param>
       /// <param name="transaction">The transaction.</param>
-      /// <param name="safeHandle">An open handle to the file or directory from which to retrieve information.</param>
+      /// <param name="isFolder">Specifies that <paramref name="path"/> is a file or directory.</param>
+      /// <param name="safeFileHandle">An open handle to the file or directory from which to retrieve information.</param>
       /// <param name="path">The file or directory for which to obtain creation date and time information.</param>
       /// <param name="getUtc"><see langword="true"/> gets the Coordinated Universal Time (UTC), <see langword="false"/> gets the local time.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Disposing is under control.")]
+      [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Disposing is controlled.")]
       [SecurityCritical]
-      internal static DateTime GetChangeTimeCore(bool isFolder, KernelTransaction transaction, SafeFileHandle safeHandle, string path, bool getUtc, PathFormat pathFormat)
+      internal static DateTime GetChangeTimeCore(KernelTransaction transaction, bool isFolder, SafeFileHandle safeFileHandle, string path, bool getUtc, PathFormat pathFormat)
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(Resources.Requires_Windows_Vista_Or_Higher);
+            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
-         bool callerHandle = safeHandle != null;
+
+         var callerHandle = null != safeFileHandle;
          if (!callerHandle)
          {
             if (pathFormat != PathFormat.LongFullPath && Utils.IsNullOrWhiteSpace(path))
                throw new ArgumentNullException("path");
 
-            string pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.CheckInvalidPathChars);
+            var pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.CheckInvalidPathChars);
 
-            safeHandle = CreateFileCore(transaction, pathLp, isFolder ? ExtendedFileAttributes.BackupSemantics : ExtendedFileAttributes.Normal, null, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, true, PathFormat.LongFullPath);
+            safeFileHandle = CreateFileCore(transaction, pathLp, isFolder ? ExtendedFileAttributes.BackupSemantics : ExtendedFileAttributes.ReadOnly, null, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, true, false, PathFormat.LongFullPath);
          }
 
 
          try
          {
-            NativeMethods.IsValidHandle(safeHandle);
+            NativeMethods.IsValidHandle(safeFileHandle);
             
             using (var safeBuffer = new SafeGlobalMemoryBufferHandle(IntPtr.Size + Marshal.SizeOf(typeof(NativeMethods.FILE_BASIC_INFO))))
             {
                NativeMethods.FILE_BASIC_INFO fbi;
 
-               if (!NativeMethods.GetFileInformationByHandleEx_FileBasicInfo(safeHandle, NativeMethods.FileInfoByHandleClass.FileBasicInfo, out fbi, (uint)safeBuffer.Capacity))
-                  NativeError.ThrowException(Marshal.GetLastWin32Error());
+               var success = NativeMethods.GetFileInformationByHandleEx_FileBasicInfo(safeFileHandle, NativeMethods.FILE_INFO_BY_HANDLE_CLASS.FILE_BASIC_INFO, out fbi, (uint) safeBuffer.Capacity);
+               
+               var lastError = Marshal.GetLastWin32Error();
+               if (!success)
+                  NativeError.ThrowException(lastError, !Utils.IsNullOrWhiteSpace(path) ? path : null);
+
 
                safeBuffer.StructureToPtr(fbi, true);
-               NativeMethods.FILETIME changeTime = safeBuffer.PtrToStructure<NativeMethods.FILE_BASIC_INFO>(0).ChangeTime;
+               var changeTime = safeBuffer.PtrToStructure<NativeMethods.FILE_BASIC_INFO>(0).ChangeTime;
 
-               return getUtc
-                  ? DateTime.FromFileTimeUtc(changeTime)
-                  : DateTime.FromFileTime(changeTime);
+
+               return getUtc ? DateTime.FromFileTimeUtc(changeTime) : DateTime.FromFileTime(changeTime);
             }
          }
          finally
          {
             // Handle is ours, dispose.
-            if (!callerHandle && safeHandle != null)
-               safeHandle.Close();
+            if (!callerHandle && null != safeFileHandle)
+               safeFileHandle.Close();
          }
       }
 

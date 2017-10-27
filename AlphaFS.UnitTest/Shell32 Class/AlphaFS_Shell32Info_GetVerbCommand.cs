@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,6 +21,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
@@ -49,9 +50,9 @@ namespace AlphaFS.UnitTest
 
          // Assumption: Extention: .txt is associated with: C:\Windows\System32\notepad.exe
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Shell32Info.GetVerbCommand"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var file = rootDir.RandomFileFullPath + ".txt";
+            var file = rootDir.RandomFileFullPath;
 
             using (System.IO.File.CreateText(file)) {}
             Console.WriteLine("\nInput File Path: [{0}]\n", file);

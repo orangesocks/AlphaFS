@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,21 +21,14 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Reflection;
 
 namespace AlphaFS.UnitTest
 {
    partial class DirectoryTest
    {
       // Pattern: <class>_<function>_<scenario>_<expected result>
-
-      [TestMethod]
-      public void Directory_Delete_LocalAndNetwork_Success()
-      {
-         Directory_CreateDirectory_Delete(false);
-         Directory_CreateDirectory_Delete(true);
-      }
-
-
+      
       [TestMethod]
       public void Directory_Delete_CatchArgumentException_PathContainsInvalidCharacters_LocalAndNetwork_Success()
       {
@@ -76,10 +69,10 @@ namespace AlphaFS.UnitTest
 
 
       [TestMethod]
-      public void Directory_Delete_CatchDirectoryNotFoundException_PathIsAFileNotADirectory_LocalAndNetwork_Success()
+      public void Directory_Delete_CatchDirectoryNotFoundException_FileExistsWithSameNameAsDirectory_LocalAndNetwork_Success()
       {
-         Directory_Delete_CatchDirectoryNotFoundException_PathIsAFileNotADirectory(false);
-         Directory_Delete_CatchDirectoryNotFoundException_PathIsAFileNotADirectory(true);
+         Directory_Delete_CatchDirectoryNotFoundException_FileExistsWithSameNameAsDirectory(false);
+         Directory_Delete_CatchDirectoryNotFoundException_FileExistsWithSameNameAsDirectory(true);
       }
 
 
@@ -105,10 +98,10 @@ namespace AlphaFS.UnitTest
          Directory_Delete_CatchUnauthorizedAccessException_FolderWithDenyPermission(false);
          Directory_Delete_CatchUnauthorizedAccessException_FolderWithDenyPermission(true);
       }
-      
 
 
-      
+
+
       private void Directory_Delete_CatchArgumentException_PathContainsInvalidCharacters(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
@@ -126,7 +119,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -151,7 +144,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("ArgumentException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -178,7 +171,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("NotSupportedException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -195,9 +188,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Delete"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             var file = System.IO.Path.Combine(folder, System.IO.Path.GetRandomFileName());
 
             Console.WriteLine("\nInput Directory Path: [{0}]", folder);
@@ -205,6 +198,7 @@ namespace AlphaFS.UnitTest
 
             System.IO.Directory.CreateDirectory(folder);
             using (System.IO.File.Create(System.IO.Path.Combine(folder, file))) { }
+            
 
 
             var gotException = false;
@@ -217,7 +211,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("DirectoryNotEmptyException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
          }
@@ -246,7 +240,7 @@ namespace AlphaFS.UnitTest
          {
             var exName = ex.GetType().Name;
             gotException = exName.Equals("DirectoryNotFoundException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -277,7 +271,7 @@ namespace AlphaFS.UnitTest
 
             var exName = ex.GetType().Name;
             gotException = exName.Equals(isNetwork ? "IOException" : "DirectoryNotFoundException", StringComparison.OrdinalIgnoreCase);
-            Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+            Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
          }
          Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -285,7 +279,7 @@ namespace AlphaFS.UnitTest
       }
 
 
-      private void Directory_Delete_CatchDirectoryNotFoundException_PathIsAFileNotADirectory(bool isNetwork)
+      private void Directory_Delete_CatchDirectoryNotFoundException_FileExistsWithSameNameAsDirectory(bool isNetwork)
       {
          UnitTestConstants.PrintUnitTestHeader(isNetwork);
 
@@ -294,9 +288,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Delete"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var file = rootDir.RandomFileFullPath + ".txt";
+            var file = rootDir.RandomFileFullPath;
             Console.WriteLine("\nInput File Path: [{0}]\n", file);
 
             using (System.IO.File.Create(file)) { }
@@ -312,7 +306,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("DirectoryNotFoundException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
          }
@@ -330,9 +324,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Delete"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             System.IO.Directory.CreateDirectory(folder);
@@ -349,7 +343,7 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("DirectoryReadOnlyException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
@@ -370,9 +364,9 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "Directory.Delete"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
-            var folder = rootDir.RandomFileFullPath;
+            var folder = rootDir.RandomDirectoryFullPath;
             Console.WriteLine("\nInput Directory Path: [{0}]\n", folder);
 
             System.IO.Directory.CreateDirectory(folder);
@@ -391,14 +385,14 @@ namespace AlphaFS.UnitTest
             {
                var exName = ex.GetType().Name;
                gotException = exName.Equals("UnauthorizedAccessException", StringComparison.OrdinalIgnoreCase);
-               Console.WriteLine("\n\tCaught Exception: [{0}] Message: [{1}]", exName, ex.Message);
+               Console.WriteLine("\n\tCaught {0} Exception: [{1}] {2}", gotException ? "EXPECTED" : "UNEXPECTED", exName, ex.Message);
             }
             Assert.IsTrue(gotException, "The exception is not caught, but is expected to.");
 
 
             // Remove DENY permission for current user and delete folder.
             UnitTestConstants.FolderDenyPermission(false, folder);
-            
+
          }
 
          Console.WriteLine();

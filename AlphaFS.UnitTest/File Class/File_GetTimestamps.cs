@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Reflection;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -80,7 +81,7 @@ namespace AlphaFS.UnitTest
             tempPath = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(tempPath);
 
 
-         using (var rootDir = new TemporaryDirectory(tempPath, "File.GetXxxTimeXxx"))
+         using (var rootDir = new TemporaryDirectory(tempPath, MethodBase.GetCurrentMethod().Name))
          {
             var file = UnitTestConstants.NotepadExe;
 
@@ -98,7 +99,7 @@ namespace AlphaFS.UnitTest
             // We can not compare ChangeTime against .NET because it does not exist.
             // Creating a file and renaming it triggers ChangeTime, so test for that.
 
-            file = rootDir.RandomFileFullPath + ".txt";
+            file = rootDir.RandomFileFullPath;
             if (isNetwork) file = Alphaleonis.Win32.Filesystem.Path.LocalToUnc(file);
             Console.WriteLine("Input File Path: [{0}]\n", file);
 

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2016 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -42,7 +42,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public long CountFileSystemObjects(DirectoryEnumerationOptions options)
       {
-         return Directory.EnumerateFileSystemEntryInfosCore<string>(Transaction, LongFullName, Path.WildcardStarMatchAll, options, PathFormat.LongFullPath).Count();
+         return Directory.EnumerateFileSystemEntryInfosCore<string>(null, Transaction, LongFullName, Path.WildcardStarMatchAll, null, options, null, PathFormat.LongFullPath).Count();
       }
 
       /// <summary>[AlphaFS] Counts file system objects: files, folders or both) in a given directory.</summary>
@@ -62,7 +62,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SecurityCritical]
       public long CountFileSystemObjects(string searchPattern, DirectoryEnumerationOptions options)
       {
-         return Directory.EnumerateFileSystemEntryInfosCore<string>(Transaction, LongFullName, searchPattern, options, PathFormat.LongFullPath).Count();
+         return Directory.EnumerateFileSystemEntryInfosCore<string>(null, Transaction, LongFullName, searchPattern, null, options, null, PathFormat.LongFullPath).Count();
       }
 
       #endregion // AlphaFS
