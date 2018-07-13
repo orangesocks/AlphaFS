@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -67,34 +67,12 @@ namespace Alphaleonis.Win32.Filesystem
          /// <remarks>Minimum supported server: Windows 2000 Server [desktop apps only]</remarks>
          void Init(Shell32.AssociationAttributes flags, [MarshalAs(UnmanagedType.LPWStr)] string pszAssoc, IntPtr hkProgid, IntPtr hwnd);
 
-         //[return: MarshalAs(UnmanagedType.U4)]
-         //uint Init(Shell32.AssociationAttributes flags, [MarshalAs(UnmanagedType.LPWStr)] string pszAssoc, IntPtr hkProgid, IntPtr hwnd);
 
          /// <summary>Searches for and retrieves a file or protocol association-related string from the registry.</summary>
          /// <returns>A standard COM error value, including the following: S_OK, E_POINTER, S_FALSE</returns>
          /// <remarks>Minimum supported client: Windows 2000 Professional, Windows XP [desktop apps only]</remarks>
          /// <remarks>Minimum supported server: Windows 2000 Server [desktop apps only]</remarks>
          void GetString(Shell32.AssociationAttributes flags, Shell32.AssociationString str, [MarshalAs(UnmanagedType.LPWStr)] string pwszExtra, StringBuilder pwszOut, [MarshalAs(UnmanagedType.I4)] out int pcchOut);
-
-         //[return: MarshalAs(UnmanagedType.U4)]
-         //void GetString(Shell32.AssociationAttributes flags, Shell32.AssociationString str, [MarshalAs(UnmanagedType.LPWStr)] string pwszExtra, StringBuilder pwszOut, [MarshalAs(UnmanagedType.I4)] out int pcchOut);
-
-         ///// <summary>Searches for and retrieves a file or protocol association-related key from the registry.</summary>
-         ///// <returns>If this method succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.</returns>
-         ///// <remarks>Minimum supported client: Windows 2000 Professional, Windows XP [desktop apps only]</remarks>
-         ///// <remarks>Minimum supported server: Windows 2000 Server [desktop apps only]</remarks>
-         //[return: MarshalAs(UnmanagedType.U4)]
-         //uint GetKey(Shell32.AssociationAttributes flags, Shell32.AssociationKey str, [MarshalAs(UnmanagedType.LPWStr)] string pwszExtra, out UIntPtr phkeyOut);
-
-         ///// <summary>Searches for and retrieves file or protocol association-related binary data from the registry.</summary>
-         ///// <returns>If this method succeeds, it returns S_OK. Otherwise, it returns an HRESULT error code.</returns>
-         ///// <remarks>Minimum supported client: Windows 2000 Professional, Windows XP [desktop apps only]</remarks>
-         ///// <remarks>Minimum supported server: Windows 2000 Server [desktop apps only]</remarks>
-         //[return: MarshalAs(UnmanagedType.U4)]
-         //uint GetData(Shell32.AssociationAttributes flags, Shell32.AssociationData data, [MarshalAs(UnmanagedType.LPWStr)] string pwszExtra, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 4)] out byte[] pvOut, [MarshalAs(UnmanagedType.I4)] out int pcbOut);
-
-         ///// <summary>This method is not implemented.</summary>
-         //void GetEnum();
       }
 
       #endregion // IQueryAssociations
@@ -105,7 +83,7 @@ namespace Alphaleonis.Win32.Filesystem
       #region Path
 
       /// <summary>Determines whether a path to a file system object such as a file or folder is valid.</summary>
-      /// <returns><see langword="true"/> if the file exists; otherwise, <see langword="false"/>. Call GetLastError for extended error information.</returns>
+      /// <returns><c>true</c> if the file exists; otherwise, <c>false</c>. Call GetLastError for extended error information.</returns>
       /// <remarks>
       /// This function tests the validity of the path.
       /// A path specified by Universal Naming Convention (UNC) is limited to a file only; that is, \\server\share\file is permitted.
@@ -163,9 +141,9 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Tests whether a URL is a specified type.</summary>
       /// <returns>
       /// Type: BOOL
-      /// For all but one of the URL types, UrlIs returns <see langword="true"/> if the URL is the specified type, <see langword="true"/> otherwise.
+      /// For all but one of the URL types, UrlIs returns <c>true</c> if the URL is the specified type, <c>true</c> otherwise.
       /// If UrlIs is set to <see cref="Shell32.UrlType.IsAppliable"/>, UrlIs will attempt to determine the URL scheme.
-      /// If the function is able to determine a scheme, it returns <see langword="true"/>, or <see langword="false"/>.
+      /// If the function is able to determine a scheme, it returns <c>true</c>, or <c>false</c>.
       /// </returns>
       /// <remarks>Minimum supported client: Windows 2000 Professional, Windows XP [desktop apps only]</remarks>
       /// <remarks>Minimum supported server: Windows 2000 Server [desktop apps only]</remarks>

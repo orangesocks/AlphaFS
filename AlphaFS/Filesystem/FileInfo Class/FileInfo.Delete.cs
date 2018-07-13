@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -29,25 +29,22 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Permanently deletes a file.</summary>
       /// <remarks>If the file does not exist, this method does nothing.</remarks>
-      ///
       /// <exception cref="IOException"/>
       public override void Delete()
       {
-         File.DeleteFileCore(Transaction, LongFullName, false, PathFormat.LongFullPath);
+         File.DeleteFileCore(Transaction, LongFullName, false, Attributes, PathFormat.LongFullPath);
       }
 
       #endregion // .NET
 
-      #region AlphaFS
 
       /// <summary>[AlphaFS] Permanently deletes a file.</summary>
       /// <remarks>If the file does not exist, this method does nothing.</remarks>
-      /// <param name="ignoreReadOnly"><see langword="true"/> overrides the read only <see cref="FileAttributes"/> of the file.</param>      
+      /// <exception cref="IOException"/>
+      /// <param name="ignoreReadOnly"><c>true</c> overrides the read only <see cref="FileAttributes"/> of the file.</param>      
       public void Delete(bool ignoreReadOnly)
       {
-         File.DeleteFileCore(Transaction, LongFullName, ignoreReadOnly, PathFormat.LongFullPath);
+         File.DeleteFileCore(Transaction, LongFullName, ignoreReadOnly, Attributes, PathFormat.LongFullPath);
       }
-
-      #endregion // AlphaFS
    }
 }

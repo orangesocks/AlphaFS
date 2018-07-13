@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,32 +20,41 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Alphaleonis.Win32.Filesystem;
 
 namespace Alphaleonis.Win32.Network
 {
    /// <summary>Contains the identification number of a connection, number of open files, connection time, number of users on the connection, and the type of connection.</summary>
-   [SerializableAttribute]
+   [Serializable]
    public sealed class OpenConnectionInfo
    {
+      #region Private Fields
+
+      private string _netName;
+
+      #endregion // Private Fields
+
+
       #region Constructor
 
-      /// <summary>Create a OpenConnectionInfo instance.</summary>
-      internal OpenConnectionInfo(string host, NativeMethods.CONNECTION_INFO_1 connectionInfo)
+      /// <summary>Create an OpenConnectionInfo instance.</summary>
+      internal OpenConnectionInfo(string hostName, NativeMethods.CONNECTION_INFO_1 connectionInfo)
       {
-         Host = host;
+         HostName = hostName;
          Id = connectionInfo.coni1_id;
          ShareType = connectionInfo.coni1_type;
          TotalOpenFiles = connectionInfo.coni1_num_opens;
          TotalUsers = connectionInfo.coni1_num_users;
-         ConnectedSeconds = connectionInfo.coni1_time;
+         ConnectedTime = TimeSpan.FromSeconds(connectionInfo.coni1_time);
          UserName = connectionInfo.coni1_username;
-         NetName = connectionInfo.oni1_netname.Replace(Path.LongPathUncPrefix, string.Empty).Replace(Path.UncPrefix, string.Empty);
+         NetName = connectionInfo.oni1_netname;
       }
 
       #endregion // Constructor
 
+      
       #region Methods
 
       /// <summary>Returns the full path to the share.</summary>
@@ -55,12 +64,18 @@ namespace Alphaleonis.Win32.Network
          return Id.ToString(CultureInfo.InvariantCulture);
       }
 
+
       #endregion // Methods
 
       #region Properties
 
       /// <summary>The local or remote Host.</summary>
+      [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+      [Obsolete("Use HostName")]
       public string Host { get; private set; }
+
+      /// <summary>The host name of this connection information.</summary>
+      public string HostName { get; private set; }
 
       /// <summary>Specifies a connection identification number.</summary>
       public long Id { get; private set; }
@@ -75,13 +90,23 @@ namespace Alphaleonis.Win32.Network
       public long TotalUsers { get; private set; }
 
       /// <summary>Specifies the number of seconds that the connection has been established.</summary>
+      [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+      [Obsolete("Use ConnectedTime property.")]
       public long ConnectedSeconds { get; private set; }
 
-      /// <summary>If the server sharing the resource is running with user-level security, the UserName member describes which user made the connection. If the server is running with share-level security, coni1_username describes which computer (computername) made the connection.</summary>
-      public string UserName { get; private set; }
+      /// <summary>Specifies duration that the connection has been established.</summary>
+      public TimeSpan ConnectedTime { get; private set; }
 
-      /// <summary>String that specifies either the share name of the server's shared resource or the computername of the client. The value of this member depends on which name was specified as the qualifier parameter to the NetConnectionEnum function.</summary>
-      public string NetName { get; private set; }
+      /// <summary>If the server sharing the resource is running with user-level security, the UserName member describes which user made the connection. If the server is running with share-level security, UserName describes which Computer (Computer name) made the connection.</summary>
+      public string UserName { get; private set; }
+      
+      /// <summary>Specifies either the server's shared resource name or the Computer name or IP address of the client. The value of this member depends on which name was specified as the qualifier parameter to the function.</summary>
+      public string NetName
+      {
+         get { return _netName; }
+
+         set { _netName = null != value ? value.Replace(Path.LongPathUncPrefix, string.Empty).Replace(Path.UncPrefix, string.Empty).Trim('[', ']') : null; }
+      }
 
       #endregion // Properties
    }

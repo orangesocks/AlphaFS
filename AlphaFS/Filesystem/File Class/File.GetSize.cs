@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -20,114 +20,63 @@
  */
 
 using Microsoft.Win32.SafeHandles;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Security;
-using System.Security.AccessControl;
 
 namespace Alphaleonis.Win32.Filesystem
 {
    public static partial class File
    {
-      #region GetSize
-
-      /// <summary>[AlphaFS] Retrieves the file size, in bytes to store a specified file.</summary>
+      /// <summary>[AlphaFS] Retrieves the size of the specified file.</summary>
+      /// <returns>The file size, in bytes.</returns>
       /// <param name="path">The path to the file.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      /// <returns>The file size, in bytes.</returns>      
-      [SecurityCritical]
-      public static long GetSize(string path, PathFormat pathFormat)
-      {
-         return GetSizeCore(null, null, path, pathFormat);
-      }
-
-      /// <summary>[AlphaFS] Retrieves the file size, in bytes to store a specified file.</summary>
-      /// <param name="path">The path to the file.</param>
-      /// <returns>The file size, in bytes.</returns>      
       [SecurityCritical]
       public static long GetSize(string path)
       {
-         return GetSizeCore(null, null, path, PathFormat.RelativePath);
+         return GetSizeCore(null, null, path, false, PathFormat.RelativePath);
       }
 
-      /// <summary>[AlphaFS] Retrieves the file size, in bytes to store a specified file.</summary>
+
+      /// <summary>[AlphaFS] Retrieves the size of the specified file.</summary>
+      /// <returns>The file size, in bytes.</returns>
+      /// <param name="path">The path to the file.</param>
+      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
+      [SecurityCritical]
+      public static long GetSize(string path, PathFormat pathFormat)
+      {
+         return GetSizeCore(null, null, path, false, pathFormat);
+      }
+
+
+      /// <summary>[AlphaFS] Retrieves the size of the specified file.</summary>
+      /// <returns>The file size of the first or all streams, in bytes.</returns>
+      /// <param name="path">The path to the file.</param>
+      /// <param name="sizeOfAllStreams"><c>true</c> to retrieve the size of all alternate data streams, <c>false</c> to get the size of the first stream.</param>
+      [SecurityCritical]
+      public static long GetSize(string path, bool sizeOfAllStreams)
+      {
+         return GetSizeCore(null, null, path, sizeOfAllStreams, PathFormat.RelativePath);
+      }
+
+
+      /// <summary>[AlphaFS] Retrieves the size of the specified file.</summary>
+      /// <returns>The file size of the first or all streams, in bytes.</returns>
+      /// <param name="path">The path to the file.</param>
+      /// <param name="sizeOfAllStreams"><c>true</c> to retrieve the size of all alternate data streams, <c>false</c> to get the size of the first stream.</param>
+      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
+      [SecurityCritical]
+      public static long GetSize(string path, bool sizeOfAllStreams, PathFormat pathFormat)
+      {
+         return GetSizeCore(null, null, path, sizeOfAllStreams, pathFormat);
+      }
+
+
+      /// <summary>[AlphaFS] Retrieves the size of the specified file.</summary>
+      /// <returns>The file size, in bytes.</returns>
       /// <param name="handle">The <see cref="SafeFileHandle"/> to the file.</param>
-      /// <returns>The file size, in bytes.</returns>      
       [SecurityCritical]
       public static long GetSize(SafeFileHandle handle)
       {
-         return GetSizeCore(null, handle, null, PathFormat.LongFullPath);
+         return GetSizeCore(handle, null, null, false, PathFormat.LongFullPath);
       }
-
-      /// <summary>[AlphaFS] Retrieves the file size, in bytes to store a specified file.</summary>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to the file.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      /// <returns>The number of bytes of disk storage used to store the specified file.</returns>
-      [SecurityCritical]
-      public static long GetSizeTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
-      {
-         return GetSizeCore(transaction, null, path, pathFormat);
-      }
-
-      /// <summary>[AlphaFS] Retrieves the file size, in bytes to store a specified file.</summary>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to the file.</param>
-      /// <returns>The number of bytes of disk storage used to store the specified file.</returns>
-      [SecurityCritical]
-      public static long GetSizeTransacted(KernelTransaction transaction, string path)
-      {
-         return GetSizeCore(transaction, null, path, PathFormat.RelativePath);
-      }
-
-      #endregion // GetSize
-
-      #region Internal Methods
-
-      /// <summary>Retrieves the file size, in bytes to store a specified file.
-      /// <remarks>Use either <paramref name="path"/> or <paramref name="safeFileHandle"/>, not both.
-      /// </remarks>
-      /// </summary>
-      /// <returns>The number of bytes of disk storage used to store the specified file.</returns>
-      /// <exception/>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="safeFileHandle">The <see cref="SafeFileHandle"/> to the file.</param>
-      /// <param name="path">The path to the file.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
-      [SecurityCritical]
-      internal static long GetSizeCore(KernelTransaction transaction, SafeFileHandle safeFileHandle, string path, PathFormat pathFormat)
-      {
-         var callerHandle = null != safeFileHandle;
-         if (!callerHandle)
-         {
-            var pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.RemoveTrailingDirectorySeparator | GetFullPathOptions.FullCheck);
-
-            safeFileHandle = CreateFileCore(transaction, pathLp, ExtendedFileAttributes.Normal, null, FileMode.Open, FileSystemRights.ReadData, FileShare.Read, true, false, PathFormat.LongFullPath);
-         }
-
-
-         long fileSize;
-
-         try
-         {
-            var success = NativeMethods.GetFileSizeEx(safeFileHandle, out fileSize);
-            var lastError = Marshal.GetLastWin32Error();
-
-            if (!success && lastError != Win32Errors.ERROR_SUCCESS)
-               NativeError.ThrowException(lastError, path);
-         }
-         finally
-         {
-            // Handle is ours, dispose.
-            if (!callerHandle && null != safeFileHandle)
-               safeFileHandle.Close();
-         }
-
-         return fileSize;
-      }
-
-      #endregion // Internal Methods
    }
 }

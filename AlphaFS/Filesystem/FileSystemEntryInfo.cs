@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -28,10 +28,20 @@ namespace Alphaleonis.Win32.Filesystem
    /// <summary>Represents information about a file system entry.
    /// <para>This class cannot be inherited.</para>
    /// </summary>
-   [SerializableAttribute]
+   [Serializable]
    [SecurityCritical]
-   public sealed class FileSystemEntryInfo
+   public sealed class FileSystemEntryInfo : IEquatable<FileSystemEntryInfo>
    {
+      #region Fields
+
+      private string _fullPath;
+      private string _longFullPath;
+
+      #endregion // Fields
+
+
+      #region Constructor
+
       /// <summary>Initializes a new instance of the <see cref="FileSystemEntryInfo"/> class.</summary>
       /// <param name="findData">The NativeMethods.WIN32_FIND_DATA structure.</param>
       internal FileSystemEntryInfo(NativeMethods.WIN32_FIND_DATA findData)
@@ -39,23 +49,16 @@ namespace Alphaleonis.Win32.Filesystem
          Win32FindData = findData;
       }
 
+      #endregion // Constructor
 
 
-
-      /// <summary>Returns the <see cref="FullPath"/> of the <see cref="FileSystemEntryInfo"/> instance.</summary>
-      public override string ToString()
-      {
-         return FullPath;
-      }
-
-
-
-
+      #region Properties
 
       /// <summary>The instance 8.3 version of the filename.</summary>
-      /// <remarks>This property is always empty when <see cref="NativeMethods.FINDEX_INFO_LEVELS.Basic"/> is used.</remarks>
       public string AlternateFileName
       {
+         // This property is always empty when NativeMethods.FINDEX_INFO_LEVELS.Basic is used.
+
          get { return Win32FindData.cAlternateFileName; }
       }
 
@@ -81,7 +84,14 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>The instance  file name.</summary>
+      /// <summary>The instance file extension.</summary>
+      public string Extension
+      {
+         get { return Path.GetExtension(Win32FindData.cFileName, false); }
+      }
+
+
+      /// <summary>The instance file name.</summary>
       public string FileName
       {
          get { return Win32FindData.cFileName; }
@@ -94,8 +104,7 @@ namespace Alphaleonis.Win32.Filesystem
          get { return NativeMethods.ToLong(Win32FindData.nFileSizeHigh, Win32FindData.nFileSizeLow); }
       }
 
-
-      private string _fullPath;
+      
       /// <summary>The instance full path.</summary>
       public string FullPath
       {
@@ -251,7 +260,6 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      private string _longFullPath;
       /// <summary>The instance full path in long path format.</summary>
       public string LongFullPath
       {
@@ -270,5 +278,72 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>The instance internal WIN32 FIND Data</summary>
       internal NativeMethods.WIN32_FIND_DATA Win32FindData { get; private set; }
+
+      #endregion // Properties
+
+
+      #region Methods
+
+      /// <summary>Returns the <see cref="FullPath"/> of the FileSystemEntryInfo instance.</summary>
+      /// <returns>Returns the <see cref="FullPath"/> of the FileSystemEntryInfo instance.</returns>
+      public override string ToString()
+      {
+         return FullPath;
+      }
+
+
+      /// <summary>Serves as a hash function for a particular type.</summary>
+      /// <returns>A hash code for the current Object.</returns>
+      public override int GetHashCode()
+      {
+         return Utils.CombineHashCodesOf(FullPath, LongFullPath);
+      }
+
+
+      /// <summary>Determines whether the specified Object is equal to the current Object.</summary>
+      /// <param name="other">Another <see cref="FileSystemInfo"/> instance to compare to.</param>
+      /// <returns><c>true</c> if the specified Object is equal to the current Object; otherwise, <c>false</c>.</returns>
+      public bool Equals(FileSystemEntryInfo other)
+      {
+         return null != other && GetType() == other.GetType() &&
+                Equals(FileName, other.FileName) &&
+                Equals(FullPath, other.FullPath) &&
+                Equals(Attributes, other.Attributes) &&
+                Equals(CreationTimeUtc, other.CreationTimeUtc) &&
+                Equals(LastAccessTimeUtc, other.LastAccessTimeUtc);
+      }
+
+
+      /// <summary>Determines whether the specified Object is equal to the current Object.</summary>
+      /// <param name="obj">Another object to compare to.</param>
+      /// <returns><c>true</c> if the specified Object is equal to the current Object; otherwise, <c>false</c>.</returns>
+      public override bool Equals(object obj)
+      {
+         var other = obj as FileSystemEntryInfo;
+
+         return null != other && Equals(other);
+      }
+
+
+      /// <summary>Implements the operator ==</summary>
+      /// <param name="left">A.</param>
+      /// <param name="right">B.</param>
+      /// <returns>The result of the operator.</returns>
+      public static bool operator ==(FileSystemEntryInfo left, FileSystemEntryInfo right)
+      {
+         return ReferenceEquals(left, null) && ReferenceEquals(right, null) ||
+                !ReferenceEquals(left, null) && !ReferenceEquals(right, null) && left.Equals(right);
+      }
+
+
+      /// <summary>Implements the operator !=</summary>
+      /// <param name="left">A.</param>
+      /// <param name="right">B.</param>
+      /// <returns>The result of the operator.</returns>
+      public static bool operator !=(FileSystemEntryInfo left, FileSystemEntryInfo right)
+      {
+         return !(left == right);
+      }
+      #endregion // Methods
    }
 }

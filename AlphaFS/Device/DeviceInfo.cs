@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -29,7 +29,7 @@ namespace Alphaleonis.Win32.Filesystem
 {
    /// <summary>Provides access to information of a device, on a local or remote host.</summary>
    [SecurityPermission(SecurityAction.InheritanceDemand, UnmanagedCode = true)]
-   [SerializableAttribute]
+   [Serializable]
    [SecurityCritical]
    public sealed class DeviceInfo
    {
@@ -43,7 +43,7 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
       /// <summary>Initializes a DeviceInfo class.</summary>
-      /// <param name="host">The DNS or NetBIOS name of the remote server. <see langword="null"/> refers to the local host.</param>
+      /// <param name="host">The DNS or NetBIOS name of the remote server. <c>null</c> refers to the local host.</param>
       [SecurityCritical]
       public DeviceInfo(string host)
       {
@@ -56,12 +56,12 @@ namespace Alphaleonis.Win32.Filesystem
       #region Methods
 
       /// <summary>Enumerates all available devices on the local host.</summary>
-      /// <param name="deviceGuid">One of the <see cref="DeviceGuid"/> devices.</param>
-      /// <returns><see cref="IEnumerable{DeviceInfo}"/> instances of type <see cref="DeviceGuid"/> from the local host.</returns>
+      /// <param name="deviceGuid">One of the <see cref="Filesystem.DeviceGuid"/> devices.</param>
+      /// <returns><see cref="IEnumerable{DeviceInfo}"/> instances of type <see cref="Filesystem.DeviceGuid"/> from the local host.</returns>
       [SecurityCritical]
       public IEnumerable<DeviceInfo> EnumerateDevices(DeviceGuid deviceGuid)
       {
-         return Device.EnumerateDevicesCore(null, HostName, deviceGuid);
+         return Device.EnumerateDevicesCore(HostName, deviceGuid, true);
       }
       
       #endregion // Methods
@@ -74,7 +74,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Represents the name of the device setup class that a device instance belongs to.</summary>
-      public string Class { get; internal set; }
+      public string DeviceClass { get; internal set; }
 
 
       /// <summary>Represents the <see cref="Guid"/> of the device setup class that a device instance belongs to.</summary>

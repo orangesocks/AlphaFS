@@ -19,7 +19,7 @@ namespace Alphaleonis.Win32 {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -134,6 +134,24 @@ namespace Alphaleonis.Win32 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to get the current WindowsIdentity..
+        /// </summary>
+        internal static string GetCurrentWindowsIdentityFailed {
+            get {
+                return ResourceManager.GetString("GetCurrentWindowsIdentityFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot add and remove trailing DirectorySeparator simultaneously..
+        /// </summary>
+        internal static string GetFullPathOptions_Add_And_Remove_DirectorySeparator_Invalid {
+            get {
+                return ResourceManager.GetString("GetFullPathOptions_Add_And_Remove_DirectorySeparator_Invalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The handle is closed..
         /// </summary>
         internal static string Handle_Is_Closed {
@@ -224,6 +242,15 @@ namespace Alphaleonis.Win32 {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Argument must be a drive letter: &quot;C&quot;, RootDir: &quot;C:\&quot; or UNC path: &quot;\\server\share&quot;.
+        /// </summary>
+        internal static string InvalidDriveLetterArgument {
+            get {
+                return ResourceManager.GetString("InvalidDriveLetterArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The target directory of the directory junction must be on the same local drive..
         /// </summary>
         internal static string Junction_And_Target_Must_Be_On_The_Same_Drive {
@@ -301,6 +328,15 @@ namespace Alphaleonis.Win32 {
         internal static string Network_Path_Not_Allowed {
             get {
                 return ResourceManager.GetString("Network_Path_Not_Allowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No drive letters available..
+        /// </summary>
+        internal static string No_Drive_Letters_Available {
+            get {
+                return ResourceManager.GetString("No_Drive_Letters_Available", resourceCulture);
             }
         }
         

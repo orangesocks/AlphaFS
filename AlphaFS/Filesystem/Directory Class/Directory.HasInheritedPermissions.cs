@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,14 +21,22 @@
 
 using System;
 using System.Security.AccessControl;
-using System.Security.Principal;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   partial class Directory
+   public static partial class Directory
    {
-      /// <summary>[AlphaFS] Check if the directory has permission inheritance enabled.</summary>
-      /// <returns><see langword="true"/> if permission inheritance is enabled, <see langword="false"/> if permission inheritance is disabled.</returns>
+      /// <summary>[AlphaFS] Checks if the directory has permission inheritance enabled.</summary>
+      /// <param name="path">The full path to the directory to check.</param>
+      /// <returns><c>true</c> if permission inheritance is enabled, <c>false</c> if permission inheritance is disabled.</returns>
+      public static bool HasInheritedPermissions(string path)
+      {
+         return HasInheritedPermissions(path, PathFormat.RelativePath);
+      }
+
+
+      /// <summary>[AlphaFS] Checks if the directory has permission inheritance enabled.</summary>
+      /// <returns><c>true</c> if permission inheritance is enabled, <c>false</c> if permission inheritance is disabled.</returns>
       /// <param name="path">The full path to the directory to check.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
       public static bool HasInheritedPermissions(string path, PathFormat pathFormat)
@@ -36,23 +44,18 @@ namespace Alphaleonis.Win32.Filesystem
          if (Utils.IsNullOrWhiteSpace(path))
             throw new ArgumentNullException("path");
 
+
          var acl = File.GetAccessControlCore<DirectorySecurity>(true, path, AccessControlSections.Access | AccessControlSections.Group | AccessControlSections.Owner, pathFormat);
 
-         return acl.GetAccessRules(false, true, typeof(SecurityIdentifier)).Count > 0;
-      }
+         var rawBytes = acl.GetSecurityDescriptorBinaryForm();
+
+         var rsd = new RawSecurityDescriptor(rawBytes, 0);
 
 
-      /// <summary>[AlphaFS] Check if the directory has permission inheritance enabled.</summary>
-      /// <param name="path">The full path to the directory to check.</param>
-      /// <returns><see langword="true"/> if permission inheritance is enabled, <see langword="false"/> if permission inheritance is disabled.</returns>
-      public static bool HasInheritedPermissions(string path)
-      {
-         if (Utils.IsNullOrWhiteSpace(path))
-            throw new ArgumentNullException("path");
+         // "Include inheritable permissions from this object's parent" is unchecked.
+         var inheritanceDisabled = (rsd.ControlFlags & ControlFlags.DiscretionaryAclProtected) == ControlFlags.DiscretionaryAclProtected;
 
-         var acl = File.GetAccessControlCore<DirectorySecurity>(true, path, AccessControlSections.Access | AccessControlSections.Group | AccessControlSections.Owner, PathFormat.RelativePath);
-
-         return acl.GetAccessRules(false, true, typeof(SecurityIdentifier)).Count > 0;
+         return !inheritanceDisabled;
       }
    }
 }

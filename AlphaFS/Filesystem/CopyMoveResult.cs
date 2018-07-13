@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,51 +21,63 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   /// <summary>Class for CopyMoveResult that contains the results for the Copy or Move action.
+   /// <summary>Class for CopyMoveResult that contains the results for the Copy or Move action.</summary>
    /// <remarks>Normally there is no need to manually instantiate and/or populate this class.</remarks>
-   /// </summary>
-   [SerializableAttribute]
+   [Serializable]
    public sealed class CopyMoveResult
    {
+      #region Private Fields
+
+      [NonSerialized] internal readonly Stopwatch Stopwatch;
+
+      #endregion // Private Fields
+      
+
       #region Constructors
 
-      /// <summary>Create a CopyMoveResult class instance for the Copy or Move action.
-      /// <remarks>Normally there is no need to manually call this constructor.</remarks>
-      /// </summary>
-      /// <param name="source">Indicates the source file or directory.</param>
-      /// <param name="destination">Indicates the destination file or directory.</param>
+      /// <summary>Initializes a CopyMoveResult instance for the Copy or Move action.</summary>
+      /// <param name="source">Indicates the full path to the source file or directory.</param>
+      /// <param name="destination">Indicates the full path to the destination file or directory.</param>
       private CopyMoveResult(string source, string destination)
       {
          Source = source;
+
          Destination = destination;
 
          IsCopy = true;
 
-         ActionStart = ActionFinish = DateTime.Now;
+         Retries = 0;
+
+         Stopwatch = new Stopwatch();
       }
 
 
-      /// <summary>Create a CopyMoveResult class instance for the Copy or Move action.
-      /// <remarks>Normally there is no need to manually call this constructor.</remarks>
-      /// </summary>
-      /// <param name="source">Indicates the source file or directory.</param>
-      /// <param name="destination">Indicates the destination file or directory.</param>
-      /// <param name="isCopy">>When <see langword="true"/> the action is a Copy, Move otherwise.</param>
-      /// <param name="isDirectory">When <see langword="true"/> indicates the sources is a directory; file otherwise.</param>
-      /// <param name="preserveDates"><see langword="true"/> if original Timestamps must be preserved, <see langword="false"/> otherwise. This parameter is ignored for move operations.</param>
-      /// <param name="emulatedMove">When <see langword="true"/> indicates the Move action used a fallback of Copy + Delete actions.</param>
-      public CopyMoveResult(string source, string destination, bool isCopy, bool isDirectory, bool preserveDates, bool emulatedMove) : this(source, destination)
+      internal CopyMoveResult(CopyMoveArguments cma, bool isFolder) : this(cma.SourcePath, cma.DestinationPath)
       {
-         EmulatedMove = emulatedMove;
+         IsEmulatedMove = cma.EmulateMove;
 
-         IsCopy = isCopy;
-         IsDirectory = isDirectory;
+         IsCopy = cma.IsCopy;
 
-         TimestampsCopied = preserveDates;
+         IsDirectory = isFolder;
+
+         TimestampsCopied = cma.CopyTimestamps;
+      }
+
+
+      internal CopyMoveResult(CopyMoveArguments cma, bool isFolder, string source, string destination) : this(source, destination)
+      {
+         IsEmulatedMove = cma.EmulateMove;
+
+         IsCopy = cma.IsCopy;
+
+         IsDirectory = isFolder;
+
+         TimestampsCopied = cma.CopyTimestamps;
       }
 
       #endregion // Constructors
@@ -73,25 +85,16 @@ namespace Alphaleonis.Win32.Filesystem
 
       #region Properties
 
-      /// <summary>Indicates when the Copy or Move action started, in UTC format.</summary>
-      public DateTime ActionStart { get; set; }
-
-
-      /// <summary>Indicates when the Copy or Move action finished, in UTC format.</summary>
-      public DateTime ActionFinish { get; set; }
-
-
       /// <summary>Indicates the duration of the Copy or Move action.</summary>
-      public TimeSpan Duration { get { return ActionFinish.Subtract(ActionStart); } }
-
+      public TimeSpan Duration
+      {
+         get { return TimeSpan.FromMilliseconds(Stopwatch.Elapsed.TotalMilliseconds); }
+      }
+      
 
       /// <summary>Indicates the destination file or directory.</summary>
       public string Destination { get; private set; }
-
-
-      /// <summary>Indicates the Move action used a fallback of Copy + Delete actions.</summary>
-      public bool EmulatedMove { get; private set; }
-
+      
 
       /// <summary>The error code encountered during the Copy or Move action.</summary>
       /// <value>0 (zero) indicates success.</value>
@@ -104,29 +107,37 @@ namespace Alphaleonis.Win32.Filesystem
       public string ErrorMessage { get { return new Win32Exception(ErrorCode).Message; } }
 
 
-      /// <summary>When <see langword="true"/> indicates that the Copy or Move action was canceled.</summary>
-      /// <value><see langword="true"/> when the Copy/Move action was canceled. Otherwise <see langword="false"/>.</value>
+      /// <summary>When <c>true</c> indicates that the Copy or Move action was canceled.</summary>
+      /// <value><c>true</c> when the Copy/Move action was canceled. Otherwise <c>false</c>.</value>
       public bool IsCanceled { get; internal set; }
 
 
-      /// <summary>When <see langword="true"/> the action was a Copy, Move otherwise.</summary>
-      /// <value><see langword="true"/> when the action was a Copy. Otherwise a Move action was performed.</value>
+      /// <summary>When <c>true</c> the action was a Copy, Move otherwise.</summary>
+      /// <value><c>true</c> when the action was a Copy. Otherwise a Move action was performed.</value>
       public bool IsCopy { get; private set; }
 
 
       /// <summary>Gets a value indicating whether this instance represents a directory.</summary>
-      /// <value><see langword="true"/> if this instance represents a directory; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if this instance represents a directory; otherwise, <c>false</c>.</value>
       public bool IsDirectory { get; private set; }
 
 
+      /// <summary>Indicates the Move action used a fallback of Copy + Delete actions.</summary>
+      public bool IsEmulatedMove { get; private set; }
+
+
       /// <summary>Gets a value indicating whether this instance represents a file.</summary>
-      /// <value><see langword="true"/> if this instance represents a file; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if this instance represents a file; otherwise, <c>false</c>.</value>
       public bool IsFile { get { return !IsDirectory; } }
 
 
-      /// <summary>When <see langword="true"/> the action was a Move, Copy otherwise.</summary>
-      /// <value><see langword="true"/> when the action was a Move. Otherwise a Copy action was performed.</value>
+      /// <summary>When <c>true</c> the action was a Move, Copy otherwise.</summary>
+      /// <value><c>true</c> when the action was a Move. Otherwise a Copy action was performed.</value>
       public bool IsMove { get { return !IsCopy; } }
+
+
+      /// <summary>The total number of retry attempts.</summary>
+      public long Retries { get; internal set; }
 
 
       /// <summary>Indicates the source file or directory.</summary>
@@ -139,6 +150,13 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>The total number of bytes copied.</summary>
       public long TotalBytes { get; internal set; }
+
+
+      /// <summary>The total number of bytes copied, formatted as a unit size.</summary>
+      public string TotalBytesUnitSize
+      {
+         get { return Utils.UnitSizeToText(TotalBytes); }
+      }
 
 
       /// <summary>The total number of files copied.</summary>

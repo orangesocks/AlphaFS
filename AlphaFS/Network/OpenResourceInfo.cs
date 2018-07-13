@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -21,27 +21,29 @@
 
 using System;
 using System.Globalization;
+using Alphaleonis.Win32.Filesystem;
 
 namespace Alphaleonis.Win32.Network
 {
    /// <summary>Contains the identification number and other pertinent information about files, devices, and pipes. This class cannot be inherited.</summary>
-   [SerializableAttribute]
+   [Serializable]
    public sealed class OpenResourceInfo
    {
       #region Constructor
 
-      /// <summary>Create a OpenResourceInfo instance.</summary>
-      internal OpenResourceInfo(string host, NativeMethods.FILE_INFO_3 fileInfo)
+      /// <summary>Create an OpenResourceInfo instance.</summary>
+      internal OpenResourceInfo(string hostName, NativeMethods.FILE_INFO_3 fileInfo)
       {
-         Host = host;
+         HostName = hostName;
          Id = fileInfo.fi3_id;
          Permissions = fileInfo.fi3_permissions;
          TotalLocks = fileInfo.fi3_num_locks;
-         PathName = fileInfo.fi3_pathname.Replace(@"\\", @"\");
+         PathName = fileInfo.fi3_pathname.Replace(Path.UncPrefix, Path.DirectorySeparator);
          UserName = fileInfo.fi3_username;
       }
 
       #endregion // Constructor
+
 
       #region Methods
 
@@ -49,9 +51,11 @@ namespace Alphaleonis.Win32.Network
       /// <remarks>You should this method with caution because it does not write data cached on the client system to the file before closing the file.</remarks>
       public void Close()
       {
-         uint lastError = NativeMethods.NetFileClose(Host, (uint) Id);
+         var lastError = NativeMethods.NetFileClose(HostName, (uint) Id);
+
          if (lastError != Win32Errors.NERR_Success && lastError != Win32Errors.NERR_FileIdNotFound)
-            NativeError.ThrowException(lastError, Host, PathName);
+
+            NativeError.ThrowException(lastError, HostName, PathName);
       }
 
       /// <summary>Returns the full path to the share.</summary>
@@ -61,12 +65,18 @@ namespace Alphaleonis.Win32.Network
          return Id.ToString(CultureInfo.InvariantCulture);
       }
 
+
       #endregion // Methods
 
       #region Properties
 
       /// <summary>The local or remote Host.</summary>
+      [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+      [Obsolete("Use HostName")]
       public string Host { get; private set; }
+
+      /// <summary>The host name of this resource information.</summary>
+      public string HostName { get; private set; }
 
       /// <summary>The identification number assigned to the resource when it is opened.</summary>
       public long Id { get; private set; }

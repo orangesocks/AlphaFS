@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -28,36 +28,32 @@ namespace Alphaleonis.Win32
    /// <summary>Base class for classes representing a block of unmanaged memory.</summary>
    internal abstract class SafeNativeMemoryBufferHandle : SafeHandleZeroOrMinusOneIsInvalid
    {
-      #region Private Fields
-
       private readonly int m_capacity;
 
-      #endregion
 
-      #region Constructors
-
-      protected SafeNativeMemoryBufferHandle(bool ownsHandle) : base(ownsHandle)
+      /// <summary>Initializes a new instance of the <see cref="SafeNativeMemoryBufferHandle"/> class, specifying the allocated capacity of the memory block.</summary>
+      /// <param name="callerHandle"><c>true</c> to reliably release the handle during the finalization phase; <c>false</c> to prevent reliable release (not recommended).</param>
+      protected SafeNativeMemoryBufferHandle(bool callerHandle) : base(callerHandle)
       {
       }
 
-      /// <summary>Initializes a new instance of the <see cref="SafeNativeMemoryBufferHandle"/> specifying the allocated capacity of the memory block.</summary>
+
+      /// <summary>Initializes a new instance of the <see cref="SafeNativeMemoryBufferHandle"/> class, specifying the allocated capacity of the memory block.</summary>
       /// <param name="capacity">The capacity.</param>
-      protected SafeNativeMemoryBufferHandle(int capacity)
-         : this(true)
+      protected SafeNativeMemoryBufferHandle(int capacity) : this(true)
       {
          m_capacity = capacity;
       }
 
-      protected SafeNativeMemoryBufferHandle(IntPtr memory, int capacity)
-         : this(capacity)
+
+      protected SafeNativeMemoryBufferHandle(IntPtr memory, int capacity) : this(capacity)
       {
          SetHandle(memory);
       }
 
-      #endregion
 
-      #region Properties
-
+      
+      
       /// <summary>Gets the capacity. Only valid if this instance was created using a constructor that specifies the size,
       /// it is not correct if this handle was returned by a native method using p/invoke.
       /// </summary>
@@ -66,9 +62,8 @@ namespace Alphaleonis.Win32
          get { return m_capacity; }
       }
 
-      #endregion
 
-      #region Public Methods
+
 
       /// <summary>Copies data from a one-dimensional, managed 8-bit unsigned integer array to the unmanaged memory pointer referenced by this instance.</summary>
       /// <param name="source">The one-dimensional array to copy from. </param>
@@ -302,6 +297,7 @@ namespace Alphaleonis.Win32
          Marshal.StructureToPtr(structure, handle, deleteOld);
       }
 
+
       /// <summary>Marshals data from an unmanaged block of memory to a newly allocated managed object of the specified type.</summary>
       /// <returns>A managed object containing the data pointed to by the ptr parameter.</returns>
       public T PtrToStructure<T>(int offset)
@@ -309,11 +305,12 @@ namespace Alphaleonis.Win32
          return (T) Marshal.PtrToStructure(new IntPtr(handle.ToInt64() + offset), typeof (T));
       }
 
-      /// <summary>Allocates a managed System.String and copies a specified number of characters from an unmanaged Unicode string into it.</summary>
+
+      /// <summary>Allocates a managed System.String and copies a specified number of characters from an unmanaged ANSI string into it.</summary>
       /// <returns>A managed string that holds a copy of the unmanaged string if the value of the ptr parameter is not null; otherwise, this method returns null.</returns>
-      public string PtrToStringUni(int offset, int length)
+      public string PtrToStringAnsi(int offset)
       {
-         return Marshal.PtrToStringUni(new IntPtr(handle.ToInt64() + offset), length);
+         return Marshal.PtrToStringAnsi(new IntPtr(handle.ToInt64() + offset));
       }
 
       /// <summary>Allocates a managed System.String and copies all characters up to the first null character from an unmanaged Unicode string into it.</summary>
@@ -323,6 +320,12 @@ namespace Alphaleonis.Win32
          return Marshal.PtrToStringUni(handle);
       }
 
-      #endregion // Public Methods
+
+      /// <summary>Allocates a managed System.String and copies a specified number of characters from an unmanaged Unicode string into it.</summary>
+      /// <returns>A managed string that holds a copy of the unmanaged string if the value of the ptr parameter is not null; otherwise, this method returns null.</returns>
+      public string PtrToStringUni(int offset, int length)
+      {
+         return Marshal.PtrToStringUni(new IntPtr(handle.ToInt64() + offset), length);
+      }
    }
 }

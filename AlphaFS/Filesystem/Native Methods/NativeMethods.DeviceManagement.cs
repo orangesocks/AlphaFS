@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -77,7 +77,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <remarks>
       ///   <para>Beginning in Windows 8 and Windows Server 2012 functionality to access remote machines has been removed.</para>
       ///   <para>You cannot access remote machines when running on these versions of Windows.</para>
-      ///   <para>SetLastError is set to <see langword="false"/>.</para>
+      ///   <para>SetLastError is set to <c>false</c>.</para>
       ///   <para>Available in Microsoft Windows 2000 and later versions of Windows.</para>
       /// </remarks>
       /// <param name="hMachine">The machine.</param>
@@ -199,7 +199,7 @@ namespace Alphaleonis.Win32.Filesystem
       ///   The SetupDiDestroyDeviceInfoList function deletes a device information set and frees all associated memory.
       /// </summary>
       /// <remarks>
-      ///   <para>SetLastError is set to <see langword="false"/>.</para>
+      ///   <para>SetLastError is set to <c>false</c>.</para>
       ///   <para>Available in Microsoft Windows 2000 and later versions of Windows.</para>
       /// </remarks>
       /// <param name="hDevInfo">Information describing the development.</param>
@@ -309,7 +309,7 @@ namespace Alphaleonis.Win32.Filesystem
       [SuppressMessage("Microsoft.Security", "CA2118:ReviewSuppressUnmanagedCodeSecurityUsage"), SuppressMessage("Microsoft.Security", "CA5122:PInvokesShouldNotBeSafeCriticalFxCopRule")]
       [DllImport("setupapi.dll", SetLastError = true, CharSet = CharSet.Unicode), SuppressUnmanagedCodeSecurity]
       [return: MarshalAs(UnmanagedType.Bool)]
-      internal static extern bool SetupDiGetDeviceRegistryProperty(SafeHandle deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, SetupDiGetDeviceRegistryPropertyEnum property, [MarshalAs(UnmanagedType.U4)] out uint propertyRegDataType, SafeGlobalMemoryBufferHandle propertyBuffer, [MarshalAs(UnmanagedType.U4)] uint propertyBufferSize, IntPtr requiredSize);
+      internal static extern bool SetupDiGetDeviceRegistryProperty(SafeHandle deviceInfoSet, ref SP_DEVINFO_DATA deviceInfoData, SetupDiGetDeviceRegistryPropertyEnum property, IntPtr propertyRegDataType, SafeGlobalMemoryBufferHandle propertyBuffer, [MarshalAs(UnmanagedType.U4)] uint propertyBufferSize, IntPtr requiredSize);
 
       #endregion // SetupDiXxx
    }

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -30,7 +30,7 @@ namespace Alphaleonis.Win32.Network
    /// <summary>Contains information about a Distributed File System (DFS) root or link. This class cannot be inherited.
    /// <para>This structure contains the name, status, GUID, time-out, number of targets, and information about each target of the root or link.</para>
    /// </summary>
-   [SerializableAttribute]
+   [Serializable]
    [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dfs")]
    public sealed class DfsInfo
    {
@@ -84,14 +84,7 @@ namespace Alphaleonis.Win32.Network
       /// <summary>The <see cref="DirectoryInfo"/> instance of the DFS root or link.</summary>
       public DirectoryInfo DirectoryInfo
       {
-         get
-         {
-            // Do not use ?? expression here.
-            if (_directoryInfo == null)
-               _directoryInfo = new DirectoryInfo(null, EntryPath, PathFormat.FullPath);
-
-            return _directoryInfo;
-         }
+         get { return _directoryInfo ?? (_directoryInfo = new DirectoryInfo(null, EntryPath, PathFormat.FullPath)); }
       }
 
       /// <summary>The comment of the DFS root or link.</summary>

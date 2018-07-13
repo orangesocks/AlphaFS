@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -302,10 +302,8 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>SHFILEINFO structure, contains information about a file system object.</summary>
-      [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Sh")]
-      [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Sh")]
-      [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
       [SuppressMessage("Microsoft.Performance", "CA1815:OverrideEqualsAndOperatorEqualsOnValueTypes")]
+      [SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
       [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
       public struct FileInfo
       {
@@ -545,7 +543,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Retrieves information about an object in the file system, such as a file, folder, directory, or drive root.</summary>
-      /// <returns>A <see cref="Shell32.FileInfo"/> struct instance.</returns>
+      /// <returns>A <see cref="FileInfo"/> struct instance.</returns>
       /// <remarks>
       /// <para>You should call this function from a background thread.</para>
       /// <para>Failure to do so could cause the UI to stop responding.</para>
@@ -555,7 +553,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="attributes">A <see cref="System.IO.FileAttributes"/> attribute.</param>
       /// <param name="fileAttributes">One ore more <see cref="FileAttributes"/> attributes.</param>
       /// <param name="continueOnException">
-      /// <para><see langword="true"/> suppress any Exception that might be thrown as a result from a failure,</para>
+      /// <para><c>true</c> suppress any Exception that might be thrown as a result from a failure,</para>
       /// <para>such as ACLs protected directories or non-accessible reparse points.</para>
       /// </param>
       [SecurityCritical]
@@ -609,7 +607,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="urlPath">The file URL.</param>
       /// <returns>
       /// <para>The Microsoft MS-DOS path. If no path can be created, <c>string.Empty</c> is returned.</para>
-      /// <para>If <paramref name="urlPath"/> is <see langword="null"/>, <see langword="null"/> will also be returned.</para>
+      /// <para>If <paramref name="urlPath"/> is <c>null</c>, <c>null</c> will also be returned.</para>
       /// </returns>
       [SecurityCritical]
       internal static string PathCreateFromUrl(string urlPath)
@@ -628,16 +626,17 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Creates a path from a file URL.</summary>
-      /// <param name="urlPath">The URL.</param>
       /// <returns>
       /// <para>The file path. If no path can be created, <c>string.Empty</c> is returned.</para>
-      /// <para>If <paramref name="urlPath"/> is <see langword="null"/>, <see langword="null"/> will also be returned.</para>
+      /// <para>If <paramref name="urlPath"/> is <c>null</c>, <c>null</c> will also be returned.</para>
       /// </returns>
+      /// <exception cref="PlatformNotSupportedException">The operating system is older than Windows Vista.</exception>
+      /// <param name="urlPath">The URL.</param>
       [SecurityCritical]
       internal static string PathCreateFromUrlAlloc(string urlPath)
       {
          if (!NativeMethods.IsAtLeastWindowsVista)
-            throw new PlatformNotSupportedException(new Win32Exception((int) Win32Errors.ERROR_OLD_WIN_VERSION).Message);
+            throw new PlatformNotSupportedException(new Win32Exception((int)Win32Errors.ERROR_OLD_WIN_VERSION).Message);
 
 
          if (urlPath == null)
@@ -653,17 +652,15 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Determines whether a path to a file system object such as a file or folder is valid.</summary>
       /// <param name="path">The full path of maximum length the maximum path length to the object to verify.</param>
-      /// <returns><see langword="true"/> if the file exists; <see langword="false"/> otherwise</returns>
+      /// <returns><c>true</c> if the file exists; <c>false</c> otherwise</returns>
       [SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "lastError")]
       [SecurityCritical]
       public static bool PathFileExists(string path)
       {
          // PathFileExists()
-         // In the ANSI version of this function, the name is limited to 248 characters.
-         // To extend this limit to 32,767 wide characters, call the Unicode version of the function and prepend "\\?\" to the path.
          // 2013-01-13: MSDN does not confirm LongPath usage but a Unicode version of this function exists.
 
-         return !Utils.IsNullOrWhiteSpace(path) && NativeMethods.PathFileExists(Path.GetFullPathCore(null, path, GetFullPathOptions.AsLongPath | GetFullPathOptions.FullCheck | GetFullPathOptions.ContinueOnNonExist));
+         return !Utils.IsNullOrWhiteSpace(path) && NativeMethods.PathFileExists(Path.GetFullPathCore(null, false, path, GetFullPathOptions.AsLongPath | GetFullPathOptions.FullCheck | GetFullPathOptions.ContinueOnNonExist));
       }
 
 
@@ -671,9 +668,9 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="url">The URL.</param>
       /// <param name="urlType"></param>
       /// <returns>
-      /// For all but one of the URL types, UrlIs returns <see langword="true"/> if the URL is the specified type, or <see langword="false"/> otherwise.
+      /// For all but one of the URL types, UrlIs returns <c>true</c> if the URL is the specified type, or <c>false</c> otherwise.
       /// If UrlIs is set to <see cref="UrlType.IsAppliable"/>, UrlIs will attempt to determine the URL scheme.
-      /// If the function is able to determine a scheme, it returns <see langword="true"/>, or <see langword="false"/> otherwise.
+      /// If the function is able to determine a scheme, it returns <c>true</c>, or <c>false</c> otherwise.
       /// </returns>
       [SecurityCritical]
       internal static bool UrlIs(string url, UrlType urlType)
@@ -686,7 +683,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="path">The full MS-DOS path of maximum length <see cref="NativeMethods.MaxPath"/>.</param>
       /// <returns>
       /// <para>The URL. If no URL can be created <c>string.Empty</c> is returned.</para>
-      /// <para>If <paramref name="path"/> is <see langword="null"/>, <see langword="null"/> will also be returned.</para>
+      /// <para>If <paramref name="path"/> is <c>null</c>, <c>null</c> will also be returned.</para>
       /// </returns>
       [SecurityCritical]
       internal static string UrlCreateFromPath(string path)
@@ -713,7 +710,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Tests a URL to determine if it is a file URL.</summary>
       /// <param name="url">The URL.</param>
-      /// <returns><see langword="true"/> if the URL is a file URL, or <see langword="false"/> otherwise.</returns>
+      /// <returns><c>true</c> if the URL is a file URL, or <c>false</c> otherwise.</returns>
       [SecurityCritical]
       internal static bool UrlIsFileUrl(string url)
       {
@@ -723,7 +720,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Returns whether a URL is a URL that browsers typically do not include in navigation history.</summary>
       /// <param name="url">The URL.</param>
-      /// <returns><see langword="true"/> if the URL is a URL that is not included in navigation history, or <see langword="false"/> otherwise.</returns>
+      /// <returns><c>true</c> if the URL is a URL that is not included in navigation history, or <c>false</c> otherwise.</returns>
       [SecurityCritical]
       internal static bool UrlIsNoHistory(string url)
       {
@@ -733,7 +730,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Returns whether a URL is opaque.</summary>
       /// <param name="url">The URL.</param>
-      /// <returns><see langword="true"/> if the URL is opaque, or <see langword="false"/> otherwise.</returns>
+      /// <returns><c>true</c> if the URL is opaque, or <c>false</c> otherwise.</returns>
       [SecurityCritical]
       internal static bool UrlIsOpaque(string url)
       {
@@ -766,8 +763,6 @@ namespace Alphaleonis.Win32.Filesystem
             buffer = new StringBuilder((int)bufferSize);
 
             // AssocQueryString()
-            // In the ANSI version of this function, the name is limited to 248 characters.
-            // To extend this limit to 32,767 wide characters, call the Unicode version of the function and prepend "\\?\" to the path.
             // 2014-02-05: MSDN does not confirm LongPath usage but a Unicode version of this function exists.
             // 2015-07-17: This function does not support long paths.
 
@@ -795,7 +790,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Retrieve information about an object in the file system, such as a file, folder, directory, or drive root.</summary>
-      /// <returns>A <see cref="Shell32.FileInfo"/> struct instance.</returns>
+      /// <returns>A <see cref="FileInfo"/> struct instance.</returns>
       /// <remarks>
       /// <para>You should call this function from a background thread.</para>
       /// <para>Failure to do so could cause the UI to stop responding.</para>
@@ -806,7 +801,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <param name="fileAttributes">A <see cref="FileAttributes"/> attribute.</param>
       /// <param name="checkInvalidPathChars">Checks that the path contains only valid path-characters.</param>
       /// <param name="continueOnException">
-      /// <para><see langword="true"/> suppress any Exception that might be thrown as a result from a failure,</para>
+      /// <para><c>true</c> suppress any Exception that might be thrown as a result from a failure,</para>
       /// <para>such as ACLs protected directories or non-accessible reparse points.</para>
       /// </param>
       [SecurityCritical]
@@ -823,8 +818,6 @@ namespace Alphaleonis.Win32.Filesystem
          if (!Utils.IsNullOrWhiteSpace(path))
          {
             // ShGetFileInfo()
-            // In the ANSI version of this function, the name is limited to 248 characters.
-            // To extend this limit to 32,767 wide characters, call the Unicode version of the function and prepend "\\?\" to the path.
             // 2013-01-13: MSDN does not confirm LongPath usage but a Unicode version of this function exists.
             // 2015-07-17: This function does not support long paths.
 

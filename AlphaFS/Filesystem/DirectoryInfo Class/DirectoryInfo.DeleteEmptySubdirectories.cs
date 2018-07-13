@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -24,10 +24,8 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   partial class DirectoryInfo
+   public sealed partial class DirectoryInfo
    {
-      #region AlphaFS
-
       /// <summary>[AlphaFS] Deletes empty subdirectories from the <see cref="DirectoryInfo"/> instance.</summary>
       [SecurityCritical]
       public void DeleteEmptySubdirectories()
@@ -35,23 +33,23 @@ namespace Alphaleonis.Win32.Filesystem
          Directory.DeleteEmptySubdirectoriesCore(EntryInfo, Transaction, null, false, false, PathFormat.LongFullPath);
       }
 
+
       /// <summary>[AlphaFS] Deletes empty subdirectories from the <see cref="DirectoryInfo"/> instance.</summary>
-      /// <param name="recursive"><see langword="true"/> deletes empty subdirectories from this directory and its subdirectories.</param>
+      /// <param name="recursive"><c>true</c> deletes empty subdirectories from this directory and its subdirectories.</param>
       [SecurityCritical]
       public void DeleteEmptySubdirectories(bool recursive)
       {
          Directory.DeleteEmptySubdirectoriesCore(EntryInfo, Transaction, null, recursive, false, PathFormat.LongFullPath);
       }
 
+
       /// <summary>[AlphaFS] Deletes empty subdirectories from the <see cref="DirectoryInfo"/> instance.</summary>
-      /// <param name="recursive"><see langword="true"/> deletes empty subdirectories from this directory and its subdirectories.</param>
-      /// <param name="ignoreReadOnly"><see langword="true"/> overrides read only <see cref="FileAttributes"/> of empty directories.</param>
+      /// <param name="recursive"><c>true</c> deletes empty subdirectories from this directory and its subdirectories.</param>
+      /// <param name="ignoreReadOnly"><c>true</c> overrides read only <see cref="FileAttributes"/> of empty directories.</param>
       [SecurityCritical]
       public void DeleteEmptySubdirectories(bool recursive, bool ignoreReadOnly)
       {
          Directory.DeleteEmptySubdirectoriesCore(EntryInfo, Transaction, null, recursive, ignoreReadOnly, PathFormat.LongFullPath);
       }
-
-      #endregion // AlphaFS
    }
 }

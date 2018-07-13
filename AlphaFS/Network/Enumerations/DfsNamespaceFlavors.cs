@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -33,7 +33,7 @@ namespace Alphaleonis.Win32.Network
       [Flags]
       internal enum DfsNamespaceFlavors
       {
-         /// <summary></summary>
+         /// <summary>Unknown</summary>
          Unknown = 0,
 
          /// <summary>DFS_VOLUME_FLAVOR_STANDALONE

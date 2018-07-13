@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -70,7 +70,7 @@ namespace Alphaleonis.Win32.Security
 
 
       /// <summary>Adjusts the privilege.</summary>
-      /// <param name="enable"><see langword="true"/> the privilege will be enabled, otherwise disabled.</param>
+      /// <param name="enable"><c>true</c> the privilege will be enabled, otherwise disabled.</param>
       [SecurityCritical]
       private void AdjustPrivilege(bool enable)
       {
@@ -78,9 +78,9 @@ namespace Alphaleonis.Win32.Security
          {
             uint length;
             var hToken = currentIdentity.Token;
-            var mOldPrivilege = new TokenPrivileges();
+            var mOldPrivilege = new TOKEN_PRIVILEGES();
 
-            var newPrivilege = new TokenPrivileges
+            var newPrivilege = new TOKEN_PRIVILEGES
             {
                PrivilegeCount = 1,
                Luid = Filesystem.NativeMethods.LongToLuid(EnabledPrivilege.LookupLuid()),

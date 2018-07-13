@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -28,9 +28,9 @@ using System.Security;
 namespace Alphaleonis.Win32.Filesystem
 {
    /// <summary>Provides the base class for both <see cref="FileInfo"/> and <see cref="DirectoryInfo"/> objects.</summary>
-   [SerializableAttribute]
-   [ComVisibleAttribute(true)]
-   public abstract class FileSystemInfo : MarshalByRefObject
+   [Serializable]
+   [ComVisible(true)]
+   public abstract class FileSystemInfo : MarshalByRefObject, IEquatable<FileSystemInfo>
    {
       #region Fields
 
@@ -51,28 +51,13 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // .NET
 
 
-      // We use this field in conjunction with the Refresh methods, if we succeed
-      // we store a zero, on failure we store the HResult in it so that we can
-      // give back a generic error back.
-      [NonSerialized]
-      internal int DataInitialised = -1;
+      // We use this field in conjunction with the Refresh methods, if we succeed we store a zero,
+      // on failure we store the HResult in it so that we can give back a generic error back.
+      [NonSerialized] internal int DataInitialised = -1;
 
 
       // The pre-cached FileSystemInfo information.
-      [NonSerialized]
-      internal NativeMethods.WIN32_FILE_ATTRIBUTE_DATA Win32AttributeData;
-
-
-      // A random prime number will be picked and added to the HashCode, each time an instance is created.
-      [NonSerialized]
-      private static readonly int[] Primes = { 17, 23, 29, 37, 47, 59, 71, 89, 107, 131, 163, 197, 239, 293, 353, 431, 521, 631, 761, 919 };
-      [NonSerialized]
-      private readonly int _random = new Random().Next(0, 19);
-
-
-      /// <summary>The target path to the Hard/Soft (Symbolic)/Junction link as a long path.</summary>
-      [NonSerialized]
-      internal string linkTargetPath = null;
+      [NonSerialized] internal NativeMethods.WIN32_FILE_ATTRIBUTE_DATA Win32AttributeData;
 
       #endregion // Fields
 
@@ -81,9 +66,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       #region .NET
 
-      /// <summary>
-      ///   Gets or sets the attributes for the current file or directory.
-      /// </summary>
+      /// <summary>Gets or sets the attributes for the current file or directory.</summary>
       /// <remarks>
       ///   <para>The value of the CreationTime property is pre-cached</para>
       ///   <para>To get the latest value, call the Refresh method.</para>
@@ -105,11 +88,13 @@ namespace Alphaleonis.Win32.Filesystem
             }
 
             // MSDN: .NET 3.5+: IOException: Refresh cannot initialize the data. 
+
             if (DataInitialised != 0)
-               NativeError.ThrowException(DataInitialised, LongFullName);
+               NativeError.ThrowException(DataInitialised, FullPath);
 
             return Win32AttributeData.dwFileAttributes;
          }
+
 
          [SecurityCritical]
          set
@@ -137,10 +122,9 @@ namespace Alphaleonis.Win32.Filesystem
       /// <exception cref="IOException"/>
       public DateTime CreationTime
       {
-         [SecurityCritical]
-         get { return CreationTimeUtc.ToLocalTime(); }
-         [SecurityCritical]
-         set { CreationTimeUtc = value.ToUniversalTime(); }
+         [SecurityCritical] get { return CreationTimeUtc.ToLocalTime(); }
+
+         [SecurityCritical] set { CreationTimeUtc = value.ToUniversalTime(); }
       }
 
 
@@ -180,35 +164,33 @@ namespace Alphaleonis.Win32.Filesystem
             return DateTime.FromFileTimeUtc(Win32AttributeData.ftCreationTime);
          }
 
+
          [SecurityCritical]
          set
          {
             File.SetFsoDateTimeCore(Transaction, IsDirectory, LongFullName, value, null, null, false, PathFormat.LongFullPath);
+
             Reset();
          }
       }
 
 
-      /// <summary>
-      ///   Gets a value indicating whether the file or directory exists.
-      /// </summary>
+      /// <summary>Gets a value indicating whether the file or directory exists.</summary>
       /// <remarks>
-      ///   <para>The <see cref="Exists"/> property returns <see langword="false"/> if any error occurs while trying to determine if the
+      ///   <para>The <see cref="Exists"/> property returns <c>false</c> if any error occurs while trying to determine if the
       ///   specified file or directory exists.</para>
       ///   <para>This can occur in situations that raise exceptions such as passing a directory- or file name with invalid characters or too
       ///   many characters,</para>
       ///   <para>a failing or missing disk, or if the caller does not have permission to read the file or directory.</para>
       /// </remarks>
-      /// <value><see langword="true"/> if the file or directory exists; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if the file or directory exists; otherwise, <c>false</c>.</value>
       public abstract bool Exists { get; }
 
 
-      /// <summary>
-      ///   Gets the string representing the extension part of the file.
-      /// </summary>
+      /// <summary>Gets the string representing the extension part of the file.</summary>
       /// <remarks>
-      ///   <para>The Extension property returns the <see cref="FileSystemInfo"/> extension, including the period (.).</para>
-      ///   <para>For example, for a file c:\NewFile.txt, this property returns ".txt".</para>
+      ///   The Extension property returns the <see cref="FileSystemInfo"/> extension, including the period (.).
+      ///   For example, for a file c:\NewFile.txt, this property returns ".txt".
       /// </remarks>
       /// <value>A string containing the <see cref="FileSystemInfo"/> extension.</value>
       public string Extension
@@ -217,17 +199,14 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>
-      ///   Gets the full path of the directory or file.
-      /// </summary>
+      /// <summary>Gets the full path of the directory or file.</summary>
       /// <value>A string containing the full path.</value>
       public virtual string FullName
       {
-         [SecurityCritical]
-         get { return FullPath; }
+         [SecurityCritical] get { return FullPath; }
       }
 
-
+      
       /// <summary>Gets or sets the time the current file or directory was last accessed.</summary>
       /// <remarks>
       ///   <para>The value of the LastAccessTime property is pre-cached
@@ -242,10 +221,9 @@ namespace Alphaleonis.Win32.Filesystem
       /// <exception cref="IOException"/>
       public DateTime LastAccessTime
       {
-         [SecurityCritical]
-         get { return LastAccessTimeUtc.ToLocalTime(); }
-         [SecurityCritical]
-         set { LastAccessTimeUtc = value.ToUniversalTime(); }
+         [SecurityCritical] get { return LastAccessTimeUtc.ToLocalTime(); }
+
+         [SecurityCritical] set { LastAccessTimeUtc = value.ToUniversalTime(); }
       }
 
 
@@ -280,10 +258,12 @@ namespace Alphaleonis.Win32.Filesystem
             return DateTime.FromFileTimeUtc(Win32AttributeData.ftLastAccessTime);
          }
 
+
          [SecurityCritical]
          set
          {
             File.SetFsoDateTimeCore(Transaction, IsDirectory, LongFullName, null, value, null, false, PathFormat.LongFullPath);
+
             Reset();
          }
       }
@@ -304,6 +284,7 @@ namespace Alphaleonis.Win32.Filesystem
       public DateTime LastWriteTime
       {
          get { return LastWriteTimeUtc.ToLocalTime(); }
+
          set { LastWriteTimeUtc = value.ToUniversalTime(); }
       }
 
@@ -336,10 +317,12 @@ namespace Alphaleonis.Win32.Filesystem
             return DateTime.FromFileTimeUtc(Win32AttributeData.ftLastWriteTime);
          }
 
+
          [SecurityCritical]
          set
          {
             File.SetFsoDateTimeCore(Transaction, IsDirectory, LongFullName, null, null, value, false, PathFormat.LongFullPath);
+
             Reset();
          }
       }
@@ -370,6 +353,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       private FileSystemEntryInfo _entryInfo;
+
       /// <summary>[AlphaFS] Gets the instance of the <see cref="FileSystemEntryInfo"/> class.</summary>
       public FileSystemEntryInfo EntryInfo
       {
@@ -389,13 +373,14 @@ namespace Alphaleonis.Win32.Filesystem
             return _entryInfo;
          }
 
+
          internal set
          {
             _entryInfo = value;
 
             DataInitialised = value == null ? -1 : 0;
 
-            if (DataInitialised == 0)
+            if (DataInitialised == 0 && null != _entryInfo)
                Win32AttributeData = new NativeMethods.WIN32_FILE_ATTRIBUTE_DATA(_entryInfo.Win32FindData);
          }
       }
@@ -435,9 +420,11 @@ namespace Alphaleonis.Win32.Filesystem
       ///   outdated.</para>
       /// </remarks>
       [SecurityCritical]
-      protected void Refresh()
+      public void Refresh()
       {
          DataInitialised = File.FillAttributeInfoCore(Transaction, LongFullName, ref Win32AttributeData, false, false);
+
+         IsDirectory = File.IsDirectory(Win32AttributeData.dwFileAttributes);
       }
 
 
@@ -454,46 +441,38 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>Determines whether the specified Object is equal to the current Object.</summary>
-      /// <param name="obj">Another object to compare to.</param>
-      /// <returns><see langword="true"/> if the specified Object is equal to the current Object; otherwise, <see langword="false"/>.</returns>
-      public override bool Equals(object obj)
-      {
-         if (obj == null || GetType() != obj.GetType())
-            return false;
-
-         var other = obj as FileSystemInfo;
-
-         return null != other && null != other.Name &&
-                other.FullName.Equals(FullName, StringComparison.OrdinalIgnoreCase) && other.Attributes.Equals(Attributes) &&
-                other.CreationTimeUtc.Equals(CreationTimeUtc) && other.LastWriteTimeUtc.Equals(LastWriteTimeUtc);
-      }
-
-
       /// <summary>Serves as a hash function for a particular type.</summary>
       /// <returns>A hash code for the current Object.</returns>
       public override int GetHashCode()
       {
-         var fullName = FullName;
-         var name = Name;
-
-         unchecked
-         {
-            var hash = Primes[_random];
-
-            if (!Utils.IsNullOrWhiteSpace(fullName))
-               hash = hash * Primes[1] + fullName.GetHashCode();
-
-            if (!Utils.IsNullOrWhiteSpace(name))
-               hash = hash * Primes[1] + name.GetHashCode();
-
-            hash = hash * Primes[1] + Attributes.GetHashCode();
-            hash = hash * Primes[1] + CreationTimeUtc.GetHashCode();
-            hash = hash * Primes[1] + LastWriteTimeUtc.GetHashCode();
-
-            return hash;
-         }
+         return null != FullName ? FullName.GetHashCode() : 0;
       }
+
+
+      /// <summary>Determines whether the specified Object is equal to the current Object.</summary>
+      /// <param name="other">Another <see cref="FileSystemInfo"/> instance to compare to.</param>
+      /// <returns><c>true</c> if the specified Object is equal to the current Object; otherwise, <c>false</c>.</returns>
+      public bool Equals(FileSystemInfo other)
+      {
+         return null != other && GetType() == other.GetType() &&
+                Equals(Name, other.Name) &&
+                Equals(FullName, other.FullName) &&
+                Equals(Attributes, other.Attributes) &&
+                Equals(CreationTimeUtc, other.CreationTimeUtc) &&
+                Equals(LastAccessTimeUtc, other.LastAccessTimeUtc);
+      }
+
+
+      /// <summary>Determines whether the specified Object is equal to the current Object.</summary>
+      /// <param name="obj">Another object to compare to.</param>
+      /// <returns><c>true</c> if the specified Object is equal to the current Object; otherwise, <c>false</c>.</returns>
+      public override bool Equals(object obj)
+      {
+         var other = obj as FileSystemInfo;
+
+         return null != other && Equals(other);
+      }
+
 
       /// <summary>Implements the operator ==</summary>
       /// <param name="left">A.</param>
@@ -504,6 +483,7 @@ namespace Alphaleonis.Win32.Filesystem
          return ReferenceEquals(left, null) && ReferenceEquals(right, null) ||
                 !ReferenceEquals(left, null) && !ReferenceEquals(right, null) && left.Equals(right);
       }
+
 
       /// <summary>Implements the operator !=</summary>
       /// <param name="left">A.</param>
@@ -517,15 +497,15 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // .NET
 
 
-      #region AlphaFS
-
       /// <summary>[AlphaFS] Refreshes the current <see cref="FileSystemInfo"/> instance (<see cref="DirectoryInfo"/> or <see cref="FileInfo"/>) with a new destination path.</summary>
       internal void UpdateSourcePath(string destinationPath, string destinationPathLp)
       {
          LongFullName = destinationPathLp;
+
          FullPath = null != destinationPathLp ? Path.GetRegularPathCore(LongFullName, GetFullPathOptions.None, false) : null;
 
          OriginalPath = destinationPath;
+
          DisplayPath = null != OriginalPath ? Path.GetRegularPathCore(OriginalPath, GetFullPathOptions.None, false) : null;
 
          // Flush any cached information about the FileSystemInfo instance.
@@ -533,7 +513,7 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      /// <summary>Refreshes the state of the <see cref="FileSystemEntryInfo"/> EntryInfo instance.</summary>
+      /// <summary>[AlphaFS] Refreshes the state of the <see cref="FileSystemEntryInfo"/> EntryInfo property.</summary>
       /// <remarks>
       ///   <para>FileSystemInfo.RefreshEntryInfo() takes a snapshot of the file from the current file system.</para>
       ///   <para>Refresh cannot correct the underlying file system even if the file system returns incorrect or outdated information.</para>
@@ -576,47 +556,41 @@ namespace Alphaleonis.Win32.Filesystem
             Path.CheckSupportedPathFormat(path, true, true);
 
          LongFullName = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.TrimEnd | (isFolder ? GetFullPathOptions.RemoveTrailingDirectorySeparator : 0) | GetFullPathOptions.ContinueOnNonExist);
-
+         
          // (Not on MSDN): .NET 4+ Trailing spaces are removed from the end of the path parameter before creating the FileSystemInfo instance.
 
          FullPath = Path.GetRegularPathCore(LongFullName, GetFullPathOptions.None, false);
 
          IsDirectory = isFolder;
+
          Transaction = transaction;
 
          OriginalPath = FullPath.Length == 2 && FullPath[1] == Path.VolumeSeparatorChar ? Path.CurrentDirectoryPrefix : path;
 
-         DisplayPath = OriginalPath.Length != 2 || OriginalPath[1] != Path.VolumeSeparatorChar
-            ? Path.GetRegularPathCore(OriginalPath, GetFullPathOptions.None, false)
-            : Path.CurrentDirectoryPrefix;
+         DisplayPath = OriginalPath.Length != 2 || OriginalPath[1] != Path.VolumeSeparatorChar ? Path.GetRegularPathCore(OriginalPath, GetFullPathOptions.None, false) : Path.CurrentDirectoryPrefix;
       }
 
 
-      internal static SafeFindFileHandle FindFirstFileCore(KernelTransaction transaction, string pathLp, NativeMethods.FINDEX_INFO_LEVELS infoLevel, NativeMethods.FINDEX_SEARCH_OPS searchOption, NativeMethods.FIND_FIRST_EX_FLAGS additionalFlags, out int lastError, out NativeMethods.WIN32_FIND_DATA win32FindData)
+      internal static SafeFindFileHandle FindFirstFileNative(KernelTransaction transaction, string pathLp, NativeMethods.FINDEX_INFO_LEVELS infoLevel, NativeMethods.FINDEX_SEARCH_OPS searchOption, NativeMethods.FIND_FIRST_EX_FLAGS additionalFlags, out int lastError, out NativeMethods.WIN32_FIND_DATA win32FindData)
       {
-         var handle = transaction == null || !NativeMethods.IsAtLeastWindowsVista
+         var safeHandle = null == transaction || !NativeMethods.IsAtLeastWindowsVista
 
             // FindFirstFileEx() / FindFirstFileTransacted()
-            // In the ANSI version of this function, the name is limited to MAX_PATH characters.
-            // To extend this limit to 32,767 wide characters, call the Unicode version of the function and prepend "\\?\" to the path.
             // 2013-01-13: MSDN confirms LongPath usage.
 
             // A trailing backslash is not allowed.
             ? NativeMethods.FindFirstFileEx(Path.RemoveTrailingDirectorySeparator(pathLp), infoLevel, out win32FindData, searchOption, IntPtr.Zero, additionalFlags)
+
             : NativeMethods.FindFirstFileTransacted(Path.RemoveTrailingDirectorySeparator(pathLp), infoLevel, out win32FindData, searchOption, IntPtr.Zero, additionalFlags, transaction.SafeHandle);
 
          lastError = Marshal.GetLastWin32Error();
 
-         if (handle.IsInvalid)
-         {
-            handle.Close();
-            handle = null;
-         }
+         if (!NativeMethods.IsValidHandle(safeHandle, false))
+            safeHandle = null;
 
-         return handle;
+
+         return safeHandle;
       }
-
-      #endregion // AlphaFS
 
       #endregion // Methods
    }

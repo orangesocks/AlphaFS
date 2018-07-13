@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -39,7 +39,7 @@ namespace Alphaleonis.Win32.Filesystem
       void GetHandle([Out] out SafeKernelTransactionHandle handle);
    }
 
-   /// <summary>A KTM transaction object for use with the transacted operations in <see cref="Filesystem"/></summary>
+   /// <summary>A KTM transaction object for use with the transacted operations in <see cref="Filesystem"/>.</summary>
    public sealed class KernelTransaction : MarshalByRefObject, IDisposable
    {
       /// <summary>Initializes a new instance of the <see cref="KernelTransaction"/> class, internally using the specified <see cref="Transaction"/>.
@@ -62,7 +62,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Initializes a new instance of the <see cref="KernelTransaction"/> class with a default security descriptor.</summary>
       /// <param name="timeout"><para>The time, in milliseconds, when the transaction will be aborted if it has not already reached the prepared state.</para></param>
-      /// <param name="description">A user-readable description of the transaction. This parameter may be <see langword="null"/>.</param>
+      /// <param name="description">A user-readable description of the transaction. This parameter may be <c>null</c>.</param>
       [SecurityCritical]      
       public KernelTransaction(int timeout, string description)
          : this(null, timeout, description)
@@ -70,10 +70,11 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
       /// <summary>Initializes a new instance of the <see cref="KernelTransaction"/> class.</summary>
+      /// <exception cref="PlatformNotSupportedException">The operating system is older than Windows Vista.</exception>
       /// <param name="securityDescriptor">The <see cref="ObjectSecurity"/> security descriptor.</param>
       /// <param name="timeout"><para>The time, in milliseconds, when the transaction will be aborted if it has not already reached the prepared state.</para>
       /// <para>Specify 0 to provide an infinite timeout.</para></param>
-      /// <param name="description">A user-readable description of the transaction. This parameter may be <see langword="null"/>.</param>
+      /// <param name="description">A user-readable description of the transaction. This parameter may be <c>null</c>.</param>
       [SecurityCritical]
       public KernelTransaction(ObjectSecurity securityDescriptor, int timeout, string description)
       {
@@ -93,6 +94,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Requests that the specified transaction be committed.</summary>
       /// <exception cref="TransactionAlreadyCommittedException"/>
       /// <exception cref="TransactionAlreadyAbortedException"/>
+      /// <exception cref="PlatformNotSupportedException">The operating system is older than Windows Vista.</exception>
       /// <exception cref="Win32Exception"/>
       [SecurityCritical]
       public void Commit()
@@ -107,6 +109,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Requests that the specified transaction be rolled back. This function is synchronous.</summary>
       /// <exception cref="TransactionAlreadyCommittedException"/>
       /// <exception cref="Win32Exception"/>
+      /// <exception cref="PlatformNotSupportedException">The operating system is older than Windows Vista.</exception>
       [SecurityCritical]
       public void Rollback()
       {

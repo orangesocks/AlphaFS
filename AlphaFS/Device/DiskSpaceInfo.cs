@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -31,13 +31,14 @@ namespace Alphaleonis.Win32.Filesystem
    /// the total amount of free space, and the total amount of free space available to the user that is associated with the calling thread.
    /// <para>This class cannot be inherited.</para>
    /// </summary>
-   [SerializableAttribute]
+   [Serializable]
    [SecurityCritical]
    public sealed class DiskSpaceInfo
    {
-      private readonly bool _initGetClusterInfo = true;
-      private readonly bool _initGetSpaceInfo = true;
-      private readonly bool _continueOnAccessError;
+      [NonSerialized] private readonly bool _initGetClusterInfo = true;
+      [NonSerialized] private readonly bool _initGetSpaceInfo = true;
+      [NonSerialized] private readonly CultureInfo _cultureInfo = CultureInfo.CurrentCulture;
+      [NonSerialized] private readonly bool _continueOnAccessError;
 
 
       /// <summary>Initializes a DiskSpaceInfo instance.</summary>
@@ -50,32 +51,34 @@ namespace Alphaleonis.Win32.Filesystem
          if (Utils.IsNullOrWhiteSpace(drivePath))
             throw new ArgumentNullException("drivePath");
 
-         if (drivePath.Length == 1)
-            DriveName += Path.VolumeSeparatorChar;
-         else
-            DriveName = Path.GetPathRoot(drivePath, false);
 
-         if (Utils.IsNullOrWhiteSpace(DriveName))
-            throw new ArgumentException("Argument must be a drive letter (\"C\"), RootDir (\"C:\\\") or UNC path (\"\\\\server\\share\")", "drivePath");
+         drivePath = drivePath.Length == 1 ? drivePath + Path.VolumeSeparatorChar : Path.GetPathRoot(drivePath, false);
+
+         if (Utils.IsNullOrWhiteSpace(drivePath))
+            throw new ArgumentException(Resources.InvalidDriveLetterArgument, "drivePath");
+
 
          // MSDN:
          // If this parameter is a UNC name, it must include a trailing backslash (for example, "\\MyServer\MyShare\").
          // Furthermore, a drive specification must have a trailing backslash (for example, "C:\").
          // The calling application must have FILE_LIST_DIRECTORY access rights for this directory.
-         DriveName = Path.AddTrailingDirectorySeparator(DriveName, false);
+         DriveName = Path.AddTrailingDirectorySeparator(drivePath, false);
       }
 
-
+      
       /// <summary>Initializes a DiskSpaceInfo instance.</summary>
       /// <param name="drivePath">A valid drive path or drive letter. This can be either uppercase or lowercase, 'a' to 'z' or a network share in the format: \\server\share</param>
-      /// <param name="spaceInfoType"><see langword="null"/> gets both size- and disk cluster information. <see langword="true"/> Get only disk cluster information, <see langword="false"/> Get only size information.</param>
+      /// <param name="spaceInfoType"><c>null</c> gets both size- and disk cluster information. <c>true</c> Get only disk cluster information, <c>false</c> Get only size information.</param>
       /// <param name="refresh">Refreshes the state of the object.</param>
-      /// <param name="continueOnException"><see langword="true"/> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
+      /// <param name="continueOnException"><c>true</c> suppress any Exception that might be thrown as a result from a failure, such as unavailable resources.</param>
       [SecurityCritical]
       public DiskSpaceInfo(string drivePath, bool? spaceInfoType, bool refresh, bool continueOnException) : this(drivePath)
       {
          if (spaceInfoType == null)
-            _initGetSpaceInfo = _initGetClusterInfo = true;
+         {
+            _initGetSpaceInfo = true;
+            _initGetClusterInfo = true;
+         }
 
          else
          {
@@ -88,8 +91,6 @@ namespace Alphaleonis.Win32.Filesystem
          if (refresh)
             Refresh();
       }
-      
-
 
 
       /// <summary>Indicates the amount of available free space on a drive, formatted as percentage.</summary>
@@ -97,7 +98,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          get
          {
-            return string.Format(CultureInfo.InvariantCulture, "{0:0.00}%", Utils.PercentCalculate(TotalNumberOfBytes - (TotalNumberOfBytes - TotalNumberOfFreeBytes), 0, TotalNumberOfBytes));
+            return PercentCalculate(TotalNumberOfBytes - (TotalNumberOfBytes - TotalNumberOfFreeBytes), 0, TotalNumberOfBytes).ToString("0.##", _cultureInfo) + "%";
          }
       }
 
@@ -105,7 +106,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Indicates the amount of available free space on a drive, formatted as a unit size.</summary>
       public string AvailableFreeSpaceUnitSize
       {
-         get { return Utils.UnitSizeToText(TotalNumberOfFreeBytes); }
+         get { return Utils.UnitSizeToText(TotalNumberOfFreeBytes, _cultureInfo); }
       }
 
 
@@ -125,7 +126,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>The total number of bytes on a disk that are available to the user who is associated with the calling thread, formatted as a unit size.</summary>
       public string TotalSizeUnitSize
       {
-         get { return Utils.UnitSizeToText(TotalNumberOfBytes); }
+         get { return Utils.UnitSizeToText(TotalNumberOfBytes, _cultureInfo); }
       }
 
 
@@ -134,7 +135,7 @@ namespace Alphaleonis.Win32.Filesystem
       {
          get
          {
-            return string.Format(CultureInfo.InvariantCulture, "{0:0.00}%", Utils.PercentCalculate(TotalNumberOfBytes - FreeBytesAvailable, 0, TotalNumberOfBytes));
+            return PercentCalculate(TotalNumberOfBytes - FreeBytesAvailable, 0, TotalNumberOfBytes).ToString("0.##", _cultureInfo) + "%";
          }
       }
 
@@ -142,7 +143,7 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Indicates the amount of used space on a drive, formatted as a unit size.</summary>
       public string UsedSpaceUnitSize
       {
-         get { return Utils.UnitSizeToText(TotalNumberOfBytes - FreeBytesAvailable); }
+         get { return Utils.UnitSizeToText(TotalNumberOfBytes - FreeBytesAvailable, _cultureInfo); }
       }
 
 
@@ -197,6 +198,7 @@ namespace Alphaleonis.Win32.Filesystem
                var success = NativeMethods.GetDiskFreeSpaceEx(DriveName, out freeBytesAvailable, out totalNumberOfBytes, out totalNumberOfFreeBytes);
 
                lastError = Marshal.GetLastWin32Error();
+
                if (!success && !_continueOnAccessError && lastError != Win32Errors.ERROR_NOT_READY)
                   NativeError.ThrowException(lastError, DriveName);
 
@@ -217,6 +219,7 @@ namespace Alphaleonis.Win32.Filesystem
                var success = NativeMethods.GetDiskFreeSpace(DriveName, out sectorsPerCluster, out bytesPerSector, out numberOfFreeClusters, out totalNumberOfClusters);
 
                lastError = Marshal.GetLastWin32Error();
+
                if (!success && !_continueOnAccessError && lastError != Win32Errors.ERROR_NOT_READY)
                   NativeError.ThrowException(lastError, DriveName);
 
@@ -234,11 +237,18 @@ namespace Alphaleonis.Win32.Filesystem
       private void Reset()
       {
          if (_initGetSpaceInfo)
-            FreeBytesAvailable = TotalNumberOfBytes = TotalNumberOfFreeBytes = 0;
+         {
+            FreeBytesAvailable = 0;
+            TotalNumberOfBytes = 0;
+            TotalNumberOfFreeBytes = 0;
+         }
+
 
          if (_initGetClusterInfo)
          {
-            BytesPerSector = NumberOfFreeClusters = SectorsPerCluster = 0;
+            BytesPerSector = 0;
+            NumberOfFreeClusters = 0;
+            SectorsPerCluster = 0;
             TotalNumberOfClusters = 0;
          }
       }
@@ -249,6 +259,13 @@ namespace Alphaleonis.Win32.Filesystem
       public override string ToString()
       {
          return DriveName;
+      }
+
+
+      /// <summary>Calculates a percentage value.</summary>
+      private static double PercentCalculate(double currentValue, double minimumValue, double maximumValue)
+      {
+         return currentValue < 0 || maximumValue <= 0 ? 0 : currentValue * 100 / (maximumValue - minimumValue);
       }
    }
 }

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -28,9 +28,17 @@ using System.Security;
 namespace Alphaleonis.Win32.Filesystem
 {
    /// <summary>Provides properties and instance methods for the creation, copying, deletion, moving, and opening of files, and aids in the creation of <see cref="FileStream"/> objects. This class cannot be inherited.</summary>
-   [SerializableAttribute]
+   [Serializable]
    public sealed partial class FileInfo : FileSystemInfo
    {
+      #region Fields
+
+      [NonSerialized]
+      private string _name;
+
+      #endregion // Fields
+
+
       #region Constructors
 
       #region .NET
@@ -45,8 +53,6 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // .NET
 
 
-      #region AlphaFS
-
       /// <summary>[AlphaFS] Initializes a new instance of the <see cref="Alphaleonis.Win32.Filesystem.FileInfo"/> class, which acts as a wrapper for a file path.</summary>
       /// <param name="fileName">The fully qualified name of the new file, or the relative file name. Do not end the path with the directory separator character.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
@@ -56,8 +62,6 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      #region Transactional
-
       /// <summary>[AlphaFS] Initializes a new instance of the <see cref="Alphaleonis.Win32.Filesystem.FileInfo"/> class, which acts as a wrapper for a file path.</summary>
       /// <param name="transaction">The transaction.</param>
       /// <param name="fileName">The fully qualified name of the new file, or the relative file name. Do not end the path with the directory separator character.</param>
@@ -65,6 +69,7 @@ namespace Alphaleonis.Win32.Filesystem
       public FileInfo(KernelTransaction transaction, string fileName) : this(transaction, fileName, PathFormat.RelativePath)
       {
       }
+
 
       /// <summary>[AlphaFS] Initializes a new instance of the <see cref="Alphaleonis.Win32.Filesystem.FileInfo"/> class, which acts as a wrapper for a file path.</summary>
       /// <param name="transaction">The transaction.</param>
@@ -77,10 +82,6 @@ namespace Alphaleonis.Win32.Filesystem
 
          _name = Path.GetFileName(Path.RemoveTrailingDirectorySeparator(fileName), pathFormat != PathFormat.LongFullPath);
       }
-
-      #endregion // Transacted
-
-      #endregion // AlphaFS
 
       #endregion // Constructors
 
@@ -119,9 +120,9 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Gets a value indicating whether the file exists.</summary>
-      /// <value><see langword="true"/> if the file exists; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if the file exists; otherwise, <c>false</c>.</value>
       /// <remarks>
-      ///   <para>The <see cref="Exists"/> property returns <see langword="false"/> if any error occurs while trying to determine if the specified file exists.</para>
+      ///   <para>The <see cref="Exists"/> property returns <c>false</c> if any error occurs while trying to determine if the specified file exists.</para>
       ///   <para>This can occur in situations that raise exceptions such as passing a file name with invalid characters or too many characters,</para>
       ///   <para>a failing or missing disk, or if the caller does not have permission to read the file.</para>
       /// </remarks>
@@ -137,7 +138,8 @@ namespace Alphaleonis.Win32.Filesystem
                   Refresh();
 
                var attrs = Win32AttributeData.dwFileAttributes;
-               return DataInitialised == 0 && File.HasValidAttributes(attrs) && !File.IsDirectory(attrs);
+
+               return DataInitialised == 0 && File.HasValidAttributes(attrs) && !IsDirectory;
             }
             catch
             {
@@ -148,7 +150,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>Gets or sets a value that determines if the current file is read only.</summary>
-      /// <value><see langword="true"/> if the current file is read only; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if the current file is read only; otherwise, <c>false</c>.</value>
       /// <remarks>
       ///   <para>Use the IsReadOnly property to quickly determine or change whether the current file is read only.</para>
       ///   <para>When first called, FileInfo calls Refresh and caches information about the file.</para>
@@ -192,19 +194,19 @@ namespace Alphaleonis.Win32.Filesystem
 
             // MSDN: .NET 3.5+: IOException: Refresh cannot initialize the data. 
             if (DataInitialised != 0)
-               NativeError.ThrowException(DataInitialised, LongFullName);
+               NativeError.ThrowException(DataInitialised, FullName);
 
 
             var attrs = Win32AttributeData.dwFileAttributes;
 
             // MSDN: .NET 3.5+: FileNotFoundException: The file does not exist or the Length property is called for a directory.
-            if (attrs.Equals(NativeMethods.InvalidFileAttributes))
-               NativeError.ThrowException(Win32Errors.ERROR_FILE_NOT_FOUND, LongFullName);
+            if (!File.HasValidAttributes(attrs))
+               NativeError.ThrowException(Win32Errors.ERROR_FILE_NOT_FOUND, FullName);
 
 
             // MSDN: .NET 3.5+: FileNotFoundException: The file does not exist or the Length property is called for a directory.
             if (File.IsDirectory(attrs))
-               NativeError.ThrowException(Win32Errors.ERROR_FILE_NOT_FOUND, string.Format(CultureInfo.InvariantCulture, Resources.Target_File_Is_A_Directory, LongFullName));
+               NativeError.ThrowException(Win32Errors.ERROR_FILE_NOT_FOUND, string.Format(CultureInfo.InvariantCulture, Resources.Target_File_Is_A_Directory, FullName));
 
 
             return Win32AttributeData.FileSize;
@@ -212,7 +214,6 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      private string _name;
       /// <summary>Gets the name of the file.</summary>
       /// <value>The name of the file.</value>
       /// <remarks>
@@ -229,5 +230,17 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // .NET
 
       #endregion // Properties
+
+
+      #region Methods
+
+      /// <summary>Returns the path as a string.</summary>
+      /// <returns>The path.</returns>
+      public override string ToString()
+      {
+         return DisplayPath;
+      }
+
+      #endregion // Methods
    }
 }

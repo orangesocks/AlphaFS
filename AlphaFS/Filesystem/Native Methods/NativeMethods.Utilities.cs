@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -42,7 +42,7 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      internal static long LuidToLong(Luid luid)
+      internal static long LuidToLong(LUID luid)
       {
          var high = (ulong) luid.HighPart << 32;
          var low = (ulong) luid.LowPart & 0x00000000FFFFFFFF;
@@ -51,9 +51,9 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-      internal static Luid LongToLuid(long lluid)
+      internal static LUID LongToLuid(long lluid)
       {
-         return new Luid {HighPart = (uint) (lluid >> 32), LowPart = (uint) (lluid & 0xFFFFFFFF)};
+         return new LUID {HighPart = (uint) (lluid >> 32), LowPart = (uint) (lluid & 0xFFFFFFFF)};
       }
 
 
@@ -65,15 +65,14 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Check is the current handle is not null, not closed and not invalid.</summary>
       /// <param name="handle">The current handle to check.</param>
-      /// <param name="throwException"><see langword="true"/> will throw an <exception cref="Resources.Handle_Is_Invalid"/>, <see langword="false"/> will not raise this exception..</param>
-      /// <returns><see langword="true"/> on success, <see langword="false"/> otherwise.</returns>
+      /// <param name="throwException"><c>true</c> will throw an <exception cref="Resources.Handle_Is_Invalid"/>, <c>false</c> will not raise this exception..</param>
+      /// <returns><c>true</c> on success, <c>false</c> otherwise.</returns>
       /// <exception cref="ArgumentException"/>
       internal static bool IsValidHandle(SafeHandle handle, bool throwException = true)
       {
          if (null == handle || handle.IsClosed || handle.IsInvalid)
          {
-            if (null != handle)
-               handle.Close();
+            CloseSafeHandle(handle);
 
             if (throwException)
                throw new ArgumentException(Resources.Handle_Is_Invalid, "handle");
@@ -88,15 +87,14 @@ namespace Alphaleonis.Win32.Filesystem
       /// <summary>Check is the current handle is not null, not closed and not invalid.</summary>
       /// <param name="handle">The current handle to check.</param>
       /// <param name="lastError">The result of Marshal.GetLastWin32Error()</param>
-      /// <param name="throwException"><see langword="true"/> will throw an <exception cref="Resources.Handle_Is_Invalid_Win32Error"/>, <see langword="false"/> will not raise this exception..</param>
-      /// <returns><see langword="true"/> on success, <see langword="false"/> otherwise.</returns>
+      /// <param name="throwException"><c>true</c> will throw an <exception cref="Resources.Handle_Is_Invalid_Win32Error"/>, <c>false</c> will not raise this exception..</param>
+      /// <returns><c>true</c> on success, <c>false</c> otherwise.</returns>
       /// <exception cref="ArgumentException"/>
       internal static bool IsValidHandle(SafeHandle handle, int lastError, bool throwException = true)
       {
          if (null == handle || handle.IsClosed || handle.IsInvalid)
          {
-            if (null != handle)
-               handle.Close();
+            CloseSafeHandle(handle);
 
             if (throwException)
                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.Handle_Is_Invalid_Win32Error, lastError), "handle");
@@ -105,6 +103,64 @@ namespace Alphaleonis.Win32.Filesystem
          }
 
          return true;
+      }
+
+
+      /// <summary>Check is the current handle is not null, not closed and not invalid.</summary>
+      /// <param name="handle">The current handle to check.</param>
+      /// <param name="lastError">The result of Marshal.GetLastWin32Error()</param>
+      /// <param name="path">The path on which the Exception occurred.</param>
+      /// <param name="throwException"><c>true</c> will throw an <exception cref="Resources.Handle_Is_Invalid_Win32Error"/>, <c>false</c> will not raise this exception..</param>
+      /// <returns><c>true</c> on success, <c>false</c> otherwise.</returns>
+      /// <exception cref="ArgumentException"/>
+      /// <exception cref="Exception"/>
+      internal static bool IsValidHandle(SafeHandle handle, int lastError, string path, bool throwException = true)
+      {
+         if (null == handle || handle.IsClosed || handle.IsInvalid)
+         {
+            CloseSafeHandle(handle);
+
+            if (throwException)
+               NativeError.ThrowException(lastError, path);
+
+            return false;
+         }
+
+         return true;
+      }
+
+
+      /// <summary>Check is the current handle is not null, not closed and not invalid.</summary>
+      /// <param name="handle">The current handle to check.</param>
+      /// <param name="lastError">The result of Marshal.GetLastWin32Error()</param>
+      /// <param name="isFolder">When <c>true</c> indicates the source is a directory, <c>false</c> indicates a file and <c>null</c> specifies a physical device.</param>
+      /// <param name="path">The path on which the Exception occurred.</param>
+      /// <param name="throwException"><c>true</c> will throw an <exception cref="Resources.Handle_Is_Invalid_Win32Error"/>, <c>false</c> will not raise this exception..</param>
+      /// <returns><c>true</c> on success, <c>false</c> otherwise.</returns>
+      /// <exception cref="ArgumentException"/>
+      /// <exception cref="Exception"/>
+      internal static bool CloseHandleAndPossiblyThrowException(SafeHandle handle, int lastError, bool? isFolder, string path, bool throwException = true)
+      {
+         if (null == handle || handle.IsClosed || handle.IsInvalid)
+         {
+            CloseSafeHandle(handle);
+
+            if (throwException)
+               NativeError.ThrowException(lastError, isFolder, path);
+
+            return false;
+         }
+
+         return true;
+      }
+
+
+      internal static void CloseSafeHandle(SafeHandle handle)
+      {
+         if (null != handle && !handle.IsClosed)
+            handle.Close();
+
+         handle = null;
       }
 
 

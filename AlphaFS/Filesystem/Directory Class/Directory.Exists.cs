@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -23,17 +23,17 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   partial class Directory
+   public static partial class Directory
    {
       #region .NET
 
       /// <summary>Determines whether the given path refers to an existing directory on disk.</summary>
       /// <returns>
-      ///   <para>Returns <see langword="true"/> if <paramref name="path"/> refers to an existing directory.</para>
-      ///   <para>Returns <see langword="false"/> if the directory does not exist or an error occurs when trying to determine if the specified file exists.</para>
+      ///   Returns <c>true</c> if <paramref name="path"/> refers to an existing directory.
+      ///   Returns <c>false</c> if the directory does not exist or an error occurs when trying to determine if the specified file exists.
       /// </returns>
       /// <remarks>
-      ///   The Exists method returns <see langword="false"/> if any error occurs while trying to determine if the specified file exists.
+      ///   The Exists method returns <c>false</c> if any error occurs while trying to determine if the specified file exists.
       ///   This can occur in situations that raise exceptions such as passing a file name with invalid characters or too many characters,
       ///   a failing or missing disk, or if the caller does not have permission to read the file.
       /// </remarks>
@@ -47,14 +47,13 @@ namespace Alphaleonis.Win32.Filesystem
       #endregion // .NET
 
 
-
       /// <summary>[AlphaFS] Determines whether the given path refers to an existing directory on disk.</summary>
       /// <returns>
-      ///   <para>Returns <see langword="true"/> if <paramref name="path"/> refers to an existing directory.</para>
-      ///   <para>Returns <see langword="false"/> if the directory does not exist or an error occurs when trying to determine if the specified file exists.</para>
+      ///   Returns <c>true</c> if <paramref name="path"/> refers to an existing directory.
+      ///   Returns <c>false</c> if the directory does not exist or an error occurs when trying to determine if the specified file exists.
       /// </returns>
       /// <remarks>
-      ///   The Exists method returns <see langword="false"/> if any error occurs while trying to determine if the specified file exists.
+      ///   The Exists method returns <c>false</c> if any error occurs while trying to determine if the specified file exists.
       ///   This can occur in situations that raise exceptions such as passing a file name with invalid characters or too many characters,
       ///   a failing or missing disk, or if the caller does not have permission to read the file.
       /// </remarks>
@@ -65,46 +64,5 @@ namespace Alphaleonis.Win32.Filesystem
       {
          return File.ExistsCore(null, true, path, pathFormat);
       }
-
-      #region Transactional
-
-      /// <summary>[AlphaFS] Determines whether the given path refers to an existing directory on disk.</summary>
-      /// <returns>
-      ///   <para>Returns <see langword="true"/> if <paramref name="path"/> refers to an existing directory.</para>
-      ///   <para>Returns <see langword="false"/> if the directory does not exist or an error occurs when trying to determine if the specified file exists.</para>
-      /// </returns>
-      /// <remarks>
-      ///   The Exists method returns <see langword="false"/> if any error occurs while trying to determine if the specified file exists.
-      ///   This can occur in situations that raise exceptions such as passing a file name with invalid characters or too many characters,
-      ///   a failing or missing disk, or if the caller does not have permission to read the file.
-      /// </remarks>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to test.</param>
-      [SecurityCritical]
-      public static bool ExistsTransacted(KernelTransaction transaction, string path)
-      {
-         return File.ExistsCore(transaction, true, path, PathFormat.RelativePath);
-      }
-
-      /// <summary>[AlphaFS] Determines whether the given path refers to an existing directory on disk.</summary>
-      /// <returns>
-      ///   <para>Returns <see langword="true"/> if <paramref name="path"/> refers to an existing directory.</para>
-      ///   <para>Returns <see langword="false"/> if the directory does not exist or an error occurs when trying to determine if the specified file exists.</para>
-      /// </returns>
-      /// <remarks>
-      ///   The Exists method returns <see langword="false"/> if any error occurs while trying to determine if the specified file exists.
-      ///   This can occur in situations that raise exceptions such as passing a file name with invalid characters or too many characters,
-      ///   a failing or missing disk, or if the caller does not have permission to read the file.
-      /// </remarks>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to test.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SecurityCritical]
-      public static bool ExistsTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
-      {
-         return File.ExistsCore(transaction, true, path, pathFormat);
-      }
-
-      #endregion // Transactional
    }
 }

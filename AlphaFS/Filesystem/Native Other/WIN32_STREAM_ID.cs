@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -28,7 +28,7 @@ namespace Alphaleonis.Win32.Filesystem
    {
       /// <summary>Contains stream data.</summary>
       [StructLayout(LayoutKind.Sequential, Pack = 1, CharSet = CharSet.Unicode)]
-      [SerializableAttribute]
+      [Serializable]
       internal struct WIN32_STREAM_ID
       {
          /// <summary>Type of stream data.</summary>
@@ -37,7 +37,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          /// <summary>Attributes of data to facilitate cross-operating system transfer.</summary>
          [MarshalAs(UnmanagedType.U4)]
-         public readonly STREAM_ATTRIBUTES dwStreamAttributes;
+         public readonly STREAM_ATTRIBUTE dwStreamAttribute;
 
          /// <summary>Size of data, in bytes.</summary>
          [MarshalAs(UnmanagedType.U8)]
@@ -45,7 +45,7 @@ namespace Alphaleonis.Win32.Filesystem
 
          /// <summary>Length of the name of the alternative data stream, in bytes.</summary>
          [MarshalAs(UnmanagedType.U4)]
-         public readonly uint dwStreamNameSize;         
+         public readonly uint dwStreamNameSize;
       }
    }
 }

@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -26,7 +26,7 @@ using System.Security;
 namespace Alphaleonis.Win32.Filesystem
 {
    /// <summary>Contains information that the GetFileInformationByHandle function retrieves.</summary>
-   [SerializableAttribute]
+   [Serializable]
    [SecurityCritical]
    public sealed class ByHandleFileInfo
    {
@@ -40,7 +40,7 @@ namespace Alphaleonis.Win32.Filesystem
          FileIndex = NativeMethods.ToLong(fibh.nFileIndexHigh, fibh.nFileIndexLow);
          FileSize = NativeMethods.ToLong(fibh.nFileSizeHigh, fibh.nFileSizeLow);
          NumberOfLinks = (int) fibh.nNumberOfLinks;
-         VolumeSerialNumber = (int) fibh.dwVolumeSerialNumber;
+         VolumeSerialNumber = fibh.dwVolumeSerialNumber;
       }
 
 
@@ -108,7 +108,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Gets the serial number of the volume that contains a file.</summary>
       /// <value>The serial number of the volume that contains a file.</value>
-      public int VolumeSerialNumber { get; private set; }
+      public long VolumeSerialNumber { get; private set; }
 
 
       /// <summary>Gets the size of the file.</summary>

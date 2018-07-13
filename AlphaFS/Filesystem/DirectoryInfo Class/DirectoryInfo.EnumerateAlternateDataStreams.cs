@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -24,14 +24,14 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   partial class DirectoryInfo
+   public sealed partial class DirectoryInfo
    {
       /// <summary>[AlphaFS] Returns an enumerable collection of <see cref="AlternateDataStreamInfo"/> instances for the directory.</summary>
       /// <returns>An enumerable collection of <see cref="AlternateDataStreamInfo"/> instances for the directory.</returns>
       [SecurityCritical]
       public IEnumerable<AlternateDataStreamInfo> EnumerateAlternateDataStreams()
       {
-         return File.EnumerateAlternateDataStreamsCore(Transaction, LongFullName, PathFormat.LongFullPath);
-      }    
+         return File.EnumerateAlternateDataStreamsCore(Transaction, true, LongFullName, PathFormat.LongFullPath);
+      }
    }
 }

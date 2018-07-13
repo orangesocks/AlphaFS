@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -104,7 +104,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Closes the specified volume search handle.</summary>
       /// <remarks>
-      ///   <para>SetLastError is set to <see langword="false"/>.</para>
+      ///   <para>SetLastError is set to <c>false</c>.</para>
       ///   Minimum supported client: Windows XP [desktop apps only]. Minimum supported server: Windows Server 2003 [desktop apps only].
       /// </remarks>
       /// <returns>
@@ -118,7 +118,7 @@ namespace Alphaleonis.Win32.Filesystem
 
       /// <summary>Closes the specified mounted folder search handle.</summary>
       /// <remarks>
-      ///   <para>SetLastError is set to <see langword="false"/>.</para>
+      ///   <para>SetLastError is set to <c>false</c>.</para>
       ///   <para>Minimum supported client: Windows XP</para>
       ///   <para>Minimum supported server: Windows Server 2003</para>
       /// </remarks>

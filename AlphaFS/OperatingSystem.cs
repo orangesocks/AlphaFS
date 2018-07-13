@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -76,8 +76,8 @@ namespace Alphaleonis.Win32
          /// <summary>Windows 10</summary>
          Windows10 = 11,
 
-         /// <summary>Windows Server</summary>
-         WindowsServer = 12,
+         /// <summary>Windows Server 2016</summary>
+         WindowsServer2016 = 12,
 
          /// <summary>A later version of Windows than currently installed.</summary>
          Later = 65535
@@ -119,7 +119,7 @@ namespace Alphaleonis.Win32
 
       private static bool _isServer;
       /// <summary>Gets a value indicating whether the operating system is a server operating system.</summary>
-      /// <value><see langword="true"/> if the current operating system is a server operating system; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if the current operating system is a server operating system; otherwise, <c>false</c>.</value>
       public static bool IsServer
       {
          get
@@ -134,7 +134,7 @@ namespace Alphaleonis.Win32
 
       private static bool? _isWow64Process;
       /// <summary>Gets a value indicating whether the current process is running under WOW64.</summary>
-      /// <value><see langword="true"/> if the current process is running under WOW64; otherwise, <see langword="false"/>.</value>
+      /// <value><c>true</c> if the current process is running under WOW64; otherwise, <c>false</c>.</value>
       public static bool IsWow64Process
       {
          get
@@ -226,7 +226,7 @@ namespace Alphaleonis.Win32
       #region Methods
 
       /// <summary>Determines whether the operating system is of the specified version or later.</summary>
-      /// <returns><see langword="true"/> if the operating system is of the specified <paramref name="version"/> or later; otherwise, <see langword="false"/>.</returns>      
+      /// <returns><c>true</c> if the operating system is of the specified <paramref name="version"/> or later; otherwise, <c>false</c>.</returns>      
       /// <param name="version">The lowest version for which to return true.</param>
       public static bool IsAtLeast(EnumOsName version)
       {
@@ -235,7 +235,7 @@ namespace Alphaleonis.Win32
 
       
       /// <summary>Determines whether the operating system is of the specified version or later, allowing specification of a minimum service pack that must be installed on the lowest version.</summary>
-      /// <returns><see langword="true"/> if the operating system matches the specified <paramref name="version"/> with the specified service pack, or if the operating system is of a later version; otherwise, <see langword="false"/>.</returns>      
+      /// <returns><c>true</c> if the operating system matches the specified <paramref name="version"/> with the specified service pack, or if the operating system is of a later version; otherwise, <c>false</c>.</returns>      
       /// <param name="version">The minimum required version.</param>
       /// <param name="servicePackVersion">The major version of the service pack that must be installed on the minimum required version to return true. This can be 0 to indicate that no service pack is required.</param>
       public static bool IsAtLeast(EnumOsName version, int servicePackVersion)
@@ -283,7 +283,7 @@ namespace Alphaleonis.Win32
          //    Operating system	            Version number    Other
          // ================================================================================
          //    Windows 10                    10.0              OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
-         //    Windows Server                10.0              OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
+         //    Windows Server 2016           10.0              OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
          //    Windows 8.1                   6.3               OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
          //    Windows Server 2012 R2        6.3               OSVERSIONINFOEX.wProductType != VER_NT_WORKSTATION
          //    Windows 8	                  6.2               OSVERSIONINFOEX.wProductType == VER_NT_WORKSTATION
@@ -299,7 +299,7 @@ namespace Alphaleonis.Win32
          //    Windows 2000	               5.0               Not applicable
 
 
-         // 10 == The lastest MajorVersion of Windows.
+         // 2017-01-07: 10 == The lastest MajorVersion of Windows.
          if (verInfo.dwMajorVersion > 10)
             _enumOsName = EnumOsName.Later;
 
@@ -309,37 +309,31 @@ namespace Alphaleonis.Win32
                #region Version 10
 
                case 10:
-                  switch (verInfo.dwMinorVersion)
-                  {
-                     // Windows 10 or Windows Server
-                     case 0:
-                        _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
-                           ? EnumOsName.Windows10
-                           : EnumOsName.WindowsServer;
-                        break;
-                  }
+
+                  // Windows 10 or Windows Server 2016
+
+                  _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
+                     ? EnumOsName.Windows10
+                     : EnumOsName.WindowsServer2016;
+
                   break;
+                  
 
                #endregion // Version 10
+
 
                #region Version 6
 
                case 6:
                   switch (verInfo.dwMinorVersion)
                   {
-                     // Windows Vista or Windows Server 2008
-                     case 0:
+                     // Windows 8.1 or Windows Server 2012 R2
+                     case 3:
                         _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
-                           ? EnumOsName.WindowsVista
-                           : EnumOsName.WindowsServer2008;
+                           ? EnumOsName.Windows81
+                           : EnumOsName.WindowsServer2012R2;
                         break;
 
-                     // Windows 7 or Windows Server 2008 R2
-                     case 1:
-                        _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
-                           ? EnumOsName.Windows7
-                           : EnumOsName.WindowsServer2008R2;
-                        break;
 
                      // Windows 8 or Windows Server 2012
                      case 2:
@@ -348,39 +342,54 @@ namespace Alphaleonis.Win32
                            : EnumOsName.WindowsServer2012;
                         break;
 
-                     // Windows 8.1 or Windows Server 2012 R2
-                     case 3:
+
+                     // Windows 7 or Windows Server 2008 R2
+                     case 1:
                         _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
-                           ? EnumOsName.Windows81
-                           : EnumOsName.WindowsServer2012R2;
+                           ? EnumOsName.Windows7
+                           : EnumOsName.WindowsServer2008R2;
                         break;
+
+
+                     // Windows Vista or Windows Server 2008
+                     case 0:
+                        _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION
+                           ? EnumOsName.WindowsVista
+                           : EnumOsName.WindowsServer2008;
+                        break;
+                        
 
                      default:
                         _enumOsName = EnumOsName.Later;
                         break;
                   }
+
                   break;
 
                #endregion // Version 6
+
 
                #region Version 5
 
                case 5:
                   switch (verInfo.dwMinorVersion)
                   {
-                     case 0:
-                        _enumOsName = EnumOsName.Windows2000;
-                        break;
-
-                     case 1:
-                        _enumOsName = EnumOsName.WindowsXP;
-                        break;
-
                      case 2:
                         _enumOsName = verInfo.wProductType == NativeMethods.VER_NT_WORKSTATION && _processorArchitecture == EnumProcessorArchitecture.X64
                            ? EnumOsName.WindowsXP
                            : verInfo.wProductType != NativeMethods.VER_NT_WORKSTATION ? EnumOsName.WindowsServer2003 : EnumOsName.Later;
                         break;
+
+
+                     case 1:
+                        _enumOsName = EnumOsName.WindowsXP;
+                        break;
+
+
+                     case 0:
+                        _enumOsName = EnumOsName.Windows2000;
+                        break;
+
 
                      default:
                         _enumOsName = EnumOsName.Later;
@@ -389,6 +398,7 @@ namespace Alphaleonis.Win32
                   break;
 
                #endregion // Version 5
+
 
                default:
                   _enumOsName = EnumOsName.Earlier;

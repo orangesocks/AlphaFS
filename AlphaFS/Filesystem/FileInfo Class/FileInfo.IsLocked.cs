@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -25,15 +25,12 @@ namespace Alphaleonis.Win32.Filesystem
 {
    partial class FileInfo
    {
-      #region AlphaFS
-
       /// <summary>[AlphaFS] Compresses a file using NTFS compression.</summary>      
+      /// <returns>Returns <c>true</c> if the specified file is in use (locked); otherwise, <c>false</c></returns>
       [SecurityCritical]
       public bool IsLocked()
       {
          return File.IsLockedCore(Transaction, LongFullName, PathFormat.LongFullPath);
       }
-
-      #endregion // AlphaFS
    }
 }

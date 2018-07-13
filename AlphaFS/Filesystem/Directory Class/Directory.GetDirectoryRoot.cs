@@ -1,4 +1,4 @@
-/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -24,12 +24,12 @@ using System.Security;
 
 namespace Alphaleonis.Win32.Filesystem
 {
-   partial class Directory
+   public static partial class Directory
    {
       #region .NET
 
       /// <summary>Returns the volume information, root information, or both for the specified path.</summary>
-      /// <returns>The volume information, root information, or both for the specified path, or <see langword="null"/> if <paramref name="path"/> path does not contain root directory information.</returns>
+      /// <returns>The volume information, root information, or both for the specified path, or <c>null</c> if <paramref name="path"/> path does not contain root directory information.</returns>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
@@ -41,9 +41,10 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
       #endregion // .NET
-      
-      /// <summary>Returns the volume information, root information, or both for the specified path.</summary>
-      /// <returns>The volume information, root information, or both for the specified path, or <see langword="null"/> if <paramref name="path"/> path does not contain root directory information.</returns>
+
+
+      /// <summary>[AlphaFS] Returns the volume information, root information, or both for the specified path.</summary>
+      /// <returns>The volume information, root information, or both for the specified path, or <c>null</c> if <paramref name="path"/> path does not contain root directory information.</returns>
       /// <exception cref="ArgumentException"/>
       /// <exception cref="ArgumentNullException"/>
       /// <exception cref="NotSupportedException"/>
@@ -54,62 +55,5 @@ namespace Alphaleonis.Win32.Filesystem
       {
          return GetDirectoryRootCore(null, path, pathFormat);
       }
-
-      #region Transactional
-
-      /// <summary>[AlphaFS] Returns the volume information, root information, or both for the specified path.</summary>
-      /// <returns>The volume information, root information, or both for the specified path, or <see langword="null"/> if <paramref name="path"/> path does not contain root directory information.</returns>
-      /// <exception cref="ArgumentException"/>
-      /// <exception cref="ArgumentNullException"/>
-      /// <exception cref="NotSupportedException"/>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path of a file or directory.</param>
-      [SecurityCritical]
-      public static string GetDirectoryRootTransacted(KernelTransaction transaction, string path)
-      {
-         return GetDirectoryRootCore(transaction, path, PathFormat.RelativePath);
-      }
-
-      /// <summary>Returns the volume information, root information, or both for the specified path.</summary>
-      /// <returns>The volume information, root information, or both for the specified path, or <see langword="null"/> if <paramref name="path"/> path does not contain root directory information.</returns>
-      /// <exception cref="ArgumentException"/>
-      /// <exception cref="ArgumentNullException"/>
-      /// <exception cref="NotSupportedException"/>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path of a file or directory.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SecurityCritical]
-      public static string GetDirectoryRootTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
-      {
-         return GetDirectoryRootCore(transaction, path, pathFormat);
-      }
-      
-      #endregion // Transactional
-
-      #region Internal Methods
-
-      /// <summary>Returns the volume information, root information, or both for the specified path.</summary>
-      /// <returns>The volume information, root information, or both for the specified path, or <see langword="null"/> if <paramref name="path"/> path does not contain root directory information.</returns>
-      /// <exception cref="ArgumentException"/>
-      /// <exception cref="ArgumentNullException"/>
-      /// <exception cref="NotSupportedException"/>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path of a file or directory.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SecurityCritical]
-      internal static string GetDirectoryRootCore(KernelTransaction transaction, string path, PathFormat pathFormat)
-      {
-         Path.CheckInvalidUncPath(path);
-
-         string pathLp = Path.GetExtendedLengthPathCore(transaction, path, pathFormat, GetFullPathOptions.CheckInvalidPathChars);
-
-         pathLp = Path.GetRegularPathCore(pathLp, GetFullPathOptions.None, false);
-
-         string rootPath = Path.GetPathRoot(pathLp, false);
-
-         return Utils.IsNullOrWhiteSpace(rootPath) ? null : rootPath;
-      }
-
-      #endregion // Internal Methods
    }
 }

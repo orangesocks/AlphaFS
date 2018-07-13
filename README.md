@@ -1,5 +1,7 @@
 # AlphaFS
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9b3af141aae74656b6135413564b7e5d)](https://app.codacy.com/app/Yomodo/AlphaFS?utm_source=github.com&utm_medium=referral&utm_content=alphaleonis/AlphaFS&utm_campaign=badger)
+
 AlphaFS is a .NET library providing more complete Win32 file system functionality to the .NET platform than the standard `System.IO` classes.
 
 ## Introduction
@@ -10,11 +12,13 @@ The file system support in .NET is pretty good for most uses. However there are 
 
 * Support for extended length paths (longer than 260 characters)
 * Creating Junctions/Hardlinks
-* Accessing hidden volumes
+* Enumeration of folders and files with exception reporting and recovery, custom filtering.
 * Enumeration of volumes
+* Accessing hidden volumes
 * Transactional file operations
-* Support for NTFS Alternate Data Streams (files/folders)
-* Accessing network resources (SMB/DFS)
+* Support for NTFS Alternate Data Streams on files and folders
+* Accessing SMB and DFS network resources
+* Create and access folders/files that contain space(s) in their name.
 * ...and much more!
 
 ## What does AlphaFS provide?
@@ -24,8 +28,11 @@ are replications of the `System.IO.Path`, `System.IO.File`, `System.IO.FileInfo`
 recursive file enumerations, native backups and manipulations with advanced flags and options.
 They also contain extensions to these, and there are many more features for several functions.
 
-When only  these `System.IO` classes are used, it is just a matter of replacing `using System.IO;`
-with `using Alphaleonis.Win32.Filesystem;`, which makes AlphaFS a **true** drop-in replacement.
+When only  these `System.IO` classes are used, it is just a matter of replacing `using System.IO`
+with `using Alphaleonis.Win32.Filesystem`, which makes AlphaFS a **true** drop-in replacement.
+
+The ability to report and recover from, usually access denied, exceptions while enumerating files and folders is one of the
+shortcomings that AlphaFS tries to fix, together with the ability of custom filtering to get only the files and folders you need.
 
 Another thing AlphaFS brings to the table is support for transactional NTFS (TxF). Almost every method in
 these classes exist in two versions. One normal, and one that can work with transactions, more specifically the

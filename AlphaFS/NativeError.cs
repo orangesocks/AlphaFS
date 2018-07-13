@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -19,14 +19,13 @@
  *  THE SOFTWARE. 
  */
 
-using Alphaleonis.Win32.Filesystem;
 using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Policy;
+using Alphaleonis.Win32.Filesystem;
 
 namespace Alphaleonis.Win32
 {
@@ -37,6 +36,7 @@ namespace Alphaleonis.Win32
          ThrowException((uint) errorCode, null, null);
       }
 
+      
       public static void ThrowException(uint errorCode)
       {
          ThrowException(errorCode, null, null);
@@ -47,6 +47,15 @@ namespace Alphaleonis.Win32
       {
          ThrowException((uint) errorCode, readPath, null);
       }
+
+      public static void ThrowException(int errorCode, bool? isFolder, string readPath)
+      {
+         if (errorCode == Win32Errors.ERROR_FILE_NOT_FOUND && null != isFolder && (bool) isFolder)
+            errorCode = (int) Win32Errors.ERROR_PATH_NOT_FOUND;
+
+         ThrowException((uint) errorCode, readPath, null);
+      }
+
 
       public static void ThrowException(uint errorCode, string readPath)
       {
@@ -59,10 +68,18 @@ namespace Alphaleonis.Win32
          ThrowException((uint) errorCode, readPath, writePath);
       }
 
+
       [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
       public static void ThrowException(uint errorCode, string readPath, string writePath)
       {
+         if (null != readPath)
+            readPath = Path.GetCleanExceptionPath(readPath);
+
+         if (null != writePath)
+            writePath = Path.GetCleanExceptionPath(writePath);
+
          var errorMessage = string.Format(CultureInfo.InvariantCulture, "({0}) {1}.", errorCode, new Win32Exception((int) errorCode).Message.Trim().TrimEnd('.').Trim());
+        
 
          if (!Utils.IsNullOrWhiteSpace(readPath) && !Utils.IsNullOrWhiteSpace(writePath))
             errorMessage = string.Format(CultureInfo.InvariantCulture, "{0} | Read: [{1}] | Write: [{2}]", errorMessage, readPath, writePath);
@@ -78,45 +95,42 @@ namespace Alphaleonis.Win32
          switch (errorCode)
          {
             case Win32Errors.ERROR_INVALID_DRIVE:
-               throw new DriveNotFoundException(errorMessage);
+               throw new System.IO.DriveNotFoundException(errorMessage);
+
 
             case Win32Errors.ERROR_OPERATION_ABORTED:
                throw new OperationCanceledException(errorMessage);
 
+
             case Win32Errors.ERROR_FILE_NOT_FOUND:
-               throw new FileNotFoundException(errorMessage);
+               throw new System.IO.FileNotFoundException(errorMessage);
+
 
             case Win32Errors.ERROR_PATH_NOT_FOUND:
-               throw new DirectoryNotFoundException(errorMessage);
+               throw new System.IO.DirectoryNotFoundException(errorMessage);
+
 
             case Win32Errors.ERROR_BAD_RECOVERY_POLICY:
                throw new PolicyException(errorMessage);
+
 
             case Win32Errors.ERROR_FILE_READ_ONLY:
             case Win32Errors.ERROR_ACCESS_DENIED:
             case Win32Errors.ERROR_NETWORK_ACCESS_DENIED:
                throw new UnauthorizedAccessException(errorMessage);
 
+
             case Win32Errors.ERROR_ALREADY_EXISTS:
             case Win32Errors.ERROR_FILE_EXISTS:
-               throw new AlreadyExistsException(errorMessage, false);
+               throw new AlreadyExistsException(readPath ?? writePath, true);
+
 
             case Win32Errors.ERROR_DIR_NOT_EMPTY:
                throw new DirectoryNotEmptyException(errorMessage);
 
+
             case Win32Errors.ERROR_NOT_READY:
                throw new DeviceNotReadyException(errorMessage);
-
-
-            //#region Reparse Point
-
-            //case Win32Errors.ERROR_NOT_A_REPARSE_POINT:
-            //   throw new NotAReparsePointException(errorMessage, (int) errorCode);
-
-            //case Win32Errors.ERROR_INVALID_REPARSE_DATA:
-            //   throw new UnrecognizedReparsePointException(errorMessage, (int) errorCode);
-
-            //#endregion Reparse Point
 
 
             case Win32Errors.ERROR_NOT_SAME_DEVICE:
@@ -161,7 +175,7 @@ namespace Alphaleonis.Win32
 
             default:
                // We don't have a specific exception to generate for this error.               
-               throw new IOException(errorMessage, Win32Errors.GetHrFromWin32Error(errorCode));
+               throw new System.IO.IOException(errorMessage, Win32Errors.GetHrFromWin32Error(errorCode));
          }
       }
    }

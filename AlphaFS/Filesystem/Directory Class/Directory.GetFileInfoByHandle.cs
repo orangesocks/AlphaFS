@@ -1,4 +1,4 @@
-﻿/*  Copyright (C) 2008-2017 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
+﻿/*  Copyright (C) 2008-2018 Peter Palotas, Jeffrey Jangli, Alexandr Normuradov
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy 
  *  of this software and associated documentation files (the "Software"), to deal 
@@ -27,6 +27,7 @@ namespace Alphaleonis.Win32.Filesystem
    public static partial class Directory
    {
       /// <summary>[AlphaFS] Retrieves file information for the specified directory.</summary>
+      /// <returns>A <see cref="ByHandleFileInfo"/> instance containing the requested information.</returns>
       /// <remarks>Directory IDs are not guaranteed to be unique over time, because file systems are free to reuse them. In some cases, the directory ID for a directory can change over time.</remarks>
       /// <param name="path">The path to the directory.</param>
       [SecurityCritical]
@@ -37,6 +38,7 @@ namespace Alphaleonis.Win32.Filesystem
 
 
       /// <summary>[AlphaFS] Retrieves file information for the specified directory.</summary>
+      /// <returns>A <see cref="ByHandleFileInfo"/> instance containing the requested information.</returns>
       /// <remarks>Directory IDs are not guaranteed to be unique over time, because file systems are free to reuse them. In some cases, the directory ID for a directory can change over time.</remarks>
       /// <param name="path">The path to the directory.</param>
       /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
@@ -47,36 +49,10 @@ namespace Alphaleonis.Win32.Filesystem
       }
 
 
-
-
-      /// <summary>[AlphaFS] Retrieves file information for the specified directory.</summary>
-      /// <remarks>Directory IDs are not guaranteed to be unique over time, because file systems are free to reuse them. In some cases, the directory ID for a directory can change over time.</remarks>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to the directory.</param>
-      [SecurityCritical]
-      public static ByHandleFileInfo GetFileInfoByHandleTransacted(KernelTransaction transaction, string path)
-      {
-         return File.GetFileInfoByHandleCore(transaction, true, path, PathFormat.RelativePath);
-      }
-
-
-      /// <summary>[AlphaFS] Retrieves file information for the specified directory.</summary>
-      /// <remarks>Directory IDs are not guaranteed to be unique over time, because file systems are free to reuse them. In some cases, the directory ID for a directory can change over time.</remarks>
-      /// <param name="transaction">The transaction.</param>
-      /// <param name="path">The path to the directory.</param>
-      /// <param name="pathFormat">Indicates the format of the path parameter(s).</param>
-      [SecurityCritical]
-      public static ByHandleFileInfo GetFileInfoByHandleTransacted(KernelTransaction transaction, string path, PathFormat pathFormat)
-      {
-         return File.GetFileInfoByHandleCore(transaction, true, path, pathFormat);
-      }
-
-
-
-
       /// <summary>[AlphaFS] Retrieves file information for the specified <see cref="SafeFileHandle"/>.</summary>
+      /// <returns>A <see cref="ByHandleFileInfo"/> instance containing the requested information.</returns>
+      /// <remarks>Directory IDs are not guaranteed to be unique over time, because file systems are free to reuse them. In some cases, the directory ID for a directory can change over time.</remarks>
       /// <param name="handle">A <see cref="SafeFileHandle"/> connected to the open file or directory from which to retrieve the information.</param>
-      /// <returns>A <see cref="ByHandleFileInfo"/> object containing the requested information.</returns>
       [SecurityCritical]
       public static ByHandleFileInfo GetFileInfoByHandle(SafeFileHandle handle)
       {
